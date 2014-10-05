@@ -3,12 +3,13 @@ package com.example.chat;
 import com.example.testyulongapp.R;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
-import android.os.storage.StorageManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
+/**
+ * 系统主界面
+ */
 public class MainActivity extends Activity {
 
 	@Override
