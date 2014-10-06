@@ -8,6 +8,8 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,7 +21,7 @@ import android.widget.Toast;
  * @author huanghui1
  *
  */
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends BaseActivity implements OnClickListener {
 	private EditText etAccount;
 	private EditText etPassword;
 	private Button btnLogin;
@@ -123,6 +125,12 @@ public class LoginActivity extends BaseActivity {
 	 */
 	private void setLoginBtnState(boolean isEnable) {
 		btnLogin.setEnabled(isEnable);
+	}
+
+	@Override
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

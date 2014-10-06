@@ -13,11 +13,15 @@ import android.view.MenuItem;
 public abstract class BaseActivity extends Activity {
 	protected Context mContext;
 	
+	protected static String TAG = null; 
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		mContext = this;
+		
+		TAG = this.getClass().getCanonicalName();
 		
 		setContentView(getContentView());
 		

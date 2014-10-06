@@ -8,6 +8,15 @@
         android:minSdkVersion="14"
         android:targetSdkVersion="19" />
 
+    <!-- 访问网络的权限 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 读取网络状态权限 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- 存储卡读写权限 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- 读取存储卡的权限 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
