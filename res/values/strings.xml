@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">TestYulongApp</string>
+    <string name="app_name">TestChatApp</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    
+    <string name="login_hint_account">请输入账号</string>
+    <string name="login_hint_password">请输入密码</string>
+    <string name="login_text_button_signin">登录</string>
+    <string name="login_text_regist">创建账号</string>
 
 </resources>

@@ -16,5 +16,33 @@
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
+    
+    <!-- 账号输入框的样式 -->
+    <style name="AccountTextStyle">
+		<item name="android:layout_width">match_parent</item>            
+		<item name="android:layout_height">wrap_content</item>            
+		<item name="android:textStyle">bold</item>            
+		<item name="android:singleLine">true</item>            
+		<item name="android:imeOptions">actionNext</item>            
+		<item name="android:textSize">@dimen/login_font_account</item>            
+    </style>
+    
+    <!-- 密码输入框的样式 -->
+    <style name="PasswordTextStyle">
+		<item name="android:layout_width">match_parent</item>            
+		<item name="android:layout_height">wrap_content</item>            
+		<item name="android:textStyle">bold</item>            
+		<item name="android:singleLine">true</item>            
+		<item name="android:inputType">textPassword</item>            
+		<item name="android:textSize">@dimen/login_font_password</item>            
+    </style>
+    
+    <!-- 密码输入框的样式 -->
+    <style name="LoginTextStyle">
+		<item name="android:layout_width">match_parent</item>            
+		<item name="android:layout_height">wrap_content</item>            
+		<item name="android:gravity">center</item>            
+		<item name="android:textSize">@dimen/login_font_button</item>            
+    </style>
 
 </resources>

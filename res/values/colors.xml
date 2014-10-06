@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 淡灰色 -->
+    <color name="login_main_bg">#FDFDFD</color>
+    <color name="login_text_regist">#1212EF</color>
+</resources>

@@ -1,0 +1,43 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/login_horizontal_margin"
+    android:paddingRight="@dimen/login_horizontal_margin"
+    android:background="@color/login_main_bg" >
+
+    <LinearLayout 
+        android:id="@+id/ll_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:orientation="vertical">
+        <EditText 
+            android:id="@+id/et_account"
+            style="@style/AccountTextStyle"
+            android:hint="@string/login_hint_account"/>
+        <EditText 
+            android:id="@+id/et_password"
+            style="@style/PasswordTextStyle"
+            android:hint="@string/login_hint_password"
+            android:imeOptions="actionDone"
+            android:layout_marginTop="@dimen/login_password_margin_top"/>
+        
+        <Button 
+	        android:id="@+id/btn_login"
+	        style="@style/LoginTextStyle"
+	        android:layout_marginTop="@dimen/login_signin_button_margin_top"
+	        android:enabled="false"
+	        android:text="@string/login_text_button_signin"/>
+    </LinearLayout>
+
+    <TextView 
+        android:id="@+id/tv_regist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/login_text_regist"
+        android:gravity="center"
+        android:layout_marginBottom="@dimen/login_vertical_margin"
+        android:textSize="@dimen/login_font_text_regist"
+        android:textColor="@color/login_text_regist"
+        android:layout_alignParentBottom="true"/>
+</RelativeLayout>
