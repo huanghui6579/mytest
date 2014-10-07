@@ -17,6 +17,15 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
     
+    <!-- 注册、登录界面父布局的样式 -->
+    <style name="LoginRootLayoutStyle">
+    	<item name="android:layout_width">match_parent</item>
+    	<item name="android:layout_height">match_parent</item>
+    	<item name="android:paddingLeft">@dimen/login_horizontal_margin</item>
+    	<item name="android:paddingRight">@dimen/login_horizontal_margin</item>
+    	<item name="android:background">@color/login_main_bg</item>
+    </style>
+    
     <!-- 账号输入框的样式 -->
     <style name="AccountTextStyle">
 		<item name="android:layout_width">match_parent</item>            
@@ -43,6 +52,17 @@
 		<item name="android:layout_height">wrap_content</item>            
 		<item name="android:gravity">center</item>            
 		<item name="android:textSize">@dimen/login_font_button</item>            
+    </style>
+    
+    <!-- 登录、注册界面底部提示信息样式 -->
+    <style name="LoginBottomTextStyle">
+        <item name="android:layout_width">match_parent</item>            
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:gravity">center</item>
+		<item name="android:layout_marginBottom">@dimen/login_vertical_margin</item>
+		<item name="android:textSize">@dimen/login_font_text_regist</item>
+		<item name="android:textColor">@color/login_text_regist</item>
+		<item name="android:layout_alignParentBottom">true</item>
     </style>
 
 </resources>

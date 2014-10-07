@@ -1,8 +1,22 @@
 package com.example.chat.activity;
 
+import java.io.IOException;
+
+import org.apache.harmony.javax.security.sasl.SaslException;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
+
 import com.example.chat.R;
+import com.example.chat.model.SystemConfig;
+import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -14,7 +28,6 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * 登录主界面
@@ -31,6 +44,8 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		setTitle(getString(R.string.activity_lable_login));
 	}
 
 	@Override
@@ -48,7 +63,15 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 
 	@Override
 	protected void initData() {
-		// TODO Auto-generated method stub
+		String tAccount = systemConfig.getAccount();
+		String tPassword = systemConfig.getPassword();
+		if (!TextUtils.isEmpty(tAccount)) {
+			etAccount.setText(tAccount);
+			
+			if (!TextUtils.isEmpty(tPassword)) {
+				etPassword.setText(tPassword);
+			}
+		}
 		
 	}
 
@@ -97,12 +120,13 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 				// TODO Auto-generated method stub
 				
 			}
-			
+
 			@Override
 			public void afterTextChanged(Editable s) {
 				// TODO Auto-generated method stub
 				
 			}
+			
 		});
 		
 		etPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -111,26 +135,158 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				if(actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
 					SystemUtil.hideSoftInput(v);
-					Toast.makeText(mContext, "点击的完成", Toast.LENGTH_SHORT).show();
+					v.clearFocus();
+					new LoginTask().execute(systemConfig);
 					return true;
 				}
 				return false;
 			}
 		});
+		
+		btnLogin.setOnClickListener(this);
+		tvRegist.setOnClickListener(this);
 	}
 	
 	/**
 	 * 设置登录按钮状态，true表示可用，false表示不可用
 	 * @param isEnable 使用、否可用
 	 */
-	private void setLoginBtnState(boolean isEnable) {
-		btnLogin.setEnabled(isEnable);
+	private void setLoginBtnState(boolean enable) {
+		btnLogin.setEnabled(enable);
 	}
 
 	@Override
 	public void onClick(View v) {
-		// TODO Auto-generated method stub
+		switch (v.getId()) {
+		case R.id.btn_login:	//登录
+			if (!SystemUtil.isNetworkOnline()) {
+				SystemUtil.makeShortToast(R.string.network_error);
+				return;
+			}
+			
+			systemConfig.setAccount(etAccount.getText().toString());
+			systemConfig.setPassword(etPassword.getText().toString());
+			
+			new LoginTask().execute(systemConfig);
+			
+			break;
+		case R.id.tv_regist:	//进入注册界面
+			Intent intent = new Intent(mContext, RegistActivity.class);
+			startActivity(intent);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	/**
+	 * 登录的异步任务
+	 * @author Administrator
+	 * @update 2014年10月7日 上午9:55:00
+	 *
+	 */
+	class LoginTask extends AsyncTask<SystemConfig, Void, Boolean> {
+		
+		@Override
+		protected void onPreExecute() {
+			if(pDialog != null) {
+				pDialog.setMessage(getString(R.string.logining));
+				pDialog.show();
+			}
+			super.onPreExecute();
+		}
+
+		@Override
+		protected Boolean doInBackground(SystemConfig... params) {
+			return login(params[0]);
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+			pDialog.dismiss();
+			if(result) {	//登录成功
+				SystemUtil.makeShortToast("登录成功！");
+				btnLogin.setText("已登录");
+				setLoginBtnState(false);
+				if(systemConfig.isFirstLogin()) {	//首次登录
+					systemConfig.setFirstLogin(false);
+					saveSystemConfig(preferences, systemConfig);
+				}
+				
+			} else {
+				SystemUtil.makeShortToast(R.string.logining);
+			}
+		}
 		
 	}
+	
+	/**
+	 * 登录
+	 * @author Administrator
+	 * @update 2014年10月7日 下午12:20:10
+	 * @param config
+	 * @return
+	 */
+	private boolean login(SystemConfig config) {
+		String account = config.getAccount();
+		String password = config.getPassword();
+		try {
+			
+			connection = getConnection();
+			
+			connection.connect();
+			connection.login(account, password, "Android");
+			connection.sendPacket(new Presence(Presence.Type.available));
+			config.setOnline(true);
+			return true;
+		} catch (SaslException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SmackException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XMPPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**
+	 * 登录成功后保存一些配置信息
+	 * @author Administrator
+	 * @update 2014年10月7日 上午10:31:54
+	 * @param preferences
+	 * @param config
+	 */
+	private void saveSystemConfig(SharedPreferences preferences, SystemConfig config) {
+		Editor editor = preferences.edit();
+		editor.putString(Constants.LOGIN_ACCOUNT, config.getAccount());
+		editor.putString(Constants.LOGIN_PASSWORD, config.getPassword());
+		editor.putString(Constants.SERVER_HOST, config.getHost());
+		editor.putString(Constants.SERVER_NAME, config.getServerName());
+		editor.putInt(Constants.SERVER_PORT, config.getPort());
+		editor.putBoolean(Constants.LOGIN_ISFIRST, config.isFirstLogin());
+		editor.commit();
+	}
+	
+	/*@Override
+	protected void onDestroy() {
+		if(connection != null && connection.isConnected()) {
+			try {
+				connection.disconnect();
+			} catch (NotConnectedException e) {
+				e.printStackTrace();
+				connection = null;
+			}
+		}
+		super.onDestroy();
+	}*/
 	
 }

@@ -11,23 +11,44 @@
             android:id="@+id/et_account"
             style="@style/AccountTextStyle"
             android:hint="@string/login_hint_account"/>
+        
+        <EditText 
+            android:id="@+id/et_nickname"
+            style="@style/AccountTextStyle"
+            android:layout_marginTop="@dimen/login_password_margin_top"
+            android:hint="@string/login_hint_nickname"/>
+        
+        <EditText 
+            android:id="@+id/et_email"
+            style="@style/AccountTextStyle"
+            android:inputType="textEmailAddress"
+            android:layout_marginTop="@dimen/login_password_margin_top"
+            android:hint="@string/login_hint_email"/>
+        
         <EditText 
             android:id="@+id/et_password"
             style="@style/PasswordTextStyle"
             android:hint="@string/login_hint_password"
+            android:imeOptions="actionNext"
+            android:layout_marginTop="@dimen/login_password_margin_top"/>
+        
+        <EditText 
+            android:id="@+id/et_confirm_password"
+            style="@style/PasswordTextStyle"
+            android:hint="@string/login_hint_confirm_password"
             android:imeOptions="actionDone"
             android:layout_marginTop="@dimen/login_password_margin_top"/>
         
         <Button 
-	        android:id="@+id/btn_login"
+	        android:id="@+id/btn_regist"
 	        style="@style/LoginTextStyle"
 	        android:layout_marginTop="@dimen/login_signin_button_margin_top"
 	        android:enabled="false"
-	        android:text="@string/login_text_button_signin"/>
+	        android:text="@string/login_text_button_regist"/>
     </LinearLayout>
 
     <TextView 
-        android:id="@+id/tv_regist"
+        android:id="@+id/tv_login"
         style="@style/LoginBottomTextStyle"
-        android:text="@string/login_text_regist"/>
+        android:text="@string/login_text_login"/>
 </RelativeLayout>

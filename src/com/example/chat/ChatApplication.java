@@ -8,7 +8,7 @@ import android.app.Application;
  *
  */
 public class ChatApplication extends Application {
-	public static ChatApplication instance;
+	private static ChatApplication instance;
 	
 	@Override
 	public void onCreate() {

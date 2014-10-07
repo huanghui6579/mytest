@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import com.example.chat.ChatApplication;
 
@@ -45,5 +46,45 @@ public class SystemUtil {
 	public static void hideSoftInput(View view) {
 		InputMethodManager imm = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
+	
+	/**
+	 * 显示短时间的toast
+	 * @author Administrator
+	 * @update 2014年10月7日 上午9:49:18
+	 * @param text
+	 */
+	public static void makeShortToast(CharSequence text) {
+		Toast.makeText(ChatApplication.getInstance(), text, Toast.LENGTH_SHORT).show();
+	}
+	
+	/**
+	 * 显示短时间的toast
+	 * @author Administrator
+	 * @update 2014年10月7日 上午9:49:18
+	 * @param text
+	 */
+	public static void makeShortToast(int resId) {
+		Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_SHORT).show();
+	}
+	
+	/**
+	 * 显示长时间的toast
+	 * @author Administrator
+	 * @update 2014年10月7日 上午9:50:02
+	 * @param text
+	 */
+	public static void makeLongToast(CharSequence text) {
+		Toast.makeText(ChatApplication.getInstance(), text, Toast.LENGTH_LONG).show();
+	}
+	
+	/**
+	 * 显示长时间的toast
+	 * @author Administrator
+	 * @update 2014年10月7日 上午9:50:02
+	 * @param text
+	 */
+	public static void makeLongToast(int resId) {
+		Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_LONG).show();
 	}
 }
