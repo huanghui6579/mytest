@@ -15,6 +15,7 @@
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
     </style>
     
     <!-- 注册、登录界面父布局的样式 -->
@@ -63,6 +64,16 @@
 		<item name="android:textSize">@dimen/login_font_text_regist</item>
 		<item name="android:textColor">@color/login_text_regist</item>
 		<item name="android:layout_alignParentBottom">true</item>
+    </style>
+    
+    <!-- 主界面功能标签的样式 -->
+    <style name="FuncTabView">
+        <item name="android:addStatesFromChildren">true</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">bottom|center_horizontal</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:background">@android:color/white</item>
+        <item name="android:layout_height">match_parent</item>
     </style>
 
 </resources>

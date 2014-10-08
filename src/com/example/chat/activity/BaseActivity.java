@@ -1,7 +1,9 @@
 package com.example.chat.activity;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 
+import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.model.SystemConfig;
 import com.example.chat.util.Constants;
@@ -12,6 +14,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 
 /**
@@ -19,10 +22,11 @@ import android.view.MenuItem;
  * @author huanghui1
  *
  */
-public abstract class BaseActivity extends Activity {
+public abstract class BaseActivity extends FragmentActivity {
 	protected Context mContext;
 	protected ProgressDialog pDialog;
 	protected SharedPreferences preferences;
+	protected ChatApplication application;
 	
 	protected SystemConfig systemConfig;
 	
@@ -37,6 +41,10 @@ public abstract class BaseActivity extends Activity {
 		mContext = this;
 		
 		TAG = this.getClass().getCanonicalName();
+		
+		application = ChatApplication.getInstance();
+		
+		application.addActivity(this);
 		
 		pDialog = new ProgressDialog(mContext);
 		
@@ -119,5 +127,11 @@ public abstract class BaseActivity extends Activity {
 			break;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		application.removeActivity(this);
+		super.onDestroy();
 	}
 }

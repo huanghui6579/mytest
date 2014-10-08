@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- 读取存储卡的权限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_SERVICE"/>
 
     <application
         android:allowBackup="true"
@@ -34,6 +36,11 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name="com.example.chat.activity.MainActivity"
+            android:label="@string/activity_lable_regist"
+            android:configChanges="orientation|screenSize"
+            android:launchMode="singleTask"/>
         <activity
             android:name="com.example.chat.activity.RegistActivity"
             android:label="@string/activity_lable_regist"

@@ -18,6 +18,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -168,7 +169,6 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			systemConfig.setPassword(etPassword.getText().toString());
 			
 			new LoginTask().execute(systemConfig);
-			
 			break;
 		case R.id.tv_regist:	//进入注册界面
 			Intent intent = new Intent(mContext, RegistActivity.class);
@@ -205,16 +205,16 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		protected void onPostExecute(Boolean result) {
 			pDialog.dismiss();
 			if(result) {	//登录成功
-				SystemUtil.makeShortToast("登录成功！");
-				btnLogin.setText("已登录");
-				setLoginBtnState(false);
 				if(systemConfig.isFirstLogin()) {	//首次登录
 					systemConfig.setFirstLogin(false);
 					saveSystemConfig(preferences, systemConfig);
 				}
-				
+				Intent intent = new Intent(mContext, MainActivity.class);
+				intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				startActivity(intent);
+				finish();
 			} else {
-				SystemUtil.makeShortToast(R.string.logining);
+				SystemUtil.makeShortToast(R.string.login_failed);
 			}
 		}
 		
@@ -276,17 +276,9 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		editor.commit();
 	}
 	
-	/*@Override
-	protected void onDestroy() {
-		if(connection != null && connection.isConnected()) {
-			try {
-				connection.disconnect();
-			} catch (NotConnectedException e) {
-				e.printStackTrace();
-				connection = null;
-			}
-		}
-		super.onDestroy();
-	}*/
+	@Override
+	public void onBackPressed() {
+		application.exit();
+	}
 	
 }

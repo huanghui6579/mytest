@@ -3,4 +3,10 @@
     <!-- 淡灰色 -->
     <color name="login_main_bg">#FDFDFD</color>
     <color name="login_text_regist">#1212EF</color>
+    
+    <color name="tab_text_normal">#696969</color>
+    <color name="tab_text_selected">#73bf40</color>
+    
+    <color name="session_list_item_content">#999999</color>
+    <color name="session_list_item_time">#99888888</color>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="main_function_lable">
+        <item>聊天</item>
+        <item>通讯录</item>
+        <item>我</item>
+    </string-array>
+</resources>

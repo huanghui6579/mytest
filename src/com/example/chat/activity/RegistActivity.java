@@ -8,21 +8,13 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.PacketCollector;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.AndFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.filter.PacketIDFilter;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.packet.Registration;
-
-import com.example.chat.R;
-import com.example.chat.model.SystemConfig;
-import com.example.chat.util.Constants;
-import com.example.chat.util.Log;
-import com.example.chat.util.SystemUtil;
 
 import android.app.ActionBar;
 import android.content.Intent;
@@ -39,6 +31,11 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.chat.R;
+import com.example.chat.util.Constants;
+import com.example.chat.util.Log;
+import com.example.chat.util.SystemUtil;
 
 /**
  * 注册界面
@@ -247,8 +244,9 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 				editor.putBoolean(Constants.LOGIN_ISFIRST, false);
 				editor.commit();
 				systemConfig.setOnline(true);
-				btnRegist.setText("已登录");
-				btnRegist.setEnabled(false);
+				Intent intent = new Intent(mContext, MainActivity.class);
+				intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				startActivity(intent);
 				break;
 			case REGIST_RESULT_FAIL:	//失败
 				SystemUtil.makeLongToast(R.string.regist_failed);

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="server_host">192.168.0.102</string>
+    <!-- <string name="server_host">192.168.0.102</string> -->
+    <string name="server_host">172.16.45.16</string>
     <integer name="server_port">5222</integer>
-    <string name="server_name">tiger.com</string>
+    <!-- <string name="server_name">tiger.com</string> -->
+    <string name="server_name">huanghui4.com</string>
 </resources>
