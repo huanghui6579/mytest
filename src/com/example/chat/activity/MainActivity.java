@@ -1,7 +1,5 @@
 package com.example.chat.activity;
 
-import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -17,7 +15,6 @@ import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment;
 import com.example.chat.fragment.MineFragment;
 import com.example.chat.fragment.SessionListFragment;
-import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.view.IconPagerAdapter;
 import com.example.chat.view.IconTabPageIndicator;
 
@@ -27,6 +24,10 @@ import com.example.chat.view.IconTabPageIndicator;
  * @update 2014年10月8日 下午9:15:47
  */
 public class MainActivity extends BaseActivity {
+	private static final int FRAGMENT_SESSION_LIST = 0;
+	private static final int FRAGMENT_CONTACT = 1;
+	private static final int FRAGMENT_MINE = 2;
+	
 	private IconTabPageIndicator mPageIndicator;
 	private ViewPager mViewPager;
 	
@@ -54,10 +55,15 @@ public class MainActivity extends BaseActivity {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_exit) {
+		switch (item.getItemId()) {
+		case R.id.action_add_friend:	//添加好友
+			break;
+		case R.id.action_exit:	//退出
 			application.exit();
 			return true;
+
+		default:
+			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -109,13 +115,13 @@ public class MainActivity extends BaseActivity {
 		public Fragment getItem(int position) {
 			Fragment fragment = null;
 			switch (position) {
-			case 0:	//会话聊天列表
+			case FRAGMENT_SESSION_LIST:	//会话聊天列表
 				fragment = SessionListFragment.newInstance();
 				break;
-			case 1:	//好友列表
+			case FRAGMENT_CONTACT:	//好友列表
 				fragment = ContactFragment.newInstance();
 				break;
-			case 2:	//我
+			case FRAGMENT_MINE:	//我
 				fragment = MineFragment.newInstance();
 				break;
 			default:
