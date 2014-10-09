@@ -2,8 +2,32 @@
     xmlns:tools="http://schemas.android.com/tools" >
 
     <item
-        android:id="@+id/action_exit"
-        android:title="@string/action_exit"
-        android:showAsAction="never"/>
-
+        android:id="@+id/action_search"
+        android:title="@string/action_search"
+        android:icon="@drawable/abc_ic_search"
+        android:showAsAction="ifRoom"/>
+    
+    <item 
+        android:id="@+id/action_plus"
+        android:title="@string/action_plus"
+        android:icon="@drawable/abc_ic_plus"
+        android:showAsAction="ifRoom">
+	    <menu>
+	        <item
+		        android:id="@+id/action_create_group_chat"
+		        android:title="@string/action_create_group_chat"
+		        android:icon="@drawable/abc_ic_group_chat"
+		        android:showAsAction="withText"/>
+	        <item
+		        android:id="@+id/action_add_friend"
+		        android:title="@string/action_add_friend"
+		        android:icon="@drawable/abc_ic_add_friend"
+		        android:showAsAction="withText"/>
+		    <item
+		        android:id="@+id/action_exit"
+		        android:title="@string/action_exit"
+		        android:icon="@drawable/abc_ic_exit"
+		        android:showAsAction="withText"/>
+	    </menu>
+	</item>
 </menu>

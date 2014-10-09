@@ -8,8 +8,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 
 import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment;
@@ -30,9 +32,9 @@ public class MainActivity extends BaseActivity {
 	
 	private static String[] CONTENT = null;
     private static int[] ICONS = new int[] {
-    	R.drawable.tab_user_selector,
-    	R.drawable.tab_record_selector,
-    	R.drawable.tab_user_selector
+    	R.drawable.main_fun_session_selector,
+    	R.drawable.main_fun_contact_selector,
+    	R.drawable.main_fun_mine_selector
     };
 
 	@Override
@@ -83,6 +85,18 @@ public class MainActivity extends BaseActivity {
 	protected void addListener() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_MENU:
+			break;
+
+		default:
+			break;
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 	
 	class FragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapter {

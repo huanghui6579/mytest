@@ -4,7 +4,13 @@
     <string name="app_name">TestChatApp</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    
+    <!-- MainActivity的主菜单 -->
     <string name="action_exit">退出</string>
+    <string name="action_search">搜索</string>
+    <string name="action_plus">添加</string>
+    <string name="action_create_group_chat">发起群聊</string>
+    <string name="action_add_friend">添加朋友</string>
     
     <string name="login_failed">登录失败</string>
     <string name="regist_failed">注册失败</string>
