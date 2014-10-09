@@ -16,8 +16,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- 读取存储卡的权限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    
+    <!-- 访问后台服务的权限 -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_SERVICE"/>
+    <!-- 获取手机状态的权限 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:allowBackup="true"

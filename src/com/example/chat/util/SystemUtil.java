@@ -3,6 +3,7 @@ package com.example.chat.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
@@ -86,5 +87,18 @@ public class SystemUtil {
 	 */
 	public static void makeLongToast(int resId) {
 		Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_LONG).show();
+	}
+	
+	/**
+	 * 获取手机型号
+	 * @update 2014年10月9日 上午8:39:55
+	 * @return
+	 */
+	public static String getPhoneModel() {
+		String model = android.os.Build.MODEL;
+		if(TextUtils.isEmpty(model)) {
+			model = "Android";
+		}
+		return model;
 	}
 }

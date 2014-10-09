@@ -18,7 +18,6 @@ import org.jivesoftware.smack.packet.Registration;
 
 import android.app.ActionBar;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -33,9 +32,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.chat.R;
-import com.example.chat.util.Constants;
+import com.example.chat.model.SystemConfig;
 import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.util.XmppConnectionManager;
 
 /**
  * 注册界面
@@ -57,6 +57,8 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	private Button btnRegist;
 	
 	private TextView tvLogin;
+	
+	private SystemConfig systemConfig;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +88,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 
 	@Override
 	protected void initData() {
-		// TODO Auto-generated method stub
-
+		systemConfig = application.getSystemConfig();
 	}
 
 	@Override
@@ -182,8 +183,8 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 				if(actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
 					SystemUtil.hideSoftInput(v);
 					v.clearFocus();
-					if (!systemConfig.isOnline()) {
-						new RegistTask().execute(getConnection());
+					if (!application.getSystemConfig().isOnline()) {
+						new RegistTask().execute();
 					}
 					return true;
 				}
@@ -199,7 +200,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.btn_regist:	//注册
-			new RegistTask().execute(getConnection());
+			new RegistTask().execute();
 			break;
 		case R.id.tv_login:	//返回登录界面
 			Intent intent = new Intent(mContext, LoginActivity.class);
@@ -217,7 +218,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	 * @update 2014年10月7日 下午4:56:24
 	 *
 	 */
-	class RegistTask extends AsyncTask<AbstractXMPPConnection, Void, Integer> {
+	class RegistTask extends AsyncTask<Void, Void, Integer> {
 		@Override
 		protected void onPreExecute() {
 			pDialog.setMessage(getString(R.string.registing));
@@ -226,8 +227,8 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 		}
 
 		@Override
-		protected Integer doInBackground(AbstractXMPPConnection... params) {
-			return regist(params[0]);
+		protected Integer doInBackground(Void... params) {
+			return regist();
 		}
 		
 		@Override
@@ -235,15 +236,10 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 			pDialog.dismiss();
 			switch (result) {
 			case REGIST_RESULT_SUCCESS:	//注册成功
-				String username = etAccount.getText().toString();
-				String password = etPassword.getText().toString();
 				//保存用户信息
-				Editor editor = preferences.edit();
-				editor.putString(Constants.LOGIN_ACCOUNT, username);
-				editor.putString(Constants.LOGIN_PASSWORD, password);
-				editor.putBoolean(Constants.LOGIN_ISFIRST, false);
-				editor.commit();
 				systemConfig.setOnline(true);
+				systemConfig.setFirstLogin(false);
+				application.saveSystemConfig();
 				Intent intent = new Intent(mContext, MainActivity.class);
 				intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				startActivity(intent);
@@ -278,8 +274,9 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	 * @param config
 	 * @return
 	 */
-	private int regist(AbstractXMPPConnection connection) {
+	private int regist() {
 		try {
+			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.connect();
 			Registration registration = new Registration();
 			registration.setType(IQ.Type.set);
@@ -287,6 +284,8 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 			Map<String, String> attr = new HashMap<String, String>();
 			String username = etAccount.getText().toString();
 			String password = etPassword.getText().toString();
+			systemConfig.setAccount(username);
+			systemConfig.setPassword(password);
 			attr.put("username", username);
 			attr.put("password", password);
 			attr.put("name", etNickname.getText().toString());
