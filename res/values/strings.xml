@@ -4,6 +4,11 @@
     <string name="app_name">TestChatApp</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="add">添加</string>
+    
+    <string name="activity_lable_login">用户登录</string>
+    <string name="activity_lable_regist">用户注册</string>
+    <string name="activity_lable_add_friend">添加用户</string>
     
     <!-- MainActivity的主菜单 -->
     <string name="action_exit">退出</string>
@@ -19,9 +24,6 @@
     <string name="registing">正在注册，请稍后&#8230;</string>
     <string name="network_error">没有可用的网络连接，请检查网络！</string>
     
-    <string name="activity_lable_login">用户登录</string>
-    <string name="activity_lable_regist">用户注册</string>
-    
     <string name="login_hint_account">请输入账号</string>
     <string name="login_hint_nickname">请输入昵称</string>
     <string name="login_hint_email">请输入邮箱</string>
@@ -31,5 +33,9 @@
     <string name="login_text_button_regist">注册</string>
     <string name="login_text_regist">创建账号</string>
     <string name="login_text_login">已有账号，点击登录</string>
+    
+    <string name="contact_hint_search_friend">账号</string>
+    <string name="contact_hint_search">查找</string>
+    <string name="contact_searching">正在查找，请稍后&#8230;</string>
 
 </resources>

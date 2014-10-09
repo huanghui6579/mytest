@@ -10,7 +10,7 @@
     <dimen name="login_password_margin_top">10dp</dimen>
     <dimen name="login_signin_button_margin_top">16dp</dimen>
 
-    <dimen name="session_list_item_padding">8dp</dimen>
+    <dimen name="list_item_padding">8dp</dimen>
     
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>

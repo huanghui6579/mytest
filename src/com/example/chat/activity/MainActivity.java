@@ -1,6 +1,7 @@
 package com.example.chat.activity;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -55,8 +56,11 @@ public class MainActivity extends BaseActivity {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
+		Intent intent = null;
 		switch (item.getItemId()) {
 		case R.id.action_add_friend:	//添加好友
+			intent = new Intent(mContext, AddFriendActivity.class);
+			startActivity(intent);
 			break;
 		case R.id.action_exit:	//退出
 			application.exit();

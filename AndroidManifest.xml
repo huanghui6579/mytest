@@ -45,7 +45,11 @@
             android:launchMode="singleTask"/>
         <activity
             android:name="com.example.chat.activity.RegistActivity"
-            android:label="@string/activity_lable_regist"
+            android:label="@string/app_name"
+            android:configChanges="orientation|screenSize"/>
+        <activity
+            android:name="com.example.chat.activity.AddFriendActivity"
+            android:label="@string/activity_lable_add_friend"
             android:configChanges="orientation|screenSize"/>
         
     </application>

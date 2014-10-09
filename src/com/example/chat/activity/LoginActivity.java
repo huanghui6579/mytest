@@ -172,8 +172,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			new LoginTask().execute(systemConfig);
 			break;
 		case R.id.tv_regist:	//进入注册界面
-//			Intent intent = new Intent(mContext, RegistActivity.class);
-			Intent intent = new Intent(mContext, MainActivity.class);
+			Intent intent = new Intent(mContext, RegistActivity.class);
 			startActivity(intent);
 			break;
 		default:

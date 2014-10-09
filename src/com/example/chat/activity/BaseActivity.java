@@ -3,6 +3,7 @@ package com.example.chat.activity;
 import com.example.chat.ChatApplication;
 import com.example.chat.util.Constants;
 
+import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -77,6 +78,36 @@ public abstract class BaseActivity extends FragmentActivity {
 			break;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	/**
+	 * 显示加载对话框
+	 * @update 2014年10月9日 下午9:39:57
+	 * @param title
+	 * @param message
+	 */
+	public void showLoadingDialog(String title, String message) {
+		pDialog.setTitle(title);
+		pDialog.setMessage(message);
+		pDialog.show();
+	}
+	
+	/**
+	 * 显示加载对话框
+	 * @update 2014年10月9日 下午9:39:57
+	 * @param titleResId
+	 * @param message
+	 */
+	public void showLoadingDialog(int titleResId, String message) {
+		pDialog.setTitle(titleResId);
+		pDialog.setMessage(message);
+		pDialog.show();
+	}
+	
+	public void hideLoadingDialog() {
+		if(pDialog != null && pDialog.isShowing()) {
+			pDialog.dismiss();
+		}
 	}
 	
 	@Override
