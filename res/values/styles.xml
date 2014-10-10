@@ -100,6 +100,19 @@
 		<item name="android:textColor">@android:color/white</item>
     </style>
     
+    <!-- 公用正常按钮的样式 -->
+    <style name="CommonNormalButtonstyle" parent="CommonSmallButtonstyle">
+		<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+    </style>
+    
+    <!-- 公用正常按钮的样式 -->
+    <style name="CommonWidthButtonstyle" parent="CommonSmallButtonstyle">
+		<item name="android:layout_width">match_parent</item>
+		<item name="android:layout_height">wrap_content</item>
+    </style>
+    
+    <!-- 公共的listview样式 -->
     <style name="CommonListViewStyle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>

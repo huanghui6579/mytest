@@ -11,7 +11,8 @@
     
     <string name="activity_lable_login">用户登录</string>
     <string name="activity_lable_regist">用户注册</string>
-    <string name="activity_lable_add_friend">添加用户</string>
+    <string name="activity_lable_add_friend">添加好友</string>
+    <string name="activity_lable_friend_info">好友详情</string>
     
     <!-- MainActivity的主菜单 -->
     <string name="action_exit">退出</string>
@@ -40,5 +41,8 @@
     <string name="contact_hint_search_friend">账号</string>
     <string name="contact_hint_search">查找</string>
     <string name="contact_searching">正在查找，请稍后&#8230;</string>
+    <string name="contact_add_friend">添加好友</string>
+    <string name="contact_signature">个性签名</string>
+    <string name="contact_address">地区</string>
 
 </resources>

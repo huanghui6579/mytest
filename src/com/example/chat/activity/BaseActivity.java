@@ -33,6 +33,8 @@ public abstract class BaseActivity extends FragmentActivity {
 		
 		application = ChatApplication.getInstance();
 		
+		initWidow();
+		
 		application.addActivity(this);
 		
 		preferences = getSharedPreferences(Constants.SETTTING_LOGIN, Context.MODE_PRIVATE);
@@ -45,6 +47,14 @@ public abstract class BaseActivity extends FragmentActivity {
 		
 		initData();
 	}
+	
+	/**
+	 * 初始化一些窗口信息
+	 * @update 2014年10月10日 下午9:29:18
+	 */
+	protected void initWidow() {
+		
+	};
 	
 	/**
 	 * 获得界面的布局文件id

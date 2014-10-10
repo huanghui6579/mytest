@@ -30,4 +30,9 @@ public class Constants {
 	public static final String NAME_SERVER_HOST = "name_server_host";
 	public static final String NAME_SERVER_PORT = "name_server_port";
 	public static final String NAME_SERVER_NAME = "name_server_name";
+	
+	/**
+	 * 【1】像是好友头像，主要在UserInfoActivity中用到
+	 */
+	public static final int MSG_SHOW_USR_ICON = 0x00001;
 }

@@ -1,5 +1,8 @@
 package com.example.chat.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * 用户实体
  * 
@@ -7,7 +10,7 @@ package com.example.chat.model;
  * @version 1.0.0
  * @update 2014年10月9日 下午9:19:08
  */
-public class User {
+public class User implements Parcelable {
 	private String JID;
 	private String username;
 	private String password;
@@ -80,4 +83,48 @@ public class User {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(JID);
+		dest.writeString(username);
+		dest.writeString(password);
+		dest.writeString(email);
+		dest.writeString(nickname);
+		dest.writeString(phone);
+		dest.writeString(resource);
+		dest.writeString(status);
+	}
+	
+	public User(Parcel in) {
+		JID = in.readString();
+		username = in.readString();
+		password = in.readString();
+		email = in.readString();
+		nickname = in.readString();
+		phone = in.readString();
+		resource = in.readString();
+		status = in.readString();
+	}
+	
+	public User() {
+	}
+
+	public static final Parcelable.Creator<User> CREATOR = new Creator<User>() {
+		
+		@Override
+		public User[] newArray(int size) {
+			return new User[size];
+		}
+		
+		@Override
+		public User createFromParcel(Parcel source) {
+			return new User(source);
+		}
+	};
 }

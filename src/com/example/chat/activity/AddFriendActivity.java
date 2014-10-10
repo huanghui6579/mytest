@@ -6,6 +6,7 @@ import java.util.List;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,6 +15,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -31,6 +33,8 @@ import com.example.chat.util.XmppConnectionManager;
  * @update 2014年10月9日 下午9:11:37
  */
 public class AddFriendActivity extends BaseActivity {
+	public static final String ARG_USER = "arg_user";
+	
 	private EditText etUsername;
 	private Button btnSearch;
 	private ListView lvResult;
@@ -67,6 +71,18 @@ public class AddFriendActivity extends BaseActivity {
 //		users = new ArrayList<>();
 //		adapter = new FriendResultAdapter(users, mContext);
 //		lvResult.setAdapter(adapter);
+		
+		lvResult.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				User user = users.get(position);
+				Intent intent = new Intent(mContext, UserInfoActivity.class);
+				intent.putExtra(ARG_USER, user);
+				startActivity(intent);
+			}
+		});
 	}
 
 	@Override

@@ -15,6 +15,9 @@
     <dimen name="common_button_width">50dp</dimen>
     <dimen name="common_button_height">40dp</dimen>
     
+    <dimen name="contact_head_icon_max_width">96dp</dimen>
+    <dimen name="contact_head_icon_max_height">96dp</dimen>
+    
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>
     <dimen name="login_font_button">18sp</dimen>
@@ -25,5 +28,8 @@
     <dimen name="session_list_item_title">16sp</dimen>
     <dimen name="session_list_item_content">14sp</dimen>
     <dimen name="session_list_item_time">12sp</dimen>
+    
+    <dimen name="contact_user_info_title">16sp</dimen>
+    <dimen name="contact_user_info_content">14sp</dimen>
 
 </resources>
