@@ -1,6 +1,9 @@
 package com.example.chat.activity;
 
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,12 +13,14 @@ import android.support.v4.view.ViewPager;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
+import android.view.ViewConfiguration;
+import android.view.Window;
 
 import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment;
 import com.example.chat.fragment.MineFragment;
 import com.example.chat.fragment.SessionListFragment;
+import com.example.chat.util.Log;
 import com.example.chat.view.IconPagerAdapter;
 import com.example.chat.view.IconTabPageIndicator;
 
@@ -42,6 +47,8 @@ public class MainActivity extends BaseActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		forceShowActionBarOverflowMenu();
 	}
 	
 	@Override
@@ -49,6 +56,27 @@ public class MainActivity extends BaseActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
+	}
+	
+	@Override
+	public boolean onMenuOpened(int featureId, Menu menu) {
+	    if(featureId == Window.FEATURE_ACTION_BAR && menu != null){
+	        if(menu.getClass().getSimpleName().equals("MenuBuilder")){
+	            try{
+	                Method m = menu.getClass().getDeclaredMethod(
+	                    "setOptionalIconsVisible", Boolean.TYPE);
+	                m.setAccessible(true);
+	                m.invoke(menu, true);
+	            }
+	            catch(NoSuchMethodException e){
+	                Log.e(TAG, "onMenuOpened", e);
+	            }
+	            catch(Exception e){
+	                throw new RuntimeException(e);
+	            }
+	        }
+	    }
+	    return super.onMenuOpened(featureId, menu);
 	}
 
 	@Override
@@ -71,6 +99,22 @@ public class MainActivity extends BaseActivity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	/** 
+     * 强制显示 overflow menu 
+     */  
+    private void forceShowActionBarOverflowMenu() {  
+        try {  
+            ViewConfiguration config = ViewConfiguration.get(this);  
+            Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");  
+            if (menuKeyField != null) {  
+                menuKeyField.setAccessible(true);  
+                menuKeyField.setBoolean(config, false);  
+            }  
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        }  
+    }
 
 	@Override
 	protected int getContentView() {
