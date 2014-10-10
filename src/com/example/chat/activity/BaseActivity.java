@@ -18,7 +18,6 @@ import android.view.MenuItem;
  */
 public abstract class BaseActivity extends FragmentActivity {
 	protected Context mContext;
-	protected ProgressDialog pDialog;
 	protected SharedPreferences preferences;
 	protected ChatApplication application;
 	
@@ -35,8 +34,6 @@ public abstract class BaseActivity extends FragmentActivity {
 		application = ChatApplication.getInstance();
 		
 		application.addActivity(this);
-		
-		pDialog = new ProgressDialog(mContext);
 		
 		preferences = getSharedPreferences(Constants.SETTTING_LOGIN, Context.MODE_PRIVATE);
 		
@@ -81,30 +78,11 @@ public abstract class BaseActivity extends FragmentActivity {
 	}
 	
 	/**
-	 * 显示加载对话框
-	 * @update 2014年10月9日 下午9:39:57
-	 * @param title
-	 * @param message
+	 * 隐藏dialog
+	 * @update 2014年10月10日 上午8:10:47
+	 * @param pDialog
 	 */
-	public void showLoadingDialog(String title, String message) {
-		pDialog.setTitle(title);
-		pDialog.setMessage(message);
-		pDialog.show();
-	}
-	
-	/**
-	 * 显示加载对话框
-	 * @update 2014年10月9日 下午9:39:57
-	 * @param titleResId
-	 * @param message
-	 */
-	public void showLoadingDialog(int titleResId, String message) {
-		pDialog.setTitle(titleResId);
-		pDialog.setMessage(message);
-		pDialog.show();
-	}
-	
-	public void hideLoadingDialog() {
+	public void hideLoadingDialog(ProgressDialog pDialog) {
 		if(pDialog != null && pDialog.isShowing()) {
 			pDialog.dismiss();
 		}

@@ -28,8 +28,14 @@
     </LinearLayout>
     <ListView 
         android:id="@+id/lv_result"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:cacheColorHint="@android:color/transparent"/>
+        style="@style/CommonListViewStyle"/>
 
+    <TextView 
+        android:id="@+id/empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_result"
+        android:gravity="center"
+        android:visibility="gone"/>
+    
 </LinearLayout>

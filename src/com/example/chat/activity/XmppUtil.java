@@ -30,8 +30,8 @@ public class XmppUtil {
 			Form answerForm = searchForm.createAnswerForm();
 			answerForm.setAnswer("Username", true);
 			answerForm.setAnswer("Name", true);
-			answerForm.setAnswer("Username", true);
-			answerForm.setAnswer("Email", username);
+			answerForm.setAnswer("Email", true);
+			answerForm.setAnswer("search", username);
 			ReportedData reportedData = searchManager.getSearchResults(answerForm, searchService);
 			List<Row> rows = reportedData.getRows();
 			if(rows != null && rows.size() > 0) {

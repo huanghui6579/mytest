@@ -9,4 +9,6 @@
     
     <color name="session_list_item_content">#999999</color>
     <color name="session_list_item_time">#99888888</color>
+    
+    <color name="list_selector">#26999999</color>
 </resources>

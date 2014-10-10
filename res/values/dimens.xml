@@ -12,6 +12,9 @@
 
     <dimen name="list_item_padding">8dp</dimen>
     
+    <dimen name="common_button_width">50dp</dimen>
+    <dimen name="common_button_height">40dp</dimen>
+    
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>
     <dimen name="login_font_button">18sp</dimen>

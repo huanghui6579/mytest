@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ActionBar;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -13,7 +14,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -34,8 +34,12 @@ public class AddFriendActivity extends BaseActivity {
 	private EditText etUsername;
 	private Button btnSearch;
 	private ListView lvResult;
+	private TextView emptyView;
+	
 	private List<User> users;
 	private FriendResultAdapter adapter;
+	private ProgressDialog pDialog;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,13 +59,14 @@ public class AddFriendActivity extends BaseActivity {
 		etUsername = (EditText) findViewById(R.id.et_username);
 		btnSearch = (Button) findViewById(R.id.btn_search);
 		lvResult = (ListView) findViewById(R.id.lv_result);
+		emptyView = (TextView) findViewById(R.id.empty_view);
 	}
 
 	@Override
 	protected void initData() {
-		users = new ArrayList<>();
-		adapter = new FriendResultAdapter(users, mContext);
-		lvResult.setAdapter(adapter);
+//		users = new ArrayList<>();
+//		adapter = new FriendResultAdapter(users, mContext);
+//		lvResult.setAdapter(adapter);
 	}
 
 	@Override
@@ -110,8 +115,9 @@ public class AddFriendActivity extends BaseActivity {
 	class SearchTask extends AsyncTask<String, Void, List<User>> {
 		@Override
 		protected void onPreExecute() {
-//			showLoadingDialog(null, getString(R.string.contact_searching));
-			
+			if(pDialog == null) {
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.contact_searching));
+			}
 		}
 
 		@Override
@@ -121,13 +127,18 @@ public class AddFriendActivity extends BaseActivity {
 		
 		@Override
 		protected void onPostExecute(List<User> result) {
-//			hideLoadingDialog();
-			pDialog.dismiss();
-			if(result != null && result.size() > 0) {
-				users.clear();
-				users.addAll(result);
-				adapter.notifyDataSetChanged();
+			if(adapter == null) {
+				users = new ArrayList<>();
+				adapter = new FriendResultAdapter(users, mContext);
+				lvResult.setAdapter(adapter);
+				lvResult.setEmptyView(emptyView);
 			}
+			hideLoadingDialog(pDialog);
+			users.clear();
+			if(result != null && result.size() > 0) {
+				users.addAll(result);
+			}
+			adapter.notifyDataSetChanged();
 		}
 		
 	}

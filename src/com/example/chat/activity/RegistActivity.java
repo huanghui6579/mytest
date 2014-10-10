@@ -17,6 +17,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Registration;
 
 import android.app.ActionBar;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -59,6 +60,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	private TextView tvLogin;
 	
 	private SystemConfig systemConfig;
+	private ProgressDialog pDialog;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -221,9 +223,9 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	class RegistTask extends AsyncTask<Void, Void, Integer> {
 		@Override
 		protected void onPreExecute() {
-			pDialog.setMessage(getString(R.string.registing));
-			pDialog.show();
-			super.onPreExecute();
+			if(pDialog == null) {
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.registing));
+			}
 		}
 
 		@Override
@@ -233,7 +235,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 		
 		@Override
 		protected void onPostExecute(Integer result) {
-			pDialog.dismiss();
+			hideLoadingDialog(pDialog);
 			switch (result) {
 			case REGIST_RESULT_SUCCESS:	//注册成功
 				//保存用户信息

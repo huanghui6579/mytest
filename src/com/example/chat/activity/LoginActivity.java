@@ -12,6 +12,7 @@ import com.example.chat.model.SystemConfig;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -39,6 +40,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	private TextView tvRegist;
 	
 	private SystemConfig systemConfig;
+	private ProgressDialog pDialog;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -190,11 +192,9 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		
 		@Override
 		protected void onPreExecute() {
-			if(pDialog != null) {
-				pDialog.setMessage(getString(R.string.logining));
-				pDialog.show();
+			if(pDialog == null) {
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining));
 			}
-			super.onPreExecute();
 		}
 
 		@Override
@@ -204,7 +204,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		
 		@Override
 		protected void onPostExecute(Boolean result) {
-			pDialog.dismiss();
+			hideLoadingDialog(pDialog);
 			if(result) {	//登录成功
 				systemConfig.setOnline(true);
 				systemConfig.setFirstLogin(false);
