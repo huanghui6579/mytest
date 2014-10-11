@@ -3,12 +3,18 @@ package com.example.chat.activity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -23,8 +29,10 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.model.User;
+import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
+import com.example.chat.util.XmppUtil;
 
 /**
  * 添加好友界面，主要是查询好友
@@ -44,6 +52,29 @@ public class AddFriendActivity extends BaseActivity {
 	private FriendResultAdapter adapter;
 	private ProgressDialog pDialog;
 	
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case Constants.MSG_CONNECTION_UNAVAILABLE:	//客户端与服务器没有连接
+				hideLoadingDialog(pDialog);
+				new AlertDialog.Builder(mContext)
+					.setTitle(R.string.prompt)
+					.setMessage(R.string.connection_unavailable)
+					.setNegativeButton(android.R.string.cancel, null)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, null).show();
+				break;
+			case Constants.MSG_SEND_ADD_FRIEND_REQUEST:	//发送添加好友的请求
+				hideLoadingDialog(pDialog);
+				SystemUtil.makeShortToast(R.string.contact_send_add_friend_request_success);
+				break;
+			default:
+				break;
+			}
+		}
+	};
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -194,8 +225,21 @@ public class AddFriendActivity extends BaseActivity {
 				
 				@Override
 				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					SystemUtil.makeShortToast("添加好友：" + user.getUsername());
+					mHandler.post(new Runnable() {
+						
+						@Override
+						public void run() {
+							Message msg = mHandler.obtainMessage();
+							try {
+								XmppUtil.addFriend(XmppConnectionManager.getInstance().getConnection(), user.getJID());
+								msg.what = Constants.MSG_SEND_ADD_FRIEND_REQUEST;
+							} catch (NotConnectedException e) {
+								e.printStackTrace();
+								msg.what = Constants.MSG_CONNECTION_UNAVAILABLE;
+							}
+							mHandler.sendMessage(msg);
+						}
+					});
 				}
 			});
 			return convertView;

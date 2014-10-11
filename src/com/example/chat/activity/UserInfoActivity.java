@@ -1,9 +1,12 @@
 package com.example.chat.activity;
 
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,7 +21,9 @@ import android.widget.TextView;
 import com.example.chat.R;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;
+import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
+import com.example.chat.util.XmppUtil;
 
 /**
  * 好友详情界面
@@ -48,7 +53,20 @@ public class UserInfoActivity extends BaseActivity {
 			case Constants.MSG_SHOW_USR_ICON:	//显示好友头像
 				ivHeadIcon.setImageBitmap((Bitmap) msg.obj);
 				break;
-
+			case Constants.MSG_CONNECTION_UNAVAILABLE:	//客户端与服务器没有连接
+				hideLoadingDialog(pDialog);
+				new AlertDialog.Builder(mContext)
+					.setTitle(R.string.prompt)
+					.setMessage(R.string.connection_unavailable)
+					.setNegativeButton(android.R.string.cancel, null)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, null).show();
+				break;
+			case Constants.MSG_SEND_ADD_FRIEND_REQUEST:	//发送添加好友的请求
+				hideLoadingDialog(pDialog);
+				SystemUtil.makeShortToast(R.string.contact_send_add_friend_request_success);
+				btnAddFriend.setEnabled(false);
+				break;
 			default:
 				break;
 			}
@@ -59,7 +77,6 @@ public class UserInfoActivity extends BaseActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 	}
@@ -93,9 +110,9 @@ public class UserInfoActivity extends BaseActivity {
 		if (user != null) {
 			new LoadVcardTask().execute(user.getJID());
 			
-			tvUsername.setText("用户名：" + user.getUsername());
+			tvUsername.setText(getString(R.string.username, user.getUsername()));
 //			tvNickname.setText("昵称：" + user.getNickname());
-			tvEmail.setText("邮箱：" + user.getEmail());
+			tvEmail.setText(getString(R.string.email, user.getEmail()));
 			
 		}
 	}
@@ -106,9 +123,24 @@ public class UserInfoActivity extends BaseActivity {
 			
 			@Override
 			public void onClick(View v) {
-//				if (pDialog == null) {
-//					pDialog = ProgressDialog.show(mContext, null, "正在处理数据，请稍后...");
-//				}
+				if (pDialog == null) {
+					pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading));
+				}
+				mHandler.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						Message msg = mHandler.obtainMessage();
+						try {
+							XmppUtil.addFriend(XmppConnectionManager.getInstance().getConnection(), user.getJID());
+							msg.what = Constants.MSG_SEND_ADD_FRIEND_REQUEST;
+						} catch (NotConnectedException e) {
+							e.printStackTrace();
+							msg.what = Constants.MSG_CONNECTION_UNAVAILABLE;
+						}
+						mHandler.sendMessage(msg);
+					}
+				});
 			}
 		});
 	}
@@ -138,7 +170,7 @@ public class UserInfoActivity extends BaseActivity {
 		protected void onPostExecute(VCard result) {
 			if (result != null) {
 				tvAddress.setText(result.getAddressFieldHome("REGION") + " " + result.getAddressFieldHome("LOCALITY"));	//省市
-				tvNickname.setText("昵称：" + result.getNickName());
+				tvNickname.setText(getString(R.string.nickname, result.getNickName()));
 			}
 			setProgressBarIndeterminateVisibility(false);
 		}

@@ -1,7 +1,13 @@
 package com.example.chat.model;
 
+import java.util.Comparator;
+import java.util.Locale;
+
+import opensource.jpinyin.PinyinFormat;
+import opensource.jpinyin.PinyinHelper;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 /**
  * 用户实体
@@ -10,7 +16,9 @@ import android.os.Parcelable;
  * @version 1.0.0
  * @update 2014年10月9日 下午9:19:08
  */
-public class User implements Parcelable {
+public class User implements Parcelable, Comparator<User> {
+	public static final String TAG_OTHER = "#";
+	
 	private String JID;
 	private String username;
 	private String password;
@@ -19,6 +27,12 @@ public class User implements Parcelable {
 	private String phone;
 	private String resource;
 	private String status;
+	private String fullPinyin;
+	private String shortPinyin;
+	/**
+	 * 名字拼音的首字母，大写的
+	 */
+	private String sortLetter;
 
 	public String getJID() {
 		return JID;
@@ -83,6 +97,57 @@ public class User implements Parcelable {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+	
+	/**
+	 * 获取名字拼音的首字母大写
+	 * @update 2014年10月11日 下午9:51:07
+	 * @return
+	 */
+	public String getSortLetter() {
+//		if (TextUtils.isEmpty(sortLetter)) {
+//			String sp = getShortPinyin().toUpperCase(Locale.getDefault());
+//			return String.valueOf(sp.charAt(0));
+//		}
+		return sortLetter;
+	}
+
+	public void setSortLetter(String sortLetter) {
+		this.sortLetter = sortLetter;
+	}
+
+	/**
+	 * 获取用户的名称，默认是显示昵称，如没有昵称，则显示用户名
+	 * @update 2014年10月11日 下午9:34:23
+	 * @return
+	 */
+	public String getName() {
+		if (TextUtils.isEmpty(nickname)) {
+			return username;
+		}
+		return nickname;
+	}
+
+	public String getFullPinyin() {
+		if(TextUtils.isEmpty(fullPinyin)) {
+			if(!TextUtils.isEmpty(nickname)) {
+				fullPinyin = PinyinHelper.getShortPinyin(nickname);
+			} else {
+				fullPinyin = username;
+			}
+		}
+		return fullPinyin;
+	}
+
+	public String getShortPinyin() {
+		if(TextUtils.isEmpty(shortPinyin)) {
+			if(!TextUtils.isEmpty(nickname)) {
+				shortPinyin = PinyinHelper.convertToPinyinString(nickname, "", PinyinFormat.WITHOUT_TONE);
+			} else {
+				shortPinyin = username;
+			}
+		}
+		return shortPinyin;
+	}
 
 	@Override
 	public int describeContents() {
@@ -99,6 +164,8 @@ public class User implements Parcelable {
 		dest.writeString(phone);
 		dest.writeString(resource);
 		dest.writeString(status);
+		dest.writeString(fullPinyin);
+		dest.writeString(shortPinyin);
 	}
 	
 	public User(Parcel in) {
@@ -110,6 +177,8 @@ public class User implements Parcelable {
 		phone = in.readString();
 		resource = in.readString();
 		status = in.readString();
+		fullPinyin = in.readString();
+		shortPinyin = in.readString();
 	}
 	
 	public User() {
@@ -127,4 +196,15 @@ public class User implements Parcelable {
 			return new User(source);
 		}
 	};
+
+	@Override
+	public int compare(User lhs, User rhs) {
+		if (TAG_OTHER.equals(lhs.getSortLetter())) {
+			return 1;
+		} else if (TAG_OTHER.equals(rhs.getSortLetter())) {
+			return -1;
+		} else {
+			return lhs.getSortLetter().compareTo(rhs.getSortLetter());
+		}
+	}
 }

@@ -17,6 +17,13 @@
     
     <dimen name="contact_head_icon_max_width">96dp</dimen>
     <dimen name="contact_head_icon_max_height">96dp</dimen>
+    <dimen name="contact_sidebar_width">30dp</dimen>
+    <dimen name="contact_text_index_width">80dp</dimen>
+    <dimen name="contact_text_index_height">80dp</dimen>
+    <dimen name="contact_item_head_icon_width">48dp</dimen>
+    <dimen name="contact_item_head_icon_height">48dp</dimen>
+    <dimen name="contact_text_index_padding_top">5dp</dimen>
+    <dimen name="contact_text_index_padding_bottom">5dp</dimen>
     
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>
@@ -31,5 +38,8 @@
     
     <dimen name="contact_user_info_title">16sp</dimen>
     <dimen name="contact_user_info_content">14sp</dimen>
+    
+    <dimen name="contact_text_index">32sp</dimen>
+    
 
 </resources>

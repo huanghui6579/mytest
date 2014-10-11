@@ -32,7 +32,15 @@ public class Constants {
 	public static final String NAME_SERVER_NAME = "name_server_name";
 	
 	/**
-	 * 【1】像是好友头像，主要在UserInfoActivity中用到
+	 * 【1】显示好友头像，主要在UserInfoActivity中用到
 	 */
 	public static final int MSG_SHOW_USR_ICON = 0x00001;
+	/**
+	 * 【2】服务器连接不可用
+	 */
+	public static final int MSG_CONNECTION_UNAVAILABLE = 0x00002;
+	/**
+	 * 【3】发送添加好友的请求
+	 */
+	public static final int MSG_SEND_ADD_FRIEND_REQUEST = 0x00003;
 }

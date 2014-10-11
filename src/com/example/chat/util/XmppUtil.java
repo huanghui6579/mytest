@@ -1,4 +1,4 @@
-package com.example.chat.activity;
+package com.example.chat.util;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -8,11 +8,18 @@
     <string name="add">添加</string>
     <string name="no_data">没有数据</string>
     <string name="no_result">没有结果</string>
+    <string name="prompt">提示</string>
+    <string name="connection_unavailable">与服务器的连接已经断开，请重新登录</string>
+    <string name="loading">正在处理，请稍后&#8230;</string>
     
     <string name="activity_lable_login">用户登录</string>
     <string name="activity_lable_regist">用户注册</string>
     <string name="activity_lable_add_friend">添加好友</string>
     <string name="activity_lable_friend_info">好友详情</string>
+    
+    <string name="email">邮箱：%1$s</string>
+    <string name="username">用户名：%1$s</string>
+    <string name="nickname">昵称：%1$s</string>
     
     <!-- MainActivity的主菜单 -->
     <string name="action_exit">退出</string>
@@ -44,5 +51,6 @@
     <string name="contact_add_friend">添加好友</string>
     <string name="contact_signature">个性签名</string>
     <string name="contact_address">地区</string>
+    <string name="contact_send_add_friend_request_success">发送添加好友请求成功</string>
 
 </resources>

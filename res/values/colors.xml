@@ -13,4 +13,7 @@
     <color name="list_selector">#26999999</color>
     
     <color name="divider_color">#aaaaaa</color>
+    
+    <color name="index_text_color">#454545</color>
+    <color name="index_text_bg_color">#E0E0E0</color>
 </resources>
