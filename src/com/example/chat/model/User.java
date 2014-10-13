@@ -1,7 +1,6 @@
 package com.example.chat.model;
 
 import java.util.Comparator;
-import java.util.Locale;
 
 import opensource.jpinyin.PinyinFormat;
 import opensource.jpinyin.PinyinHelper;
@@ -11,7 +10,6 @@ import android.text.TextUtils;
 
 /**
  * 用户实体
- * 
  * @author huanghui1
  * @version 1.0.0
  * @update 2014年10月9日 下午9:19:08

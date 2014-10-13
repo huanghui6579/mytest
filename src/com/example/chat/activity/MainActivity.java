@@ -138,7 +138,24 @@ public class MainActivity extends BaseActivity {
 	@Override
 	protected void addListener() {
 		// TODO Auto-generated method stub
-		
+		mPageIndicator.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+			
+			@Override
+			public void onPageSelected(int position) {
+				// TODO Auto-generated method stub
+			}
+			
+			@Override
+			public void onPageScrolled(int position, float positionOffset,
+					int positionOffsetPixels) {
+				// TODO Auto-generated method stub
+			}
+			
+			@Override
+			public void onPageScrollStateChanged(int state) {
+				// TODO Auto-generated method stub
+			}
+		});
 	}
 	
 	@Override

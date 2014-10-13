@@ -39,7 +39,8 @@
     <dimen name="contact_user_info_title">16sp</dimen>
     <dimen name="contact_user_info_content">14sp</dimen>
     
-    <dimen name="contact_text_index">32sp</dimen>
+    <dimen name="contact_text_dialog">32sp</dimen>
+    <dimen name="contact_text_index">14sp</dimen>
     
 
 </resources>

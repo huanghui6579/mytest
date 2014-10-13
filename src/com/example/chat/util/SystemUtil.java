@@ -3,6 +3,7 @@ package com.example.chat.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -100,5 +101,14 @@ public class SystemUtil {
 			model = "Android";
 		}
 		return model;
+	}
+	
+	/**
+	 * 获得当前的Android版本
+	 * @update 2014年10月13日 上午9:11:10
+	 * @return
+	 */
+	public static final int getCurrentSDK() {
+		return android.os.Build.VERSION.SDK_INT;
 	}
 }

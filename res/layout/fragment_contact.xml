@@ -15,7 +15,7 @@
         android:background="@drawable/text_index_background"
         android:gravity="center"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/contact_text_index"
+        android:textSize="@dimen/contact_text_dialog"
         android:visibility="gone" />
 
     <com.example.chat.view.SideBar

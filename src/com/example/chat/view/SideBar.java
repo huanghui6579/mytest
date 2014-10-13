@@ -1,17 +1,20 @@
 package com.example.chat.view;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.chat.R;
+import com.example.chat.util.SystemUtil;
 
 public class SideBar extends View {
 	// 触摸事件
@@ -45,6 +48,7 @@ public class SideBar extends View {
 	/**
 	 * 重写这个方法
 	 */
+	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 		// 获取焦点改变背景颜色.
@@ -57,7 +61,7 @@ public class SideBar extends View {
 			// paint.setColor(Color.WHITE);
 			paint.setTypeface(Typeface.DEFAULT_BOLD);
 			paint.setAntiAlias(true);
-			paint.setTextSize(20);
+			paint.setTextSize(getResources().getDimensionPixelSize(R.dimen.contact_text_index));
 			// 选中的状态
 			if (i == choose) {
 				paint.setColor(Color.parseColor("#3399ff"));
@@ -72,6 +76,7 @@ public class SideBar extends View {
 
 	}
 
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
 		final int action = event.getAction();
@@ -79,17 +84,20 @@ public class SideBar extends View {
 		final int oldChoose = choose;
 		final OnTouchingLetterChangedListener listener = onTouchingLetterChangedListener;
 		final int c = (int) (y / getHeight() * b.length);// 点击y坐标所占总高度的比例*b数组的长度就等于点击b中的个数.
-
+		
 		switch (action) {
 		case MotionEvent.ACTION_UP:
-			setBackgroundDrawable(new ColorDrawable(0x00000000));
+			if (SystemUtil.getCurrentSDK() >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+				setBackground(new ColorDrawable(0x00000000));
+			} else {
+				setBackgroundDrawable(new ColorDrawable(0x00000000));
+			}
 			choose = -1;//
 			invalidate();
 			if (mTextDialog != null) {
 				mTextDialog.setVisibility(View.INVISIBLE);
 			}
 			break;
-
 		default:
 			setBackgroundResource(R.drawable.sidebar_background);
 			if (oldChoose != c) {
@@ -111,7 +119,7 @@ public class SideBar extends View {
 		}
 		return true;
 	}
-
+	
 	/**
 	 * 向外公开的方法
 	 * 

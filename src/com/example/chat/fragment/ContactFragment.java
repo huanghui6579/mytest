@@ -74,6 +74,23 @@ public class ContactFragment extends BaseFragment {
 	}
 	
 	/**
+	 * 改变sideBar的显示和隐藏的状态
+	 * @update 2014年10月13日 上午9:53:10
+	 * @param flag
+	 */
+	public void setHideSideBar(boolean flag) {
+		if (sideBar != null && tvIndexDialog != null) {
+			if (flag) {	//需要隐藏
+				sideBar.setVisibility(View.GONE);
+				tvIndexDialog.setVisibility(View.GONE);
+			} else {
+				sideBar.setVisibility(View.VISIBLE);
+				tvIndexDialog.setVisibility(View.VISIBLE);
+			}
+		}
+	}
+	
+	/**
 	 * 初始化数据
 	 * @update 2014年10月11日 下午8:43:34
 	 */
