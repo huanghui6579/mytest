@@ -1,16 +1,20 @@
 package com.example.chat.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * 用户名片（用户详细信息）
  * @author huanghui1
  * @version 1.0.0
  * @update 2014年10月13日 上午10:55:58
  */
-public class UserVcard {
+public class UserVcard implements Parcelable {
+	private int id;
 	/**
-	 * 所属用户的名片，依赖于{@link User}的JID
+	 * 所属用户的名片，依赖于{@link User}的_ID
 	 */
-	private String userId;
+	private int userId;
 	private String nickame;
 	private String firstName;
 	private String middleName;
@@ -29,11 +33,19 @@ public class UserVcard {
 	 */
 	private String iconPath;
 
-	public String getUserId() {
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getUserId() {
 		return userId;
 	}
 
-	public void setUserId(String userId) {
+	public void setUserId(int userId) {
 		this.userId = userId;
 	}
 
@@ -124,5 +136,58 @@ public class UserVcard {
 	public void setIconPath(String iconPath) {
 		this.iconPath = iconPath;
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(id);
+		dest.writeInt(userId);
+		dest.writeString(nickame);
+		dest.writeString(firstName);
+		dest.writeString(middleName);
+		dest.writeString(lastName);
+		dest.writeString(email);
+		dest.writeString(street);
+		dest.writeString(city);
+		dest.writeString(province);
+		dest.writeString(zipCode);
+		dest.writeString(mobile);
+		dest.writeString(iconPath);
+	}
+	
+	public UserVcard() {}
+	
+	public UserVcard(Parcel in) {
+		id = in.readInt();
+		userId = in.readInt();
+		nickame = in.readString();
+		firstName = in.readString();
+		middleName = in.readString();
+		lastName = in.readString();
+		email = in.readString();
+		street = in.readString();
+		city = in.readString();
+		province = in.readString();
+		zipCode = in.readString();
+		mobile = in.readString();
+		iconPath = in.readString();
+	}
+	
+	public static final Parcelable.Creator<UserVcard> CREATOR = new Creator<UserVcard>() {
+		
+		@Override
+		public UserVcard[] newArray(int size) {
+			return new UserVcard[size];
+		}
+		
+		@Override
+		public UserVcard createFromParcel(Parcel source) {
+			return new UserVcard(source);
+		}
+	};
 
 }

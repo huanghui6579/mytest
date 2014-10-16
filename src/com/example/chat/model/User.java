@@ -17,6 +17,7 @@ import android.text.TextUtils;
 public class User implements Parcelable, Comparator<User> {
 	public static final String TAG_OTHER = "#";
 	
+	private int id;
 	private String JID;
 	private String username;
 	private String password;
@@ -27,10 +28,20 @@ public class User implements Parcelable, Comparator<User> {
 	private String status;
 	private String fullPinyin;
 	private String shortPinyin;
+	private UserVcard userVcard;
+	
 	/**
 	 * 名字拼音的首字母，大写的
 	 */
 	private String sortLetter;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 
 	public String getJID() {
 		return JID;
@@ -96,6 +107,14 @@ public class User implements Parcelable, Comparator<User> {
 		this.status = status;
 	}
 	
+	public UserVcard getUserVcard() {
+		return userVcard;
+	}
+
+	public void setUserVcard(UserVcard userVcard) {
+		this.userVcard = userVcard;
+	}
+
 	/**
 	 * 获取名字拼音的首字母大写
 	 * @update 2014年10月11日 下午9:51:07
@@ -154,6 +173,7 @@ public class User implements Parcelable, Comparator<User> {
 
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(id);
 		dest.writeString(JID);
 		dest.writeString(username);
 		dest.writeString(password);
@@ -164,9 +184,11 @@ public class User implements Parcelable, Comparator<User> {
 		dest.writeString(status);
 		dest.writeString(fullPinyin);
 		dest.writeString(shortPinyin);
+		dest.writeParcelable(userVcard, flags);
 	}
 	
 	public User(Parcel in) {
+		id = in.readInt();
 		JID = in.readString();
 		username = in.readString();
 		password = in.readString();
@@ -177,6 +199,7 @@ public class User implements Parcelable, Comparator<User> {
 		status = in.readString();
 		fullPinyin = in.readString();
 		shortPinyin = in.readString();
+		userVcard = in.readParcelable(null);
 	}
 	
 	public User() {

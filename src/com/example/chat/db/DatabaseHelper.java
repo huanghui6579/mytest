@@ -23,9 +23,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL("CREATE TABLE " + Provider.UserColumns.TABLE_NAME + " ("
-				+ Provider.UserColumns.JID + " TEXT PRIMARY KEY, "
-				+ Provider.UserColumns.USERNAME + " TEXT, "
-				+ Provider.UserColumns.PASSWORD + " TEXT, "
+				+ Provider.UserColumns._ID + " INTEGER PRIMARY KEY, "
+				+ Provider.UserColumns.JID + " TEXT UNIQUE NOT NULL, "
+				+ Provider.UserColumns.USERNAME + " TEXT UNIQUE NOT NULL, "
+				+ Provider.UserColumns.PASSWORD + " TEXT NOT NULL, "
 				+ Provider.UserColumns.NICKNAME + " TEXT, "
 				+ Provider.UserColumns.EMAIL + " TEXT, "
 				+ Provider.UserColumns.PHONE + " TEXT, "
@@ -35,7 +36,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.UserColumns.SORTLETTER + " TEXT);");
 		
 		db.execSQL("CREATE TABLE " + Provider.UserVcardColumns.TABLE_NAME + " ("
-				+ Provider.UserVcardColumns.USERID + " TEXT PRIMARY KEY, "
+				+ Provider.UserVcardColumns._ID + " INTEGER PRIMARY KEY,"
+				+ Provider.UserVcardColumns.USERID + " INTEGER UNIQUE NOT NULL, "
 				+ Provider.UserVcardColumns.NICKNAME + " TEXT, "
 				+ Provider.UserVcardColumns.FIRSTNAME + " TEXT, "
 				+ Provider.UserVcardColumns.MIDDLENAME + " TEXT, "

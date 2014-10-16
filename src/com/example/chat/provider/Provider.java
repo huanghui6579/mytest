@@ -1,5 +1,8 @@
 package com.example.chat.provider;
 
+import android.net.Uri;
+import android.provider.BaseColumns;
+
 /**
  *
  * @author huanghui1
@@ -7,14 +10,20 @@ package com.example.chat.provider;
  * @update 2014年10月13日 上午11:31:24
  */
 public class Provider {
+	public static final String AUTHORITY = "com.example.chat.provider.user";
+	public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.example.chat";
+	public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.example.chat";
 
 	/**
 	 * 用户的表字段
 	 * @author huanghui1
 	 * @update 2014年10月13日 上午11:36:35
 	 */
-	public static final class UserColumns {
-		public static final String TABLE_NAME = "t_user";  
+	public static final class UserColumns implements BaseColumns {
+		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/users");
+		public static final Uri CONTENT_SEARCH_URI = Uri.parse("content://" + AUTHORITY + "/users/search");
+		
+		public static final String TABLE_NAME = "t_user";
         public static final String DEFAULT_SORT_ORDER = "JID ASC";  
         
         public static final String JID = "JID";  
@@ -35,19 +44,21 @@ public class Provider {
 	 * @author huanghui1
 	 * @update 2014年10月13日 上午11:39:41
 	 */
-	public static final class UserVcardColumns {
-		public static final String TABLE_NAME = "t_user_vcard";  
-        public static final String DEFAULT_SORT_ORDER = "userId ASC";  
+	public static final class UserVcardColumns implements BaseColumns {
+		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/userVcards");
+		
+		public static final String TABLE_NAME = "t_user_vcard";
+        public static final String DEFAULT_SORT_ORDER = "userId ASC";
         
-        public static final String USERID = "userId";  
-        public static final String NICKNAME = "nickname";  
-        public static final String FIRSTNAME = "firstName";  
-        public static final String MIDDLENAME = "middleName";  
-        public static final String LASTNAME = "lastName";  
-        public static final String EMAIL = "email";  
-        public static final String STREET = "street";  
-        public static final String CITY = "city";  
-        public static final String PROVINCE = "province";  
+        public static final String USERID = "userId";
+        public static final String NICKNAME = "nickname";
+        public static final String FIRSTNAME = "firstName";
+        public static final String MIDDLENAME = "middleName";
+        public static final String LASTNAME = "lastName";
+        public static final String EMAIL = "email";
+        public static final String STREET = "street";
+        public static final String CITY = "city";
+        public static final String PROVINCE = "province";
         public static final String ZIPCODE = "zipCode";
         public static final String MOBILE = "mobile";
         public static final String ICONPATH = "iconPath";
