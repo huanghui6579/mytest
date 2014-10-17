@@ -4,8 +4,12 @@ package com.example.chat.activity;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -20,6 +24,10 @@ import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment;
 import com.example.chat.fragment.MineFragment;
 import com.example.chat.fragment.SessionListFragment;
+import com.example.chat.model.Personal;
+import com.example.chat.model.SystemConfig;
+import com.example.chat.service.CoreService;
+import com.example.chat.service.CoreService.MainBinder;
 import com.example.chat.util.Log;
 import com.example.chat.view.IconPagerAdapter;
 import com.example.chat.view.IconTabPageIndicator;
@@ -44,6 +52,23 @@ public class MainActivity extends BaseActivity {
     	R.drawable.main_fun_mine_selector
     };
 
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			// TODO Auto-generated method stub
+			MainBinder mBinder = (MainBinder) service;
+			CoreService coreService = mBinder.getService();
+			coreService.initCurrentUser(initCurrentUserInfo());
+		}
+	};
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -78,6 +103,8 @@ public class MainActivity extends BaseActivity {
 	    }
 	    return super.onMenuOpened(featureId, menu);
 	}
+	
+	
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -115,6 +142,18 @@ public class MainActivity extends BaseActivity {
             e.printStackTrace();  
         }  
     }
+    
+    /**
+     * 初始化当前用户的信息
+     */
+    private Personal initCurrentUserInfo() {
+    	Personal temp = application.getCurrentUser();
+    	SystemConfig sc = application.getSystemConfig();
+    	temp.setUsername(sc.getAccount());
+    	temp.setPassword(sc.getPassword());
+    	temp.setResource(sc.getResource());
+    	return temp;
+    }
 
 	@Override
 	protected int getContentView() {
@@ -133,8 +172,11 @@ public class MainActivity extends BaseActivity {
 		FragmentAdapter adapter = new FragmentAdapter(getSupportFragmentManager());
 		mViewPager.setAdapter(adapter);
 		mPageIndicator.setViewPager(mViewPager);
+		
+		Intent service = new Intent(mContext, CoreService.class);
+		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
 	}
-
+	
 	@Override
 	protected void addListener() {
 		// TODO Auto-generated method stub
@@ -168,6 +210,12 @@ public class MainActivity extends BaseActivity {
 			break;
 		}
 		return super.onKeyDown(keyCode, event);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		unbindService(serviceConnection);
+		super.onDestroy();
 	}
 	
 	class FragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapter {

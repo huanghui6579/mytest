@@ -6,6 +6,7 @@ import org.apache.harmony.javax.security.sasl.SaslException;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
 
 import com.example.chat.R;
 import com.example.chat.model.SystemConfig;
@@ -174,8 +175,8 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			new LoginTask().execute(systemConfig);
 			break;
 		case R.id.tv_regist:	//进入注册界面
-			Intent intent = new Intent(mContext, MainActivity.class);
-//			Intent intent = new Intent(mContext, RegistActivity.class);
+//			Intent intent = new Intent(mContext, MainActivity.class);
+			Intent intent = new Intent(mContext, RegistActivity.class);
 			startActivity(intent);
 			break;
 		default:

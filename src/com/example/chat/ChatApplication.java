@@ -2,6 +2,7 @@ package com.example.chat;
 
 import java.util.LinkedList;
 
+import com.example.chat.model.Personal;
 import com.example.chat.model.SystemConfig;
 import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
@@ -27,6 +28,8 @@ public class ChatApplication extends Application {
 	
 	private SharedPreferences preferences;
 	
+	private static Personal currentUser = null;
+	
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -34,6 +37,7 @@ public class ChatApplication extends Application {
 		
 		preferences = getSharedPreferences(Constants.SETTTING_LOGIN, Context.MODE_PRIVATE);
 		systemConfig = new SystemConfig();
+		currentUser = new Personal();
 		
 		initSystemConfig();
 	}
@@ -76,6 +80,10 @@ public class ChatApplication extends Application {
 	 */
 	public SystemConfig getSystemConfig() {
 		return systemConfig;
+	}
+	
+	public Personal getCurrentUser() {
+		return currentUser;
 	}
 	
 	/**

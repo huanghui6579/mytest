@@ -24,19 +24,45 @@ public class Provider {
 		public static final Uri CONTENT_SEARCH_URI = Uri.parse("content://" + AUTHORITY + "/users/search");
 		
 		public static final String TABLE_NAME = "t_user";
-        public static final String DEFAULT_SORT_ORDER = "JID ASC";  
+        public static final String DEFAULT_SORT_ORDER = "username ASC";
         
-        public static final String JID = "JID";  
-        public static final String USERNAME = "username";  
-        public static final String PASSWORD = "password";  
-        public static final String EMAIL = "email";  
-        public static final String NICKNAME = "nickname";  
-        public static final String PHONE = "phone";  
-        public static final String RESOURCE = "resource";  
-        public static final String STATUS = "status";  
-        public static final String FULLPINYIN = "fullPinyin";  
+        public static final String USERNAME = "username";
+        public static final String EMAIL = "email";
+        public static final String NICKNAME = "nickname";
+        public static final String PHONE = "phone";
+        public static final String RESOURCE = "resource";
+        public static final String STATUS = "status";
+        public static final String MODE = "mode";
+        public static final String FULLPINYIN = "fullPinyin";
         public static final String SHORTPINYIN = "shortPinyin";
         public static final String SORTLETTER = "sortLetter";
+	}
+	
+	/**
+	 * 个人信息的表字段
+	 * @author coolpad
+	 *
+	 */
+	public static final class PersonalColums implements BaseColumns {
+		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/personals");
+		
+		public static final String TABLE_NAME = "t_personal";
+        public static final String DEFAULT_SORT_ORDER = "username ASC";
+        
+        public static final String USERNAME = "username";
+        public static final String PASSWORD = "password";
+        public static final String NICKNAME = "nickname";
+        public static final String REALNAME = "realName";
+        public static final String EMAIL = "email";
+        public static final String PHONE = "phone";
+        public static final String RESOURCE = "resource";
+        public static final String STATUS = "status";
+        public static final String MODE = "mode";
+        public static final String STREET = "street";
+        public static final String CITY = "city";
+        public static final String PROVINCE = "province";
+        public static final String ZIPCODE = "zipCode";
+        public static final String ICONPATH = "iconPath";
 	}
 	
 	/**
@@ -52,9 +78,7 @@ public class Provider {
         
         public static final String USERID = "userId";
         public static final String NICKNAME = "nickname";
-        public static final String FIRSTNAME = "firstName";
-        public static final String MIDDLENAME = "middleName";
-        public static final String LASTNAME = "lastName";
+        public static final String REALNAME = "realName";
         public static final String EMAIL = "email";
         public static final String STREET = "street";
         public static final String CITY = "city";

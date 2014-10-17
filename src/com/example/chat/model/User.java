@@ -17,17 +17,53 @@ import android.text.TextUtils;
 public class User implements Parcelable, Comparator<User> {
 	public static final String TAG_OTHER = "#";
 	
+	/**
+	 * 主键id
+	 */
 	private int id;
+	/**
+	 * 用户的完整openfire标识，格式为xxx@domain，如admin@localhost.com
+	 */
 	private String JID;
+	/**
+	 * 用户的账号，不含有@以及之后的后缀，如admin
+	 */
 	private String username;
-	private String password;
+	/**
+	 * 用户的邮箱
+	 */
 	private String email;
+	/**
+	 * 用户昵称
+	 */
 	private String nickname;
+	/**
+	 * 用户的手机号码
+	 */
 	private String phone;
+	/**
+	 * 用户登录的资源，像QQ一样，用什么设备登录的，如Android、iPhone、web
+	 */
 	private String resource;
+	/**
+	 * 在用户状态的基础上的签名，在线时标记“吃饭中”等动态信息
+	 */
 	private String status;
+	/**
+	 * 用户登录的状态，如隐身、在线、空闲等等
+	 */
+	private String mode;
+	/**
+	 * 昵称的全拼，如张三的全拼:zhangsan
+	 */
 	private String fullPinyin;
+	/**
+	 * 昵称的简拼，如张三的简拼：zs
+	 */
 	private String shortPinyin;
+	/**
+	 * 用户的电子名片
+	 */
 	private UserVcard userVcard;
 	
 	/**
@@ -57,14 +93,6 @@ public class User implements Parcelable, Comparator<User> {
 
 	public void setUsername(String username) {
 		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
 	}
 
 	public String getEmail() {
@@ -106,7 +134,15 @@ public class User implements Parcelable, Comparator<User> {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
+	}
+
 	public UserVcard getUserVcard() {
 		return userVcard;
 	}
@@ -176,12 +212,12 @@ public class User implements Parcelable, Comparator<User> {
 		dest.writeInt(id);
 		dest.writeString(JID);
 		dest.writeString(username);
-		dest.writeString(password);
 		dest.writeString(email);
 		dest.writeString(nickname);
 		dest.writeString(phone);
 		dest.writeString(resource);
 		dest.writeString(status);
+		dest.writeString(mode);
 		dest.writeString(fullPinyin);
 		dest.writeString(shortPinyin);
 		dest.writeParcelable(userVcard, flags);
@@ -191,12 +227,12 @@ public class User implements Parcelable, Comparator<User> {
 		id = in.readInt();
 		JID = in.readString();
 		username = in.readString();
-		password = in.readString();
 		email = in.readString();
 		nickname = in.readString();
 		phone = in.readString();
 		resource = in.readString();
 		status = in.readString();
+		mode = in.readString();
 		fullPinyin = in.readString();
 		shortPinyin = in.readString();
 		userVcard = in.readParcelable(null);

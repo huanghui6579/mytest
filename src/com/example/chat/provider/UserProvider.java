@@ -29,11 +29,15 @@ public class UserProvider extends ContentProvider {
 	
 	private static final int USER_VCARDS = 4;
 	private static final int USER_VCARD_ID = 5;
+	
+	private static final int PERSONALS = 6;
+	private static final int PERSONAL_ID = 7;
 
 	private static final UriMatcher mUriMatcher;
 	
 	private static Map<String, String> mUserProjectionMap = null;
 	private static Map<String, String> mUserVcardProjectionMap = null;
+	private static Map<String, String> mPersonalProjectionMap = null;
 	
 	private DatabaseHelper mDBHelper;
 	
@@ -44,34 +48,49 @@ public class UserProvider extends ContentProvider {
 		mUriMatcher.addURI(Provider.AUTHORITY, "users/search/*", USER_CONDITION);
 		mUriMatcher.addURI(Provider.AUTHORITY, "userVcards", USER_VCARDS);
 		mUriMatcher.addURI(Provider.AUTHORITY, "userVcards/#", USER_VCARD_ID);
+		mUriMatcher.addURI(Provider.AUTHORITY, "personals", PERSONALS);
+		mUriMatcher.addURI(Provider.AUTHORITY, "personals/#", PERSONAL_ID);
 		
 		mUserProjectionMap = new HashMap<String, String>();
 		mUserProjectionMap.put(Provider.UserColumns._ID, Provider.UserColumns._ID);
-		mUserProjectionMap.put(Provider.UserColumns.JID, Provider.UserColumns.JID);
 		mUserProjectionMap.put(Provider.UserColumns.USERNAME, Provider.UserColumns.USERNAME);
-		mUserProjectionMap.put(Provider.UserColumns.PASSWORD, Provider.UserColumns.PASSWORD);
 		mUserProjectionMap.put(Provider.UserColumns.EMAIL, Provider.UserColumns.EMAIL);
 		mUserProjectionMap.put(Provider.UserColumns.NICKNAME, Provider.UserColumns.NICKNAME);
 		mUserProjectionMap.put(Provider.UserColumns.PHONE, Provider.UserColumns.PHONE);
 		mUserProjectionMap.put(Provider.UserColumns.RESOURCE, Provider.UserColumns.RESOURCE);
 		mUserProjectionMap.put(Provider.UserColumns.STATUS, Provider.UserColumns.STATUS);
+		mUserProjectionMap.put(Provider.UserColumns.MODE, Provider.UserColumns.MODE);
 		mUserProjectionMap.put(Provider.UserColumns.FULLPINYIN, Provider.UserColumns.FULLPINYIN);
 		mUserProjectionMap.put(Provider.UserColumns.SHORTPINYIN, Provider.UserColumns.SHORTPINYIN);
 		mUserProjectionMap.put(Provider.UserColumns.SORTLETTER, Provider.UserColumns.SORTLETTER);
 		
 		mUserVcardProjectionMap = new HashMap<String, String>();
-		mUserVcardProjectionMap.put(Provider.UserVcardColumns._ID, Provider.UserVcardColumns._ID);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.USERID, Provider.UserVcardColumns.USERID);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.NICKNAME, Provider.UserVcardColumns.NICKNAME);
-		mUserVcardProjectionMap.put(Provider.UserVcardColumns.FIRSTNAME, Provider.UserVcardColumns.FIRSTNAME);
-		mUserVcardProjectionMap.put(Provider.UserVcardColumns.MIDDLENAME, Provider.UserVcardColumns.MIDDLENAME);
-		mUserVcardProjectionMap.put(Provider.UserVcardColumns.LASTNAME, Provider.UserVcardColumns.LASTNAME);
+		mUserVcardProjectionMap.put(Provider.UserVcardColumns.REALNAME, Provider.UserVcardColumns.REALNAME);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.EMAIL, Provider.UserVcardColumns.EMAIL);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.CITY, Provider.UserVcardColumns.CITY);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.PROVINCE, Provider.UserVcardColumns.PROVINCE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ZIPCODE, Provider.UserVcardColumns.ZIPCODE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.MOBILE, Provider.UserVcardColumns.MOBILE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ICONPATH, Provider.UserVcardColumns.ICONPATH);
+		
+		mPersonalProjectionMap = new HashMap<String, String>();
+		mPersonalProjectionMap.put(Provider.PersonalColums._ID, Provider.PersonalColums._ID);
+		mPersonalProjectionMap.put(Provider.PersonalColums.USERNAME, Provider.PersonalColums.USERNAME);
+		mPersonalProjectionMap.put(Provider.PersonalColums.PASSWORD, Provider.PersonalColums.PASSWORD);
+		mPersonalProjectionMap.put(Provider.PersonalColums.NICKNAME, Provider.PersonalColums.NICKNAME);
+		mPersonalProjectionMap.put(Provider.PersonalColums.REALNAME, Provider.PersonalColums.REALNAME);
+		mPersonalProjectionMap.put(Provider.PersonalColums.EMAIL, Provider.PersonalColums.EMAIL);
+		mPersonalProjectionMap.put(Provider.PersonalColums.PHONE, Provider.PersonalColums.PHONE);
+		mPersonalProjectionMap.put(Provider.PersonalColums.STATUS, Provider.PersonalColums.STATUS);
+		mPersonalProjectionMap.put(Provider.PersonalColums.MODE, Provider.PersonalColums.MODE);
+		mPersonalProjectionMap.put(Provider.PersonalColums.RESOURCE, Provider.PersonalColums.RESOURCE);
+		mPersonalProjectionMap.put(Provider.PersonalColums.STREET, Provider.PersonalColums.STREET);
+		mPersonalProjectionMap.put(Provider.PersonalColums.CITY, Provider.PersonalColums.CITY);
+		mPersonalProjectionMap.put(Provider.PersonalColums.PROVINCE, Provider.PersonalColums.PROVINCE);
+		mPersonalProjectionMap.put(Provider.PersonalColums.ZIPCODE, Provider.PersonalColums.ZIPCODE);
+		mPersonalProjectionMap.put(Provider.PersonalColums.ICONPATH, Provider.PersonalColums.ICONPATH);
 	}
 
 	@Override
@@ -105,6 +124,9 @@ public class UserProvider extends ContentProvider {
 				orderBy = sortOrder;
 			}
 			break;
+		case PERSONAL_ID:	//查询个人信息
+			qb.setTables(Provider.PersonalColums.TABLE_NAME);
+			break;
 		default:
 			break;
 		}
@@ -114,14 +136,13 @@ public class UserProvider extends ContentProvider {
 			break;
 		case USER_ID:
 			qb.setProjectionMap(mUserProjectionMap);
-			qb.appendWhere(Provider.UserColumns._ID + " = " + uri.getLastPathSegment());
+			qb.appendWhere(Provider.UserColumns.USERNAME + " = " + uri.getLastPathSegment());
 			break;
 		case USER_CONDITION:
 			qb.setProjectionMap(mUserProjectionMap);
 			String condition = uri.getLastPathSegment();
 			StringBuilder sb = new StringBuilder();
-			sb.append(Provider.UserColumns.JID).append(" like '").append(condition).append("%' or ")
-				.append(Provider.UserColumns.USERNAME).append(" like '").append(condition).append("%' or ")
+			sb.append(Provider.UserColumns.USERNAME).append(" like '").append(condition).append("%' or ")
 				.append(Provider.UserColumns.EMAIL).append(" like '").append(condition).append("%' or ")
 				.append(Provider.UserColumns.NICKNAME).append(" like '").append(condition).append("%' ");
 			qb.appendWhere(sb.toString());
@@ -133,7 +154,10 @@ public class UserProvider extends ContentProvider {
 			qb.setProjectionMap(mUserVcardProjectionMap);
 			qb.appendWhere(Provider.UserVcardColumns.USERID + " = " + uri.getLastPathSegment());
 			break;
-
+		case PERSONAL_ID:
+			qb.setProjectionMap(mPersonalProjectionMap);
+			qb.appendWhere(Provider.PersonalColums.USERNAME + " = " + uri.getLastPathSegment());
+			break;
 		default:
 			break;
 		}
@@ -174,17 +198,10 @@ public class UserProvider extends ContentProvider {
 			tableName = Provider.UserColumns.TABLE_NAME;
 			nullColumn = Provider.UserColumns.USERNAME;
 			
-			if (!cv.containsKey(Provider.UserColumns.JID)) {
-				cv.put(Provider.UserColumns.JID, "");
-			}
-			
 			if (!cv.containsKey(Provider.UserColumns.USERNAME)) {
 				cv.put(Provider.UserColumns.USERNAME, "");
 			}
 			
-			if (!cv.containsKey(Provider.UserColumns.PASSWORD)) {
-				cv.put(Provider.UserColumns.PASSWORD, "");
-			}
 			break;
 		case USER_VCARDS:
 			tableName = Provider.UserVcardColumns.TABLE_NAME;
@@ -192,6 +209,18 @@ public class UserProvider extends ContentProvider {
 			
 			if (!cv.containsKey(Provider.UserVcardColumns.USERID)) {
 				cv.put(Provider.UserVcardColumns.USERID, "");
+			}
+			break;
+		case PERSONALS:
+			tableName = Provider.PersonalColums.TABLE_NAME;
+			nullColumn = Provider.PersonalColums.USERNAME;
+			
+			if (!cv.containsKey(Provider.PersonalColums.USERNAME)) {
+				cv.put(Provider.PersonalColums.USERNAME, "");
+			}
+			
+			if (!cv.containsKey(Provider.PersonalColums.PASSWORD)) {
+				cv.put(Provider.PersonalColums.PASSWORD, "");
 			}
 			break;
 		default:
@@ -235,6 +264,12 @@ public class UserProvider extends ContentProvider {
 			case USER_VCARD_ID:
 				count = db.delete(Provider.UserVcardColumns.TABLE_NAME, Provider.UserVcardColumns.USERID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
 				break;
+			case PERSONALS:
+				count = db.delete(Provider.PersonalColums.TABLE_NAME, selection, selectionArgs);
+				break;
+			case PERSONAL_ID:
+				count = db.delete(Provider.PersonalColums.TABLE_NAME, Provider.PersonalColums._ID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
+				break;
 			default:
 				break;
 			}
@@ -267,6 +302,12 @@ public class UserProvider extends ContentProvider {
 				break;
 			case USER_VCARD_ID:
 				count = db.update(Provider.UserVcardColumns.TABLE_NAME, values, Provider.UserVcardColumns.USERID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
+				break;
+			case PERSONALS:
+				count = db.update(Provider.PersonalColums.TABLE_NAME, values, selection, selectionArgs);
+				break;
+			case PERSONAL_ID:
+				count = db.update(Provider.PersonalColums.TABLE_NAME, values, Provider.PersonalColums._ID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
 				break;
 			default:
 				break;

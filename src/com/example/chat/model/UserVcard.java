@@ -16,9 +16,10 @@ public class UserVcard implements Parcelable {
 	 */
 	private int userId;
 	private String nickame;
-	private String firstName;
-	private String middleName;
-	private String lastName;
+	/**
+	 * 用户的真实姓名
+	 */
+	private String realName;
 	private String email;
 	/**
 	 * 街道地址
@@ -57,28 +58,12 @@ public class UserVcard implements Parcelable {
 		this.nickame = nickame;
 	}
 
-	public String getFirstName() {
-		return firstName;
+	public String getRealName() {
+		return realName;
 	}
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getMiddleName() {
-		return middleName;
-	}
-
-	public void setMiddleName(String middleName) {
-		this.middleName = middleName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
+	public void setRealName(String realName) {
+		this.realName = realName;
 	}
 
 	public String getEmail() {
@@ -146,10 +131,8 @@ public class UserVcard implements Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(id);
 		dest.writeInt(userId);
-		dest.writeString(nickame);
-		dest.writeString(firstName);
-		dest.writeString(middleName);
-		dest.writeString(lastName);
+		dest.writeString(nickame); 
+		dest.writeString(realName); 
 		dest.writeString(email);
 		dest.writeString(street);
 		dest.writeString(city);
@@ -165,9 +148,7 @@ public class UserVcard implements Parcelable {
 		id = in.readInt();
 		userId = in.readInt();
 		nickame = in.readString();
-		firstName = in.readString();
-		middleName = in.readString();
-		lastName = in.readString();
+		realName = in.readString();
 		email = in.readString();
 		street = in.readString();
 		city = in.readString();

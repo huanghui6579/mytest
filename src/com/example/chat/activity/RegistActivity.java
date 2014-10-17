@@ -6,14 +6,19 @@ import java.util.Map;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.PacketCollector;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.filter.AndFilter;
+import org.jivesoftware.smack.filter.FlexiblePacketTypeFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.filter.PacketIDFilter;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
+import org.jivesoftware.smack.packet.Bind;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Registration;
 
 import android.app.ActionBar;
@@ -280,6 +285,23 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 		try {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.connect();
+			connection.addPacketListener(new PacketListener() {
+				
+				@Override
+				public void processPacket(Packet packet) throws NotConnectedException {
+					if (packet instanceof Bind) {
+						Bind bind = (Bind) packet;
+						bind.getJid();
+					}
+				}
+			}, new AndFilter(new PacketTypeFilter(Bind.class), new FlexiblePacketTypeFilter<IQ>() {
+				
+				@Override
+				protected boolean acceptSpecific(IQ iq) {
+					// TODO Auto-generated method stub
+					return iq.getType().equals(IQ.Type.result);
+				}
+			}));
 			Registration registration = new Registration();
 			registration.setType(IQ.Type.set);
 			registration.setTo(connection.getServiceName());
@@ -305,7 +327,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 				if(!connection.isConnected()) {
 					connection.connect();
 				}
-				connection.login(username, password);
+				connection.login(username, password, systemConfig.getResource());
 				return REGIST_RESULT_SUCCESS;
 			} else {
 				if("conflict".equalsIgnoreCase(result.getError().toString())) {
