@@ -195,7 +195,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		@Override
 		protected void onPreExecute() {
 			if(pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining));
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining), true, false);
 			}
 		}
 
