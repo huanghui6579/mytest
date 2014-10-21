@@ -26,8 +26,7 @@
             android:layout_marginStart="@dimen/list_item_padding"
             android:layout_toRightOf="@id/iv_head_icon"
             android:layout_toEndOf="@id/iv_head_icon"
-            android:layout_alignTop="@id/iv_head_icon"
-            android:layout_alignBottom="@id/iv_head_icon">
+            android:layout_alignTop="@id/iv_head_icon">
             <TextView 
                 android:id="@+id/tv_username"
                 android:layout_width="wrap_content"

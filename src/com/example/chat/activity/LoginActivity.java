@@ -5,11 +5,15 @@ import java.io.IOException;
 import org.apache.harmony.javax.security.sasl.SaslException;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.AlreadyLoggedInException;
+import org.jivesoftware.smack.SmackException.ConnectionException;
+import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Presence;
 
 import com.example.chat.R;
 import com.example.chat.model.SystemConfig;
+import com.example.chat.util.Constants;
+import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 
@@ -190,33 +194,53 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	 * @update 2014年10月7日 上午9:55:00
 	 *
 	 */
-	class LoginTask extends AsyncTask<SystemConfig, Void, Boolean> {
+	class LoginTask extends AsyncTask<SystemConfig, Void, Integer> {
 		
 		@Override
 		protected void onPreExecute() {
-			if(pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining), true, false);
+			if (pDialog == null) {
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining), true, true);
+			} else {
+				pDialog.show();
 			}
 		}
 
 		@Override
-		protected Boolean doInBackground(SystemConfig... params) {
-			return login(params[0]);
-		}
-		
-		@Override
-		protected void onPostExecute(Boolean result) {
-			hideLoadingDialog(pDialog);
-			if(result) {	//登录成功
+		protected Integer doInBackground(SystemConfig... params) {
+			int result = login(params[0]);
+			if (Constants.MSG_SUCCESS == result) {
 				systemConfig.setOnline(true);
 				systemConfig.setFirstLogin(false);
 				application.saveSystemConfig();
+			}
+			return result;
+		}
+		
+		@Override
+		protected void onPostExecute(Integer result) {
+			hideLoadingDialog(pDialog);
+			switch (result) {
+			case Constants.MSG_SUCCESS:	//登录成功
 				Intent intent = new Intent(mContext, MainActivity.class);
 				intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				startActivity(intent);
 				finish();
-			} else {
+				break;
+			case Constants.MSG_REQUEST_ADDRESS_FAILED:	//网络请求的地址不对
+				SystemUtil.makeShortToast(R.string.request_address_failed);
+				break;
+			case Constants.MSG_REQUEST_ALREADY_LOGIN:	//用户已经登录过了
+				SystemUtil.makeShortToast(R.string.request_address_failed);
+				break;
+			case Constants.MSG_NO_RESPONSE:	//服务器没有响应
+				SystemUtil.makeShortToast(R.string.request_no_response);
+				break;
+			case Constants.MSG_FAILED:	//登录失败
 				SystemUtil.makeShortToast(R.string.login_failed);
+				break;
+			default:
+				SystemUtil.makeShortToast(R.string.login_failed);
+				break;
 			}
 		}
 		
@@ -229,28 +253,34 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	 * @param config
 	 * @return
 	 */
-	private boolean login(SystemConfig config) {
+	private int login(SystemConfig config) {
 		String account = config.getAccount();
 		String password = config.getPassword();
+		int code = Constants.MSG_FAILED;	//登录是否成功的标识
 		try {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.connect();
-			connection.login(account, password, config.getResource());
-			return true;
+			connection.login(account, password, Constants.CLIENT_RESOURCE);
+			code = Constants.MSG_SUCCESS;
 		} catch (SaslException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(e.toString());
 		} catch (SmackException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (e instanceof ConnectionException) {	//连接地址不可用
+				code = Constants.MSG_REQUEST_ADDRESS_FAILED;
+			} else if (e instanceof AlreadyLoggedInException) {
+				code = Constants.MSG_REQUEST_ALREADY_LOGIN;	//用户已经登录过了
+			} else if (e instanceof NoResponseException) {
+				code = Constants.MSG_NO_RESPONSE;	//服务器没有响应
+			} else {
+				code = Constants.MSG_FAILED;
+			}
+			Log.e(e.toString());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(e.toString());
 		} catch (XMPPException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(e.toString());
 		}
-		return false;
+		return code;
 	}
 	
 	@Override

@@ -48,7 +48,7 @@ public class XmppConnectionManager {
 	 */
 	public AbstractXMPPConnection init(SystemConfig systemConfig) {
 		SmackConfiguration.DEBUG_ENABLED = true;
-		configuration = new ConnectionConfiguration(systemConfig.getHost(), systemConfig.getPort(), systemConfig.getServerName());
+		configuration = new ConnectionConfiguration(Constants.SERVER_HOST, Constants.SERVER_PORT, Constants.SERVER_NAME);
 		configuration.setSecurityMode(SecurityMode.disabled);
 		
 		//不允许自动连接

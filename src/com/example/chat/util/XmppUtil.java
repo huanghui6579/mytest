@@ -1,10 +1,12 @@
 package com.example.chat.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
@@ -72,6 +74,41 @@ public class XmppUtil {
 	}
 	
 	/**
+	 * 获取用户的好友列表
+	 * @param connection
+	 * @return
+	 */
+	public static List<User> getFriends(AbstractXMPPConnection connection) {
+		List<User> users = null;
+		Roster roster = connection.getRoster();
+		Collection<RosterEntry> entries = roster.getEntries();
+		if (entries != null && entries.size() > 0) {
+			users = new ArrayList<User>();
+			for (RosterEntry entry : entries) {
+				User user = new User();
+				String jid = entry.getUser();
+				String mode = entry.getStatus().name();
+				String name = entry.getName();
+				if (jid.contains("/")) {
+					String[] arr = jid.split("/");
+					String resource = arr[1];
+					user.setResource(resource);
+					user.setJID(arr[0]);
+				} else {
+					user.setJID(jid);
+				}
+				String username = jid.substring(0, jid.indexOf("@"));
+				user.setNickname(name);
+				user.setUsername(username);
+				user.setMode(mode);
+				
+				users.add(user);
+			}
+		}
+		return users;
+	}
+	
+	/**
 	 * 获取用户电子名片
 	 * @update 2014年10月10日 下午8:49:35
 	 * @param connection
@@ -79,16 +116,24 @@ public class XmppUtil {
 	 * @return
 	 */
 	public static VCard getUserVcard(AbstractXMPPConnection connection, String user) {
+		VCard card = null;
 		try {
-			VCard card = new VCard();
+			card = new VCard();
 			card.load(connection, user);
-			return card;
-		} catch (NoResponseException | XMPPErrorException
-				| NotConnectedException e) {
+		} catch (NoResponseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (XMPPErrorException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
 		}
-		return null;
+		return card;
 	}
 	
 	/**

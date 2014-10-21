@@ -7,20 +7,20 @@ package com.example.chat.model;
  *
  */
 public class SystemConfig {
-	private String host;
-	private int port;
-	private String serverName;
+//	private String host;
+//	private int port;
+//	private String serverName;
 	private String account;
 	private String password;
 	private String sessionId;	//会话id
-	/**
-	 * 用户使用的是哪种终端登录，如果Android手机、iPhone、web等等
-	 */
-	private String resource;
+//	/**
+//	 * 用户使用的是哪种终端登录，如果Android手机、iPhone、web等等
+//	 */
+//	private String resource;
 	private boolean isOnline;	//是否连接成功
 	private boolean isFirstLogin;	//是否是首次登录
 
-	public String getHost() {
+	/*public String getHost() {
 		return host;
 	}
 
@@ -42,7 +42,7 @@ public class SystemConfig {
 
 	public void setServerName(String serverName) {
 		this.serverName = serverName;
-	}
+	}*/
 
 	public String getAccount() {
 		return account;
@@ -84,12 +84,12 @@ public class SystemConfig {
 		this.isFirstLogin = isFirstLogin;
 	}
 
-	public String getResource() {
+	/*public String getResource() {
 		return resource;
 	}
 
 	public void setResource(String resource) {
 		this.resource = resource;
-	}
+	}*/
 
 }

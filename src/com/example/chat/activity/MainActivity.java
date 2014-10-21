@@ -4,6 +4,8 @@ package com.example.chat.activity;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import org.jivesoftware.smack.packet.Presence;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +30,7 @@ import com.example.chat.model.Personal;
 import com.example.chat.model.SystemConfig;
 import com.example.chat.service.CoreService;
 import com.example.chat.service.CoreService.MainBinder;
+import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
 import com.example.chat.view.IconPagerAdapter;
 import com.example.chat.view.IconTabPageIndicator;
@@ -151,7 +154,9 @@ public class MainActivity extends BaseActivity {
     	SystemConfig sc = application.getSystemConfig();
     	temp.setUsername(sc.getAccount());
     	temp.setPassword(sc.getPassword());
-    	temp.setResource(sc.getResource());
+    	temp.setStatus(Presence.Type.available.name());
+    	temp.setMode(Presence.Mode.available.name());
+    	temp.setResource(Constants.CLIENT_RESOURCE);
     	return temp;
     }
 
@@ -175,6 +180,10 @@ public class MainActivity extends BaseActivity {
 		
 		Intent service = new Intent(mContext, CoreService.class);
 		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
+		
+		//从网络上更新好友列表的数据
+		service.setFlags(CoreService.FLAG_SYNC_FRENDS);
+		startService(service);
 	}
 	
 	@Override

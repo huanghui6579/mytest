@@ -124,6 +124,7 @@ public class UserProvider extends ContentProvider {
 				orderBy = sortOrder;
 			}
 			break;
+		case PERSONALS:
 		case PERSONAL_ID:	//查询个人信息
 			qb.setTables(Provider.PersonalColums.TABLE_NAME);
 			break;
@@ -153,6 +154,9 @@ public class UserProvider extends ContentProvider {
 		case USER_VCARD_ID:
 			qb.setProjectionMap(mUserVcardProjectionMap);
 			qb.appendWhere(Provider.UserVcardColumns.USERID + " = " + uri.getLastPathSegment());
+			break;
+		case PERSONALS:
+			qb.setProjectionMap(mPersonalProjectionMap);
 			break;
 		case PERSONAL_ID:
 			qb.setProjectionMap(mPersonalProjectionMap);

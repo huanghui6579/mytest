@@ -17,11 +17,15 @@ public class Constants {
 	 */
 //	public static final String SERVER_HOST = "192.168.0.102";
 //	public static final String SERVER_HOST = "172.16.45.16";
-	public static final String SERVER_HOST = "192.168.1.50";
+	public static final String SERVER_HOST = "192.168.1.184";
 //	public static final String SERVER_NAME = "tiger.com";
 //	public static final String SERVER_NAME = "huanghui4.com";
 	public static final String SERVER_NAME = "localhost-pc.com";
 	public static final int SERVER_PORT = 5222;
+	/**
+	 * 用户的登录该系统的客户端类型，如Android、iphone、web等
+	 */
+	public static final String CLIENT_RESOURCE = SystemUtil.getPhoneModel();
 	
 	public static final String SETTTING_LOGIN = "settting_login";
 	public static final String USER_ACCOUNT = "user_account";
@@ -34,15 +38,35 @@ public class Constants {
 	public static final String NAME_SERVER_NAME = "name_server_name";
 	
 	/**
-	 * 【1】显示好友头像，主要在UserInfoActivity中用到
+	 * 【1】成功的结果码
 	 */
-	public static final int MSG_SHOW_USR_ICON = 0x00001;
+	public static final int MSG_SUCCESS = 0x000001;
 	/**
-	 * 【2】服务器连接不可用
+	 * 【2】失败的结果码
 	 */
-	public static final int MSG_CONNECTION_UNAVAILABLE = 0x00002;
+	public static final int MSG_FAILED = 0x000002;
 	/**
-	 * 【3】发送添加好友的请求
+	 * 【3】显示好友头像，主要在UserInfoActivity中用到
 	 */
-	public static final int MSG_SEND_ADD_FRIEND_REQUEST = 0x00003;
+	public static final int MSG_SHOW_USR_ICON = 0x000003;
+	/**
+	 * 【4】服务器连接不可用
+	 */
+	public static final int MSG_CONNECTION_UNAVAILABLE = 0x000004;
+	/**
+	 * 【5】发送添加好友的请求
+	 */
+	public static final int MSG_SEND_ADD_FRIEND_REQUEST = 0x000005;
+	/**
+	 * 【6】网络请求的地址不对
+	 */
+	public static final int MSG_REQUEST_ADDRESS_FAILED = 0x000006;
+	/**
+	 * 【7】用户已经登录过了
+	 */
+	public static final int MSG_REQUEST_ALREADY_LOGIN = 0x000007;
+	/**
+	 * 【8】服务器没有响应
+	 */
+	public static final int MSG_NO_RESPONSE = 0x000008;
 }

@@ -39,6 +39,7 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.model.SystemConfig;
+import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
@@ -228,8 +229,10 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	class RegistTask extends AsyncTask<Void, Void, Integer> {
 		@Override
 		protected void onPreExecute() {
-			if(pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.registing), true, false);
+			if (pDialog == null) {
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.registing), true, true);
+			} else {
+				pDialog.show();
 			}
 		}
 
@@ -327,7 +330,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 				if(!connection.isConnected()) {
 					connection.connect();
 				}
-				connection.login(username, password, systemConfig.getResource());
+				connection.login(username, password, Constants.CLIENT_RESOURCE);
 				return REGIST_RESULT_SUCCESS;
 			} else {
 				if("conflict".equalsIgnoreCase(result.getError().toString())) {

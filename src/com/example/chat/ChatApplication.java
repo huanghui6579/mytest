@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import com.example.chat.model.Personal;
 import com.example.chat.model.SystemConfig;
+import com.example.chat.service.CoreService;
 import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
@@ -11,6 +12,7 @@ import com.example.chat.util.XmppConnectionManager;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
@@ -50,10 +52,10 @@ public class ChatApplication extends Application {
 		systemConfig.setAccount(preferences.getString(Constants.USER_ACCOUNT, null));
 		systemConfig.setPassword(preferences.getString(Constants.USER_PASSWORD, null));
 		systemConfig.setFirstLogin(preferences.getBoolean(Constants.USER_ISFIRST, true));
-		systemConfig.setResource(preferences.getString(Constants.USER_RESOURCE, SystemUtil.getPhoneModel()));
-		systemConfig.setHost(preferences.getString(Constants.NAME_SERVER_HOST, Constants.SERVER_HOST));
-		systemConfig.setPort(preferences.getInt(Constants.NAME_SERVER_PORT, Constants.SERVER_PORT));
-		systemConfig.setServerName(preferences.getString(Constants.NAME_SERVER_NAME, Constants.SERVER_NAME));
+//		systemConfig.setResource(preferences.getString(Constants.USER_RESOURCE, SystemUtil.getPhoneModel()));
+//		systemConfig.setHost(preferences.getString(Constants.NAME_SERVER_HOST, Constants.SERVER_HOST));
+//		systemConfig.setPort(preferences.getInt(Constants.NAME_SERVER_PORT, Constants.SERVER_PORT));
+//		systemConfig.setServerName(preferences.getString(Constants.NAME_SERVER_NAME, Constants.SERVER_NAME));
 	}
 	
 	/**
@@ -66,10 +68,10 @@ public class ChatApplication extends Application {
 		editor.putString(Constants.USER_ACCOUNT, systemConfig.getAccount());
 		editor.putString(Constants.USER_PASSWORD, systemConfig.getPassword());
 		editor.putBoolean(Constants.USER_ISFIRST, systemConfig.isFirstLogin());
-		editor.putString(Constants.USER_RESOURCE, systemConfig.getResource());
-		editor.putString(Constants.NAME_SERVER_HOST, systemConfig.getHost());
-		editor.putString(Constants.NAME_SERVER_NAME, systemConfig.getServerName());
-		editor.putInt(Constants.NAME_SERVER_PORT, systemConfig.getPort());
+//		editor.putString(Constants.USER_RESOURCE, systemConfig.getResource());
+//		editor.putString(Constants.NAME_SERVER_HOST, systemConfig.getHost());
+//		editor.putString(Constants.NAME_SERVER_NAME, systemConfig.getServerName());
+//		editor.putInt(Constants.NAME_SERVER_PORT, systemConfig.getPort());
 		editor.commit();
 	}
 	
@@ -109,6 +111,8 @@ public class ChatApplication extends Application {
 	 */
 	public void exit() {
 		XmppConnectionManager.getInstance().disconnect();
+		Intent intent = new Intent(instance, CoreService.class);
+		stopService(intent);
 		for(Activity activity : activities) {
 			activity.finish();
 		}

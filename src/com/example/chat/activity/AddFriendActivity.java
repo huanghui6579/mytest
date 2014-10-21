@@ -162,8 +162,10 @@ public class AddFriendActivity extends BaseActivity {
 	class SearchTask extends AsyncTask<String, Void, List<User>> {
 		@Override
 		protected void onPreExecute() {
-			if(pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.contact_searching));
+			if (pDialog == null) {
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.contact_searching), true, true);
+			} else {
+				pDialog.show();
 			}
 		}
 

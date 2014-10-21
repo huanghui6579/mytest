@@ -6,7 +6,6 @@ import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -125,6 +124,8 @@ public class UserInfoActivity extends BaseActivity {
 			public void onClick(View v) {
 				if (pDialog == null) {
 					pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading));
+				} else {
+					pDialog.show();
 				}
 				mHandler.post(new Runnable() {
 					

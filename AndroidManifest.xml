@@ -61,6 +61,8 @@
         <provider android:name="com.example.chat.provider.UserProvider"
             android:authorities="com.example.chat.provider.user"
             android:exported="false" />
+        
+        <service android:name="com.example.chat.service.CoreService" />
     </application>
 
 </manifest>

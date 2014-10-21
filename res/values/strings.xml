@@ -30,6 +30,9 @@
     
     <string name="login_failed">登录失败</string>
     <string name="regist_failed">注册失败</string>
+    <string name="request_address_failed">网络请求的地址不对</string>
+    <string name="request_request_already_login">用户已经登录过了</string>
+    <string name="request_no_response">服务器没有响应</string>
     <string name="regist_account_conflict">该用户已存在</string>
     <string name="logining">正在登录，请稍后&#8230;</string>
     <string name="registing">正在注册，请稍后&#8230;</string>
