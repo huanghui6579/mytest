@@ -65,6 +65,7 @@ public class UserProvider extends ContentProvider {
 		mUserProjectionMap.put(Provider.UserColumns.SORTLETTER, Provider.UserColumns.SORTLETTER);
 		
 		mUserVcardProjectionMap = new HashMap<String, String>();
+		mUserVcardProjectionMap.put(Provider.UserVcardColumns._ID, Provider.UserVcardColumns._ID);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.USERID, Provider.UserVcardColumns.USERID);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.NICKNAME, Provider.UserVcardColumns.NICKNAME);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.REALNAME, Provider.UserVcardColumns.REALNAME);
@@ -74,6 +75,7 @@ public class UserProvider extends ContentProvider {
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ZIPCODE, Provider.UserVcardColumns.ZIPCODE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.MOBILE, Provider.UserVcardColumns.MOBILE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ICONPATH, Provider.UserVcardColumns.ICONPATH);
+		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ICONHASH, Provider.UserVcardColumns.ICONHASH);
 		
 		mPersonalProjectionMap = new HashMap<String, String>();
 		mPersonalProjectionMap.put(Provider.PersonalColums._ID, Provider.PersonalColums._ID);
@@ -91,6 +93,7 @@ public class UserProvider extends ContentProvider {
 		mPersonalProjectionMap.put(Provider.PersonalColums.PROVINCE, Provider.PersonalColums.PROVINCE);
 		mPersonalProjectionMap.put(Provider.PersonalColums.ZIPCODE, Provider.PersonalColums.ZIPCODE);
 		mPersonalProjectionMap.put(Provider.PersonalColums.ICONPATH, Provider.PersonalColums.ICONPATH);
+		mPersonalProjectionMap.put(Provider.PersonalColums.ICONHASH, Provider.PersonalColums.ICONHASH);
 	}
 
 	@Override

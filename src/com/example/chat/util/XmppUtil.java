@@ -1,5 +1,6 @@
 package com.example.chat.util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.RosterPacket.ItemStatus;
 import org.jivesoftware.smackx.search.ReportedData;
 import org.jivesoftware.smackx.search.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
@@ -19,8 +21,10 @@ import org.jivesoftware.smackx.xdata.Form;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 
 import com.example.chat.model.User;
+import com.example.chat.model.UserVcard;
 
 /**
  * 
@@ -87,7 +91,8 @@ public class XmppUtil {
 			for (RosterEntry entry : entries) {
 				User user = new User();
 				String jid = entry.getUser();
-				String mode = entry.getStatus().name();
+				ItemStatus status = entry.getStatus();
+				String mode = status == null ? "" : status.name();
 				String name = entry.getName();
 				if (jid.contains("/")) {
 					String[] arr = jid.split("/");
@@ -101,11 +106,73 @@ public class XmppUtil {
 				user.setNickname(name);
 				user.setUsername(username);
 				user.setMode(mode);
-				
+				user.setFullPinyin(user.initFullPinyin());
+				user.setShortPinyin(user.initShortPinyin());
+				user.setSortLetter(user.initSortLetter(user.getShortPinyin()));
 				users.add(user);
 			}
 		}
 		return users;
+	}
+	
+	/**
+	 * 同步好友的头像等基本信息
+	 * @update 2014年10月23日 下午4:38:54
+	 * @param connection
+	 * @param list
+	 * @return
+	 */
+	public static List<User> syncFriendsVcard(AbstractXMPPConnection connection, List<User> list) {
+		if (list != null && list.size() > 0) {
+			for (User user : list) {
+				syncUserVcard(connection, user);
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * 将好友信息与服务器端同步
+	 * @update 2014年10月23日 下午7:17:56
+	 * @param user
+	 * @return
+	 */
+	public static User syncUserVcard(AbstractXMPPConnection connection, User user) {
+		VCard card = getUserVcard(connection, user.getJID());
+		if (card != null) {
+			UserVcard uv = user.getUserVcard();
+			if (uv == null) {
+				uv = new UserVcard();
+				uv.setUserId(user.getId());
+			}
+			uv.setCity(card.getAddressFieldHome("LOCALITY"));
+			uv.setProvince(card.getAddressFieldHome("REGION"));
+			uv.setStreet(card.getAddressFieldHome("STREET"));
+			uv.setEmail(card.getEmailHome());
+			uv.setMobile(card.getPhoneHome("CELL"));
+			uv.setNickame(card.getNickName());
+			uv.setRealName(card.getLastName());
+			uv.setZipCode(card.getAddressFieldHome("PCODE"));
+			String iconHash = uv.getIconHash();
+			if (TextUtils.isEmpty(iconHash) || !iconHash.equals(card.getAvatarHash())) {	//没有头像或者头像已经改变就需要更新头像
+				File icon = SystemUtil.saveFile(card.getAvatar(), SystemUtil.generateIconFile(user.getUsername()));
+				if (icon != null) {
+					uv.setIconPath(icon.getAbsolutePath());
+					iconHash = SystemUtil.getFileHash(icon);
+					uv.setIconHash(iconHash);
+				}
+			}
+			if (TextUtils.isEmpty(user.getEmail())) {
+				user.setEmail(card.getEmailHome());
+			}
+			user.setPhone(uv.getMobile());
+			String resource = SystemUtil.getResourceWithJID(card.getJabberId());
+			if (!TextUtils.isEmpty(resource)) {
+				user.setResource(resource);
+			}
+			user.setUserVcard(uv);
+		}
+		return user;
 	}
 	
 	/**

@@ -33,6 +33,10 @@ public class UserVcard implements Parcelable {
 	 * 头像的本地缓存路径
 	 */
 	private String iconPath;
+	/**
+	 * 头像的hash值，通过本地hash值与服务器的hash对比来判断用不用重新更新头像
+	 */
+	private String iconHash;
 
 	public int getId() {
 		return id;
@@ -122,9 +126,26 @@ public class UserVcard implements Parcelable {
 		this.iconPath = iconPath;
 	}
 
+	public String getIconHash() {
+		return iconHash;
+	}
+
+	public void setIconHash(String iconHash) {
+		this.iconHash = iconHash;
+	}
+
 	@Override
 	public int describeContents() {
 		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return "UserVcard [id=" + id + ", userId=" + userId + ", nickame="
+				+ nickame + ", realName=" + realName + ", email=" + email
+				+ ", street=" + street + ", city=" + city + ", province="
+				+ province + ", zipCode=" + zipCode + ", mobile=" + mobile
+				+ ", iconPath=" + iconPath + ", iconHash=" + iconHash + "]";
 	}
 
 	@Override
@@ -140,6 +161,7 @@ public class UserVcard implements Parcelable {
 		dest.writeString(zipCode);
 		dest.writeString(mobile);
 		dest.writeString(iconPath);
+		dest.writeString(iconHash);
 	}
 	
 	public UserVcard() {}
@@ -156,6 +178,7 @@ public class UserVcard implements Parcelable {
 		zipCode = in.readString();
 		mobile = in.readString();
 		iconPath = in.readString();
+		iconHash = in.readString();
 	}
 	
 	public static final Parcelable.Creator<UserVcard> CREATOR = new Creator<UserVcard>() {

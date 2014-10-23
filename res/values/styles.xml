@@ -119,5 +119,5 @@
         <item name="android:cacheColorHint">@android:color/transparent</item>
         <item name="android:listSelector">@drawable/common_list_selector</item>
     </style>
-
+    
 </resources>

@@ -3,12 +3,18 @@ package com.example.chat.activity;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.jivesoftware.smack.packet.Presence;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -20,6 +26,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.view.Window;
 
 import com.example.chat.R;
@@ -47,6 +54,8 @@ public class MainActivity extends BaseActivity {
 	
 	private IconTabPageIndicator mPageIndicator;
 	private ViewPager mViewPager;
+	
+	private static Map<Integer, String> tagMap = null;
 	
 	private static String[] CONTENT = null;
     private static int[] ICONS = new int[] {
@@ -77,6 +86,7 @@ public class MainActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		
 		forceShowActionBarOverflowMenu();
+		
 	}
 	
 	@Override
@@ -182,7 +192,8 @@ public class MainActivity extends BaseActivity {
 		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
 		
 		//从网络上更新好友列表的数据
-		service.setFlags(CoreService.FLAG_SYNC_FRENDS);
+//		Intent intent = new Intent(mContext, CoreService.class);
+		service.putExtra(CoreService.FLAG_SYNC, CoreService.FLAG_SYNC_FRENDS);
 		startService(service);
 	}
 	
@@ -194,6 +205,16 @@ public class MainActivity extends BaseActivity {
 			@Override
 			public void onPageSelected(int position) {
 				// TODO Auto-generated method stub
+				switch (position) {
+				case FRAGMENT_CONTACT:	//好友列表
+					String tag = tagMap.get(position);
+					ContactFragment contactFragment = (ContactFragment) getSupportFragmentManager().findFragmentByTag(tag);
+					contactFragment.onload();
+					break;
+
+				default:
+					break;
+				}
 			}
 			
 			@Override
@@ -205,6 +226,14 @@ public class MainActivity extends BaseActivity {
 			@Override
 			public void onPageScrollStateChanged(int state) {
 				// TODO Auto-generated method stub
+			}
+		});
+		mPageIndicator.setOnTabReselectedListener(new IconTabPageIndicator.OnTabReselectedListener() {
+			
+			@Override
+			public void onTabReselected(int position) {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 	}
@@ -225,6 +254,15 @@ public class MainActivity extends BaseActivity {
 	protected void onDestroy() {
 		unbindService(serviceConnection);
 		super.onDestroy();
+	}
+	
+	/**
+	 * 延迟加载的回调
+	 * @author huanghui1
+	 * @update 2014年10月23日 下午8:54:56
+	 */
+	public interface LazyLoadCallBack {
+		public void onload();
 	}
 	
 	class FragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapter {
@@ -252,7 +290,18 @@ public class MainActivity extends BaseActivity {
 			}
 			return fragment;
 		}
-
+		
+		@Override
+		public Object instantiateItem(ViewGroup container, int position) {
+			if (tagMap == null) {
+				tagMap = new HashMap<>();
+			}
+			// TODO Auto-generated method stub
+			Fragment fragment = (Fragment) super.instantiateItem(container, position);
+			tagMap.put(position, fragment.getTag());
+			return fragment;
+		}
+		
 		@Override
 		public int getCount() {
 			// TODO Auto-generated method stub
@@ -276,4 +325,5 @@ public class MainActivity extends BaseActivity {
 	public void onBackPressed() {
 		moveTaskToBack(true);
 	}
+	
 }

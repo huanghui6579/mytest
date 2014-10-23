@@ -63,6 +63,7 @@ public class Provider {
         public static final String PROVINCE = "province";
         public static final String ZIPCODE = "zipCode";
         public static final String ICONPATH = "iconPath";
+        public static final String ICONHASH = "iconHash";
 	}
 	
 	/**
@@ -86,5 +87,6 @@ public class Provider {
         public static final String ZIPCODE = "zipCode";
         public static final String MOBILE = "mobile";
         public static final String ICONPATH = "iconPath";
+        public static final String ICONHASH = "iconHash";
 	}
 }

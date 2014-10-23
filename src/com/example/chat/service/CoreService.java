@@ -2,12 +2,15 @@ package com.example.chat.service;
 
 import java.util.List;
 
+import org.jivesoftware.smack.AbstractXMPPConnection;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 
+import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
@@ -20,6 +23,7 @@ import com.example.chat.util.XmppUtil;
  *
  */
 public class CoreService extends Service {
+	public static final String FLAG_SYNC = "flag_sync";
 	/**
 	 * 同步更新所有好友到本地数据库的标识
 	 */
@@ -52,14 +56,18 @@ public class CoreService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		switch (flags) {
-		case FLAG_SYNC_FRENDS:	//从服务器上同步所有的好友列表到本地
-			mHandler.post(new SyncFriendsTask());
-			break;
+		if (intent != null) {
+			int flag = intent.getIntExtra(FLAG_SYNC, 0);
+			switch (flag) {
+			case FLAG_SYNC_FRENDS:	//从服务器上同步所有的好友列表到本地
+				mHandler.post(new SyncFriendsTask());
+				break;
 
-		default:
-			break;
+			default:
+				break;
+			}
 		}
+		
 		return Service.START_REDELIVER_INTENT;
 	}
 	
@@ -72,10 +80,20 @@ public class CoreService extends Service {
 
 		@Override
 		public void run() {
+			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			//1、先从服务器上获取所有的好友列表
-			List<User> users = XmppUtil.getFriends(XmppConnectionManager.getInstance().getConnection());
+			List<User> users = XmppUtil.getFriends(connection);
 			//2、更新本地数据库
 			userManager.updateFriends(users);
+			
+			Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_LIST);
+			sendBroadcast(intent);
+			
+			//3、更新好友的头像等基本信息
+			users = XmppUtil.syncFriendsVcard(connection, users);
+			userManager.updateFriends(users);
+			intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
+			sendBroadcast(intent);
 		}
 		
 	}

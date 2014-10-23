@@ -14,7 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "example_chat.db";
-	private static final int DB_VERSION = 1;
+	private static final int DB_VERSION = 2;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -46,7 +46,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.UserVcardColumns.STREET + " TEXT, "
 				+ Provider.UserVcardColumns.CITY + " TEXT, "
 				+ Provider.UserVcardColumns.ZIPCODE + " TEXT, "
-				+ Provider.UserVcardColumns.ICONPATH + " TEXT);");
+				+ Provider.UserVcardColumns.ICONPATH + " TEXT, "
+				+ Provider.UserVcardColumns.ICONHASH + " TEXT);");
 		
 		db.execSQL("CREATE TABLE " + Provider.PersonalColums.TABLE_NAME + " ("
 				+ Provider.PersonalColums._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -63,7 +64,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.PersonalColums.STREET + " TEXT, "
 				+ Provider.PersonalColums.CITY + " TEXT, "
 				+ Provider.PersonalColums.ZIPCODE + " TEXT, "
-				+ Provider.PersonalColums.ICONPATH + " TEXT);");
+				+ Provider.PersonalColums.ICONPATH + " TEXT, "
+				+ Provider.PersonalColums.ICONHASH + " TEXT);");
 	}
 
 	@Override

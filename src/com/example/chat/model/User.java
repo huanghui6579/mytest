@@ -1,6 +1,9 @@
 package com.example.chat.model;
 
 import java.util.Comparator;
+import java.util.Locale;
+
+import com.example.chat.util.Constants;
 
 import opensource.jpinyin.PinyinFormat;
 import opensource.jpinyin.PinyinHelper;
@@ -179,29 +182,77 @@ public class User implements Parcelable, Comparator<User> {
 		}
 		return nickname;
 	}
-
+	
+	public void setFullPinyin(String fullPinyin) {
+		this.fullPinyin = fullPinyin;
+	}
+	
 	public String getFullPinyin() {
-		if(TextUtils.isEmpty(fullPinyin)) {
-			if(!TextUtils.isEmpty(nickname)) {
-				fullPinyin = PinyinHelper.getShortPinyin(nickname);
-			} else {
-				fullPinyin = username;
-			}
-		}
 		return fullPinyin;
 	}
 
+	public void setShortPinyin(String shortPinyin) {
+		this.shortPinyin = shortPinyin;
+	}
+	
 	public String getShortPinyin() {
-		if(TextUtils.isEmpty(shortPinyin)) {
-			if(!TextUtils.isEmpty(nickname)) {
-				shortPinyin = PinyinHelper.convertToPinyinString(nickname, "", PinyinFormat.WITHOUT_TONE);
-			} else {
-				shortPinyin = username;
-			}
-		}
 		return shortPinyin;
 	}
-
+	
+	/**
+	 * 获取用户昵称的全拼
+	 * @update 2014年10月23日 下午2:27:24
+	 * @return
+	 */
+	public String initFullPinyin() {
+		String fp = null;
+		if(!TextUtils.isEmpty(nickname)) {
+			fp = PinyinHelper.getShortPinyin(nickname);
+		} else {
+			fp = username;
+		}
+		return fp;
+	}
+	
+	/**
+	 * 获取用户昵称的简拼
+	 * @update 2014年10月23日 下午2:28:06
+	 * @return
+	 */
+	public String initShortPinyin() {
+		String sp = null;
+		if(!TextUtils.isEmpty(nickname)) {
+			sp = PinyinHelper.convertToPinyinString(nickname, "", PinyinFormat.WITHOUT_TONE);
+		} else {
+			sp = username;
+		}
+		return sp;
+	}
+	
+	/**
+	 * 根据用户昵称的简拼获取瘦子排序的索引
+	 * @update 2014年10月23日 下午2:29:51
+	 * @param shortPinyin
+	 * @return
+	 */
+	public String initSortLetter(String shortPinyin) {
+		String sl = String.valueOf(shortPinyin.toUpperCase(Locale.getDefault()).charAt(0));
+		if (!sl.matches("[A-Z]")) {
+			sl = User.TAG_OTHER;
+		}
+		return sl;
+	}
+	
+	/**
+	 * 获取用户的JID，格式为xxx@domain
+	 * @update 2014年10月23日 下午2:33:43
+	 * @param username
+	 * @return
+	 */
+	public String initJID(String username) {
+		return username + "@" + Constants.SERVER_NAME;
+	}
+	
 	@Override
 	public int describeContents() {
 		return 0;
@@ -238,6 +289,16 @@ public class User implements Parcelable, Comparator<User> {
 		userVcard = in.readParcelable(null);
 	}
 	
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", JID=" + JID + ", username=" + username
+				+ ", email=" + email + ", nickname=" + nickname + ", phone="
+				+ phone + ", resource=" + resource + ", status=" + status
+				+ ", mode=" + mode + ", fullPinyin=" + fullPinyin
+				+ ", shortPinyin=" + shortPinyin + ", userVcard=" + userVcard
+				+ ", sortLetter=" + sortLetter + "]";
+	}
+
 	public User() {
 	}
 

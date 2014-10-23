@@ -21,6 +21,8 @@
     <string name="username">用户名：%1$s</string>
     <string name="nickname">昵称：%1$s</string>
     
+    <string name="sdcard_not_available">SD卡不可用！</string>
+    
     <!-- MainActivity的主菜单 -->
     <string name="action_exit">退出</string>
     <string name="action_search">搜索</string>

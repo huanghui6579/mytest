@@ -71,6 +71,10 @@ public class Personal {
 	 * 个人的头像本地存储路径
 	 */
 	private String iconPath;
+	/**
+	 * 头像的hash值，通过本地hash值与服务器的hash对比来判断用不用重新更新头像
+	 */
+	private String iconHash;
 
 	public int getId() {
 		return id;
@@ -192,6 +196,14 @@ public class Personal {
 		this.iconPath = iconPath;
 	}
 	
+	public String getIconHash() {
+		return iconHash;
+	}
+
+	public void setIconHash(String iconHash) {
+		this.iconHash = iconHash;
+	}
+
 	/**
 	 * 获得用户的jid
 	 * @return
