@@ -212,6 +212,17 @@ public class Personal {
 		return username + "@" + Constants.SERVER_NAME;
 	}
 	
+	@Override
+	public String toString() {
+		return "Personal [id=" + id + ", username=" + username + ", password="
+				+ password + ", nickname=" + nickname + ", realName="
+				+ realName + ", email=" + email + ", phone=" + phone
+				+ ", resource=" + resource + ", status=" + status + ", mode="
+				+ mode + ", street=" + street + ", city=" + city
+				+ ", province=" + province + ", zipCode=" + zipCode
+				+ ", iconPath=" + iconPath + ", iconHash=" + iconHash + "]";
+	}
+
 	public String getFullJID() {
 		if (TextUtils.isEmpty(resource)) {
 			return getJID();

@@ -23,6 +23,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 
+import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 
@@ -150,11 +151,12 @@ public class XmppUtil {
 			uv.setStreet(card.getAddressFieldHome("STREET"));
 			uv.setEmail(card.getEmailHome());
 			uv.setMobile(card.getPhoneHome("CELL"));
-			uv.setNickame(card.getNickName());
+			uv.setNickname(card.getNickName());
 			uv.setRealName(card.getLastName());
 			uv.setZipCode(card.getAddressFieldHome("PCODE"));
 			String iconHash = uv.getIconHash();
-			if (TextUtils.isEmpty(iconHash) || !iconHash.equals(card.getAvatarHash())) {	//没有头像或者头像已经改变就需要更新头像
+			boolean isIconExists = SystemUtil.isFileExists(uv.getIconPath());
+			if (!isIconExists || TextUtils.isEmpty(iconHash) || !iconHash.equals(card.getAvatarHash())) {	//没有头像或者头像已经改变就需要更新头像
 				File icon = SystemUtil.saveFile(card.getAvatar(), SystemUtil.generateIconFile(user.getUsername()));
 				if (icon != null) {
 					uv.setIconPath(icon.getAbsolutePath());
@@ -250,5 +252,36 @@ public class XmppUtil {
 		Presence presence = new Presence(Presence.Type.subscribe);
 		presence.setTo(toUser);
 		connection.sendPacket(presence);
+	}
+	
+	/**
+	 * 从服务器上同步个人信息
+	 * @update 2014年10月24日 下午5:59:33
+	 * @param personal
+	 * @return
+	 */
+	public static Personal syncPersonalInfo(AbstractXMPPConnection connection, Personal personal) {
+		VCard card = getUserVcard(connection, personal.getJID());
+		if (card != null) {
+			personal.setCity(card.getAddressFieldHome("LOCALITY"));
+			personal.setProvince(card.getAddressFieldHome("REGION"));
+			personal.setStreet(card.getAddressFieldHome("STREET"));
+			personal.setEmail(card.getEmailHome());
+			personal.setPhone(card.getPhoneHome("CELL"));
+			personal.setNickname(card.getNickName());
+			personal.setRealName(card.getLastName());
+			personal.setZipCode(card.getAddressFieldHome("PCODE"));
+			String iconHash = personal.getIconHash();
+			boolean isIconExists = SystemUtil.isFileExists(personal.getIconPath());
+			if (!isIconExists || TextUtils.isEmpty(iconHash) || !iconHash.equals(card.getAvatarHash())) {	//没有头像或者头像已经改变就需要更新头像
+				File icon = SystemUtil.saveFile(card.getAvatar(), SystemUtil.generateIconFile(personal.getUsername()));
+				if (icon != null) {
+					personal.setIconPath(icon.getAbsolutePath());
+					iconHash = SystemUtil.getFileHash(icon);
+					personal.setIconHash(iconHash);
+				}
+			}
+		}
+		return personal;
 	}
 }

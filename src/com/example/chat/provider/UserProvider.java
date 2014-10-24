@@ -72,6 +72,7 @@ public class UserProvider extends ContentProvider {
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.EMAIL, Provider.UserVcardColumns.EMAIL);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.CITY, Provider.UserVcardColumns.CITY);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.PROVINCE, Provider.UserVcardColumns.PROVINCE);
+		mUserVcardProjectionMap.put(Provider.UserVcardColumns.STREET, Provider.UserVcardColumns.STREET);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ZIPCODE, Provider.UserVcardColumns.ZIPCODE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.MOBILE, Provider.UserVcardColumns.MOBILE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ICONPATH, Provider.UserVcardColumns.ICONPATH);

@@ -173,9 +173,6 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 				return;
 			}
 			
-			systemConfig.setAccount(etAccount.getText().toString());
-			systemConfig.setPassword(etPassword.getText().toString());
-			
 			new LoginTask().execute(systemConfig);
 			break;
 		case R.id.tv_regist:	//进入注册界面
@@ -207,6 +204,8 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 
 		@Override
 		protected Integer doInBackground(SystemConfig... params) {
+			systemConfig.setAccount(etAccount.getText().toString());
+			systemConfig.setPassword(etPassword.getText().toString());
 			int result = login(params[0]);
 			if (Constants.MSG_SUCCESS == result) {
 				systemConfig.setOnline(true);
@@ -254,8 +253,8 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	 * @return
 	 */
 	private int login(SystemConfig config) {
-		String account = config.getAccount();
-		String password = config.getPassword();
+		String account = etAccount.getText().toString();
+		String password = etPassword.getText().toString();
 		int code = Constants.MSG_FAILED;	//登录是否成功的标识
 		try {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();

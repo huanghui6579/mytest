@@ -73,7 +73,7 @@ public class User implements Parcelable, Comparator<User> {
 	 * 名字拼音的首字母，大写的
 	 */
 	private String sortLetter;
-
+	
 	public int getId() {
 		return id;
 	}
@@ -99,7 +99,15 @@ public class User implements Parcelable, Comparator<User> {
 	}
 
 	public String getEmail() {
-		return email;
+		if (TextUtils.isEmpty(email)) {
+			if (userVcard != null) {
+				return userVcard.getEmail();
+			} else {
+				return null;
+			}
+		} else {
+			return email;
+		}
 	}
 
 	public void setEmail(String email) {
@@ -107,7 +115,16 @@ public class User implements Parcelable, Comparator<User> {
 	}
 
 	public String getNickname() {
-		return nickname;
+		if (userVcard != null) {
+			String nik = userVcard.getNickname();
+			if (!TextUtils.isEmpty(nik)) {
+				return nik;
+			} else {
+				return nickname;
+			}
+		} else {
+			return nickname;
+		}
 	}
 
 	public void setNickname(String nickname) {
@@ -177,10 +194,17 @@ public class User implements Parcelable, Comparator<User> {
 	 * @return
 	 */
 	public String getName() {
-		if (TextUtils.isEmpty(nickname)) {
-			return username;
+		String name = username;
+		if (!TextUtils.isEmpty(nickname)) {
+			name = nickname;
+		} else if (userVcard != null) {
+			if (!TextUtils.isEmpty(userVcard.getNickname())) {
+				name = userVcard.getNickname();
+			} else {
+				name = username;
+			}
 		}
-		return nickname;
+		return name;
 	}
 	
 	public void setFullPinyin(String fullPinyin) {
@@ -265,8 +289,8 @@ public class User implements Parcelable, Comparator<User> {
 		dest.writeString(username);
 		dest.writeString(email);
 		dest.writeString(nickname);
-		dest.writeString(phone);
-		dest.writeString(resource);
+//		dest.writeString(phone);
+//		dest.writeString(resource);
 		dest.writeString(status);
 		dest.writeString(mode);
 		dest.writeString(fullPinyin);
@@ -280,13 +304,13 @@ public class User implements Parcelable, Comparator<User> {
 		username = in.readString();
 		email = in.readString();
 		nickname = in.readString();
-		phone = in.readString();
-		resource = in.readString();
+//		phone = in.readString();
+//		resource = in.readString();
 		status = in.readString();
 		mode = in.readString();
 		fullPinyin = in.readString();
 		shortPinyin = in.readString();
-		userVcard = in.readParcelable(null);
+		userVcard = in.readParcelable(UserVcard.class.getClassLoader());
 	}
 	
 	@Override

@@ -9,7 +9,6 @@ import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -27,7 +26,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.chat.ChatApplication;
 import com.example.chat.R;
+import com.example.chat.activity.UserInfoActivity.LoadVcardTask;
+import com.example.chat.manage.UserManager;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
@@ -41,16 +43,19 @@ import com.example.chat.util.XmppUtil;
  * @update 2014年10月9日 下午9:11:37
  */
 public class AddFriendActivity extends BaseActivity {
-	public static final String ARG_USER = "arg_user";
 	
 	private EditText etUsername;
 	private Button btnSearch;
 	private ListView lvResult;
 	private TextView emptyView;
 	
-	private List<User> users;
+	private List<User> users = new ArrayList<>();
 	private FriendResultAdapter adapter;
 	private ProgressDialog pDialog;
+	
+	private UserManager userManager = UserManager.getInstance();
+	
+	private int userType = UserInfoActivity.TYPE_STRANGER;
 	
 	private Handler mHandler = new Handler() {
 
@@ -108,9 +113,12 @@ public class AddFriendActivity extends BaseActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
+				ViewHolder holder = (ViewHolder) view.getTag();
 				User user = users.get(position);
 				Intent intent = new Intent(mContext, UserInfoActivity.class);
-				intent.putExtra(ARG_USER, user);
+				intent.putExtra(UserInfoActivity.ARG_USER, user);
+				intent.putExtra(UserInfoActivity.ARG_OPTION, UserInfoActivity.OPTION_SEARCH);
+				intent.putExtra(UserInfoActivity.ARG_USER_TYPE, holder.typtTag);
 				startActivity(intent);
 			}
 		});
@@ -171,23 +179,27 @@ public class AddFriendActivity extends BaseActivity {
 
 		@Override
 		protected List<User> doInBackground(String... params) {
-			return XmppUtil.searchUser(XmppConnectionManager.getInstance().getConnection(), params[0]);
+			List<User> list = XmppUtil.searchUser(XmppConnectionManager.getInstance().getConnection(), params[0]);
+			if (list != null && list.size() > 0) {
+				users.clear();
+				users.addAll(list);
+				return list;
+			} else {
+				return null;
+			}
 		}
 		
 		@Override
 		protected void onPostExecute(List<User> result) {
 			if(adapter == null) {
-				users = new ArrayList<>();
 				adapter = new FriendResultAdapter(users, mContext);
 				lvResult.setAdapter(adapter);
 				lvResult.setEmptyView(emptyView);
+			} else {
+				adapter.notifyDataSetChanged();
 			}
 			hideLoadingDialog(pDialog);
-			users.clear();
-			if(result != null && result.size() > 0) {
-				users.addAll(result);
-			}
-			adapter.notifyDataSetChanged();
+			
 		}
 		
 	}
@@ -221,27 +233,68 @@ public class AddFriendActivity extends BaseActivity {
 			}
 
 			final User user = list.get(position);
-			holder.tvUsername.setText(user.getUsername());
+			String username = user.getUsername();
+			holder.tvUsername.setText(username);
 			holder.tvNickname.setText(user.getNickname());
+			
+			//是否是自己
+			boolean isSelf = ChatApplication.getInstance().isSelf(username);
+			if (isSelf) {
+				userType = UserInfoActivity.TYPE_SELF;
+			} else {
+				boolean isFriend = userManager.isLocalFriend(username);
+				if (isFriend) {//是本地好友
+					userType = UserInfoActivity.TYPE_FRIEND;
+				} else {//本地没有该人的信息，则从网上加载
+					userType = UserInfoActivity.TYPE_STRANGER;
+				}
+			}
+			holder.typtTag = userType;
+			final String jid = user.getJID();
+			switch (userType) {
+			case UserInfoActivity.TYPE_STRANGER:	//陌生人
+				holder.btnAdd.setText(R.string.add);
+				break;
+			case UserInfoActivity.TYPE_SELF:
+			case UserInfoActivity.TYPE_FRIEND:
+				holder.btnAdd.setText(R.string.show);
+				break;
+			default:
+				break;
+			}
 			holder.btnAdd.setOnClickListener(new View.OnClickListener() {
 				
 				@Override
 				public void onClick(View v) {
-					mHandler.post(new Runnable() {
-						
-						@Override
-						public void run() {
-							Message msg = mHandler.obtainMessage();
-							try {
-								XmppUtil.addFriend(XmppConnectionManager.getInstance().getConnection(), user.getJID());
-								msg.what = Constants.MSG_SEND_ADD_FRIEND_REQUEST;
-							} catch (NotConnectedException e) {
-								e.printStackTrace();
-								msg.what = Constants.MSG_CONNECTION_UNAVAILABLE;
+					switch (userType) {
+					case UserInfoActivity.TYPE_STRANGER:	//陌生人
+						mHandler.post(new Runnable() {
+							
+							@Override
+							public void run() {
+								Message msg = mHandler.obtainMessage();
+								try {
+									XmppUtil.addFriend(XmppConnectionManager.getInstance().getConnection(), jid);
+									msg.what = Constants.MSG_SEND_ADD_FRIEND_REQUEST;
+								} catch (NotConnectedException e) {
+									e.printStackTrace();
+									msg.what = Constants.MSG_CONNECTION_UNAVAILABLE;
+								}
+								mHandler.sendMessage(msg);
 							}
-							mHandler.sendMessage(msg);
-						}
-					});
+						});
+						break;
+					case UserInfoActivity.TYPE_SELF:
+					case UserInfoActivity.TYPE_FRIEND:
+						Intent intent = new Intent(mContext, UserInfoActivity.class);
+						intent.putExtra(UserInfoActivity.ARG_USER, user);
+						intent.putExtra(UserInfoActivity.ARG_OPTION, UserInfoActivity.OPTION_SEARCH);
+						intent.putExtra(UserInfoActivity.ARG_USER_TYPE, userType);
+						startActivity(intent);
+						break;
+					default:
+						break;
+					}
 				}
 			});
 			return convertView;
@@ -258,6 +311,7 @@ public class AddFriendActivity extends BaseActivity {
 		TextView tvUsername;
 		TextView tvNickname;
 		Button btnAdd;
+		int typtTag = UserInfoActivity.TYPE_STRANGER;
 	}
 
 }

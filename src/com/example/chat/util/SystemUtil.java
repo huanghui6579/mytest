@@ -11,6 +11,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Environment;
@@ -177,6 +179,23 @@ public class SystemUtil {
 			}
 		}
 		return file;
+	}
+	
+	/**
+	 * 根据文件的全路径判断文件是否存在
+	 * @update 2014年10月24日 上午9:00:51
+	 * @param filePath
+	 * @return
+	 */
+	public static boolean isFileExists(String filePath) {
+		boolean flag = false;
+		if (TextUtils.isEmpty(filePath)) {
+			flag = false;
+		} else {
+			File file = new File(filePath);
+			flag = file.exists();
+		}
+		return flag;
 	}
 	
 	/**
@@ -354,13 +373,27 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 获取头像默认的存放路径
+	 * 根据当前用户获取root目录
+	 * @update 2014年10月24日 下午8:12:44
+	 * @return
+	 */
+	public static File getDefaultRoot() {
+		String currentUser = ChatApplication.getInstance().getCurrentUser().getUsername();
+		File root = new File(Environment.getExternalStorageDirectory(), "ChatApp" + File.separator + currentUser);
+		if (!root.exists()) {
+			root.mkdirs();
+		}
+		return root;
+	}
+	
+	/**
+	 * 获取头像默认的存放路径，格式为/mnt/sdcard/ChatApp/currentuser/head_icon/
 	 * @update 2014年10月23日 下午6:09:27
 	 * @param username
 	 * @return
 	 */
-	public static String getDefaultIconPath(String username) {
-		File dir = new File(Environment.getExternalStorageDirectory(), username + File.separator + "head_icon");
+	public static String getDefaultIconPath() {
+		File dir = new File(getDefaultRoot(), "head_icon");
 		if (!dir.exists()) {
 			dir.mkdirs();
 		}
@@ -374,7 +407,7 @@ public class SystemUtil {
 	 * @return
 	 */
 	public static File generateIconFile(String username) {
-		return new File(getDefaultIconPath(username), "icon_" + username + ".jpg");
+		return new File(getDefaultIconPath(), "icon_" + username + ".jpg");
 	}
 	
 	/**
@@ -393,4 +426,23 @@ public class SystemUtil {
 			return null;
 		}
 	}
+	
+	/**
+	 * 从SD卡加载图片  
+	 * @update 2014年10月24日 下午3:24:51
+	 * @param imagePath
+	 * @return
+	 */
+    public static Bitmap getImageFromLocal(String imagePath){
+    	if (TextUtils.isEmpty(imagePath)) {
+			return null;
+		}
+        File file = new File(imagePath);  
+        if(file.exists()){  
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);  
+            return bitmap;  
+        }  
+        return null;  
+    }
+	
 }

@@ -15,7 +15,7 @@ public class UserVcard implements Parcelable {
 	 * 所属用户的名片，依赖于{@link User}的_ID
 	 */
 	private int userId;
-	private String nickame;
+	private String nickname;
 	/**
 	 * 用户的真实姓名
 	 */
@@ -54,12 +54,12 @@ public class UserVcard implements Parcelable {
 		this.userId = userId;
 	}
 
-	public String getNickame() {
-		return nickame;
+	public String getNickname() {
+		return nickname;
 	}
 
-	public void setNickame(String nickame) {
-		this.nickame = nickame;
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
 	}
 
 	public String getRealName() {
@@ -141,8 +141,8 @@ public class UserVcard implements Parcelable {
 
 	@Override
 	public String toString() {
-		return "UserVcard [id=" + id + ", userId=" + userId + ", nickame="
-				+ nickame + ", realName=" + realName + ", email=" + email
+		return "UserVcard [id=" + id + ", userId=" + userId + ", nickname="
+				+ nickname + ", realName=" + realName + ", email=" + email
 				+ ", street=" + street + ", city=" + city + ", province="
 				+ province + ", zipCode=" + zipCode + ", mobile=" + mobile
 				+ ", iconPath=" + iconPath + ", iconHash=" + iconHash + "]";
@@ -152,14 +152,14 @@ public class UserVcard implements Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(id);
 		dest.writeInt(userId);
-		dest.writeString(nickame); 
-		dest.writeString(realName); 
-		dest.writeString(email);
-		dest.writeString(street);
-		dest.writeString(city);
-		dest.writeString(province);
-		dest.writeString(zipCode);
-		dest.writeString(mobile);
+		dest.writeString(nickname); 
+//		dest.writeString(realName); 
+//		dest.writeString(email);
+//		dest.writeString(street);
+//		dest.writeString(city);
+//		dest.writeString(province);
+//		dest.writeString(zipCode);
+//		dest.writeString(mobile);
 		dest.writeString(iconPath);
 		dest.writeString(iconHash);
 	}
@@ -169,14 +169,14 @@ public class UserVcard implements Parcelable {
 	public UserVcard(Parcel in) {
 		id = in.readInt();
 		userId = in.readInt();
-		nickame = in.readString();
-		realName = in.readString();
-		email = in.readString();
-		street = in.readString();
-		city = in.readString();
-		province = in.readString();
-		zipCode = in.readString();
-		mobile = in.readString();
+		nickname = in.readString();
+//		realName = in.readString();
+//		email = in.readString();
+//		street = in.readString();
+//		city = in.readString();
+//		province = in.readString();
+//		zipCode = in.readString();
+//		mobile = in.readString();
 		iconPath = in.readString();
 		iconHash = in.readString();
 	}

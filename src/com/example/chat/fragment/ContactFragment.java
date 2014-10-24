@@ -7,11 +7,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -20,12 +22,20 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.activity.CommonAdapter;
+import com.example.chat.activity.UserInfoActivity;
 import com.example.chat.activity.MainActivity.LazyLoadCallBack;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.User;
+import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
+import com.example.chat.util.SystemUtil;
 import com.example.chat.view.SideBar;
 import com.example.chat.view.SideBar.OnTouchingLetterChangedListener;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 
 /**
  * 好友列表界面
@@ -109,6 +119,20 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 				
 			}
 		});
+		
+		lvContact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				// TODO Auto-generated method stub
+				User target = users.get(position);
+				Intent intent = new Intent(mContext, UserInfoActivity.class);
+				intent.putExtra(UserInfoActivity.ARG_USER, target);
+				intent.putExtra(UserInfoActivity.ARG_OPTION, UserInfoActivity.OPTION_LOAD);
+				startActivity(intent);
+			}
+		});
 		return view;
 	}
 	
@@ -152,6 +176,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		loadDataReceiver = new LoadDataBroadcastReceiver();
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_LIST);
+		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
 		mContext.registerReceiver(loadDataReceiver, filter);
 		
 		//初始化数据
@@ -199,6 +224,18 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	 * @update 2014年10月11日 下午10:10:14
 	 */
 	class ContactAdapter extends CommonAdapter<User> implements SectionIndexer {
+		private ImageLoader imageLoader = ImageLoader.getInstance();
+		
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
+				.showImageOnLoading(R.drawable.contact_head_icon_default)
+				.showImageForEmptyUri(R.drawable.contact_head_icon_default)
+				.showImageOnFail(R.drawable.contact_head_icon_default)
+				.cacheInMemory(true)
+				.cacheOnDisk(false)
+				.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+				.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+				.displayer(new FadeInBitmapDisplayer(200))
+				.build();
 
 		public ContactAdapter(List<User> list, Context context) {
 			super(list, context);
@@ -222,7 +259,19 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 			}
 
 			final User user = list.get(position);
+			final UserVcard userVcard = user.getUserVcard();
 			holder.tvName.setText(user.getName());
+			
+			if (userVcard != null) {
+				String iconPath = userVcard.getIconPath();
+				if (SystemUtil.isFileExists(iconPath)) {
+					imageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivIcon, options);
+				} else {
+					imageLoader.displayImage(Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.contact_head_icon_default)), holder.ivIcon, options);
+				}
+			} else {
+				imageLoader.displayImage(Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.contact_head_icon_default)), holder.ivIcon, options);
+			}
 			
 			//根据position获取分类的首字母的Char ascii值
 			int section = getSectionForPosition(position);
