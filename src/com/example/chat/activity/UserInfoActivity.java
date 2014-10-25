@@ -6,6 +6,7 @@ import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -262,6 +263,8 @@ public class UserInfoActivity extends BaseActivity {
 					break;
 				case TYPE_FRIEND:	//是本地好友，则发送消息
 					SystemUtil.makeShortToast("发送消息");
+					Intent intent = new Intent(mContext, ChatActivity.class);
+					startActivity(intent);
 					break;
 				case TYPE_SELF:	//自己
 					SystemUtil.makeShortToast("编辑个人信息");

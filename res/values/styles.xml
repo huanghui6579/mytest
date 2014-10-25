@@ -15,6 +15,7 @@
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
         <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
     </style>
@@ -96,7 +97,7 @@
 		<item name="android:layout_width">@dimen/common_button_width</item>
 		<item name="android:layout_height">@dimen/common_button_height</item>
 		<item name="android:gravity">center</item>
-		<item name="android:background">@drawable/common_button_selector</item>
+		<item name="android:background">@drawable/common_button_green_selector</item>
 		<item name="android:textColor">@android:color/white</item>
     </style>
     
@@ -118,6 +119,21 @@
         <item name="android:layout_height">match_parent</item>
         <item name="android:cacheColorHint">@android:color/transparent</item>
         <item name="android:listSelector">@drawable/common_list_selector</item>
+    </style>
+    
+    <!-- 公共的分割线样式 -->
+    <style name="CommonDividerStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/divider_color</item>
+    </style>
+    
+    <style name="CustomCirclePageIndicator">
+        <item name="fillColor">#FF888888</item>
+        <item name="strokeColor">#FF000000</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="radius">10dp</item>
+        <item name="centered">true</item>
     </style>
     
 </resources>

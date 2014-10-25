@@ -63,6 +63,36 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 如果输入法在窗口上已经显示，则隐藏，反之则显示
+	 * @update 2014年10月25日 下午4:47:02
+	 */
+	public static void toogleSoftInput() {
+		InputMethodManager imm = (InputMethodManager) ChatApplication.getInstance().getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+	}
+	
+	/**
+	 * 显示输入法
+	 * @update 2014年10月25日 下午4:47:46
+	 * @param view
+	 */
+	public static void showSoftInput(View view) {
+		InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.showSoftInput(view,InputMethodManager.SHOW_FORCED);
+	}
+	
+	/**
+	 * 获取输入法打开的状态
+	 * @update 2014年10月25日 下午4:49:06
+	 * @return
+	 */
+	public static boolean isSoftInputActive() {
+		InputMethodManager imm = (InputMethodManager) ChatApplication.getInstance().getSystemService(Context.INPUT_METHOD_SERVICE);
+		boolean isOpen=imm.isActive();//isOpen若返回true，则表示输入法打开
+		return isOpen;
+	}
+	
+	/**
 	 * 显示短时间的toast
 	 * @author Administrator
 	 * @update 2014年10月7日 上午9:49:18

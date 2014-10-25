@@ -16,4 +16,8 @@
     
     <color name="index_text_color">#454545</color>
     <color name="index_text_bg_color">#E0E0E0</color>
+    
+    <color name="contact_chat_list_bg">#EBEBEB</color>
+    
+    <color name="contact_chat_make_voioce_btn_pressed">#45999999</color>
 </resources>

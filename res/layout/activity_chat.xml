@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    
+    <ListView 
+        android:id="@+id/lv_msgs"
+        style="@style/CommonListViewStyle"
+        android:layout_weight="1"
+        android:background="@color/contact_chat_list_bg"/>
+    
+    <RelativeLayout 
+        android:id="@+id/layout_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/chat_edit_panel_padding"
+        android:background="@drawable/chat_bottom_panel_background">
+        <TextView 
+            android:id="@+id/btn_voice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/chat_voice_mode_selector"/>
+        
+        <TextView 
+            android:id="@+id/btn_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/chat_attach_selector"/>
+        
+        <FrameLayout 
+            android:id="@+id/layout_content_center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/btn_send"
+            android:layout_toStartOf="@id/btn_send"
+            android:layout_toRightOf="@id/btn_voice"
+            android:layout_toEndOf="@id/btn_voice"
+            android:layout_marginLeft="@dimen/chat_edit_panel_padding"
+            android:layout_marginRight="@dimen/chat_edit_panel_padding"
+            android:layout_centerVertical="true">
+            <!-- 文本输入框 -->
+            <RelativeLayout 
+	            android:id="@+id/layout_edit"
+	            android:layout_width="match_parent"
+	            android:layout_height="wrap_content"
+	            android:padding="@dimen/chat_edit_panel_padding"
+	            android:layout_gravity="center_vertical"
+	            android:background="@drawable/abc_textfield_searchview_holo_light">
+	            
+	            <TextView 
+		            android:id="@+id/btn_facial"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:layout_alignParentRight="true"
+		            android:layout_alignParentEnd="true"
+		            android:layout_centerVertical="true"
+		            android:clickable="true"
+		            android:background="@drawable/chat_facial_selector"/>
+	            
+		        <EditText 
+		            android:id="@+id/et_content"
+		            android:layout_width="match_parent"
+		            android:layout_height="wrap_content"
+		            android:maxLines="3"
+		            android:layout_centerVertical="true"
+		            android:gravity="center_vertical"
+		            android:layout_alignParentLeft="true"
+		            android:layout_alignParentStart="true"
+		            android:layout_toLeftOf="@id/btn_facial"
+		            android:layout_toStartOf="@id/btn_facial"
+		            android:background="@null"
+		            android:hint="@string/chat_msg_edit_hint"/>
+	        </RelativeLayout>
+	        
+            <!-- 语音输入框 -->
+            <TextView 
+                android:id="@+id/btn_make_voice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/chat_btn_make_voice_start"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/chat_btn_make_voice_selector"
+                android:paddingTop="@dimen/chat_voice_btn_padding"
+                android:paddingBottom="@dimen/chat_voice_btn_padding"
+                android:clickable="true"
+                android:gravity="center"
+                android:visibility="gone"/>
+        </FrameLayout>
+        
+    </RelativeLayout>
+    
+    <FrameLayout 
+        android:id="@+id/layout_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1.1"
+        android:background="@android:color/white"
+        android:visibility="gone">
+        <LinearLayout
+            android:id="@+id/layout_facial"
+		    android:orientation="vertical"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:layout_gravity="center">
+		
+		    <android.support.v4.view.ViewPager
+		        android:id="@+id/view_pager"
+		        android:layout_width="match_parent"
+		        android:layout_height="0dp"
+		        android:layout_weight="1"
+		        />
+		    <com.example.chat.view.CirclePageIndicator
+		        android:id="@+id/indicator"
+		        android:padding="10dip"
+		        android:layout_height="wrap_content"
+		        android:layout_width="match_parent"
+		        />
+		</LinearLayout>
+		<GridView 
+		    android:id="@+id/gv_pannel"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:layout_gravity="center"
+		    android:listSelector="@drawable/common_list_selector"
+		    android:cacheColorHint="@android:color/transparent"
+		    android:numColumns="4"/>
+    </FrameLayout>
+</LinearLayout>
