@@ -1,11 +1,16 @@
 package com.example.chat;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
+import com.example.chat.model.Emoji;
+import com.example.chat.model.EmojiType;
 import com.example.chat.model.Personal;
 import com.example.chat.model.SystemConfig;
 import com.example.chat.service.CoreService;
 import com.example.chat.util.Constants;
+import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -38,6 +43,23 @@ public class ChatApplication extends Application {
 	
 	private static Personal currentUser = null;
 	
+	/**
+	 * 经典表情集合
+	 */
+	private static List<Emoji> mEmojis = null;
+	/**
+	 * 表情类型集合
+	 */
+	private static List<EmojiType> mEmojiTypes = null;
+	public static int emojiTypeCount = 0;
+	
+	public static int emojiPageCount = 0;
+	
+	/**
+	 * 每页显示的表情数量，不含删除按钮
+	 */
+	private static final int PAGE_SIZE = 20;
+	
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -50,8 +72,124 @@ public class ChatApplication extends Application {
 		initSystemConfig();
 		
 		initImageLoaderConfig();
+
+		initEmojiType();
+		
+		initEmoji();
+		
 	}
 	
+	/**
+	 * 初始化表情
+	 * @update 2014年10月27日 上午11:20:53
+	 */
+	private void initEmoji() {
+		if (mEmojis == null) {
+			mEmojis = new ArrayList<>();
+		} else {
+			mEmojis.clear();
+		}
+		List<String> list = SystemUtil.getEmojiFromFile("emoji");
+		//表情格式为“f_static_000,[微笑]”
+		if (list != null && list.size() > 0) {
+			for (String str : list) {
+				String[] arr = str.split(",");
+				String faceName = arr[0];
+				String description = arr[1];
+				int resId = SystemUtil.getRespurceIdByName(faceName);
+				if (resId > 0) {
+					Emoji emoji = new Emoji();
+					emoji.setResId(resId);
+					emoji.setFaceName(faceName);
+					emoji.setDescription(description);
+					
+					mEmojis.add(emoji);
+				}
+			}
+		}
+		int emojiSize = mEmojis.size();
+		if (emojiSize > 0) {
+			//向上取整：Math.ceil(1.4)=2.0 
+			emojiPageCount = (int) Math.ceil(emojiSize / 20 + 0.1);
+		}
+	}
+	
+	/**
+	 * 初始化表情的类型
+	 * @update 2014年10月27日 下午7:59:06
+	 */
+	private void initEmojiType() {
+		if (mEmojiTypes == null) {
+			mEmojiTypes = new ArrayList<>();
+		} else {
+			mEmojiTypes.clear();
+		}
+		//assets文件内容格式：emotionstore_emoji_icon,经典表情,1,最后一个字段是表情的操作类型，分为“显示表情”、“管理本地表情”、“添加表情”
+		List<String> list = SystemUtil.getEmojiFromFile("emojiType");
+		if (list != null && list.size() > 0) {
+			for (String str : list) {
+				String[] arr = str.split(",");
+				String fileName = arr[0];
+				String description = arr[1];
+				int optType = Integer.parseInt(arr[2]);
+				int resId = SystemUtil.getRespurceIdByName(fileName);
+				if (resId > 0) {
+					EmojiType emojiType = new EmojiType();
+					emojiType.setResId(resId);
+					emojiType.setFileName(fileName);
+					emojiType.setDescription(description);
+					emojiType.setOptType(optType);
+					mEmojiTypes.add(emojiType);
+				}
+			}
+			emojiTypeCount = mEmojiTypes.size();
+		}
+	}
+	
+	/**
+	 * 获得所有的表情集合
+	 * @update 2014年10月27日 下午3:02:25
+	 * @return
+	 */
+	public static List<Emoji> getEmojis() {
+		return mEmojis;
+	}
+	
+	public static List<EmojiType> geEmojiTypes() {
+		return mEmojiTypes;
+	}
+	
+	/**
+	 * 根据当前页面的索引获得当前页面的所有表情
+	 * @update 2014年10月27日 下午3:03:10
+	 * @param position
+	 * @return
+	 */
+	public static List<Emoji> getCurrentPageEmojis(int position) {
+		int startIndex = position * PAGE_SIZE;
+		int endIndex = startIndex + PAGE_SIZE;
+		int emojiSize = mEmojis.size();
+		if (endIndex > emojiSize) {
+			endIndex = emojiSize;
+		}
+		List<Emoji> subList = new ArrayList<>();
+		subList.addAll(mEmojis.subList(startIndex, endIndex));
+		if (subList.size() < PAGE_SIZE) {	//最后一页不足20个时，就补充空的占位置
+			for (int i = subList.size(); i < PAGE_SIZE; i++) {
+				Emoji emoji = new Emoji();
+				emoji.setResTpe(Emoji.TYPE_EMPTY);
+				subList.add(emoji);
+			}
+		}
+		if (subList.size() == PAGE_SIZE) {
+			Emoji emoji = new Emoji();
+			emoji.setResId(R.drawable.chat_emoji_del_selector);
+			emoji.setResTpe(Emoji.TYPE_DEL);
+			subList.add(emoji);
+		}
+		return subList;
+	}
+
 	/**
 	 * 配置图片加载的工具
 	 * @update 2014年10月24日 上午11:08:16

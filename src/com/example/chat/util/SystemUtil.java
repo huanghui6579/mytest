@@ -1,14 +1,19 @@
 package com.example.chat.util;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,12 +21,16 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Environment;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.style.ImageSpan;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.model.Emoji;
 
 /**
  * 系统常用的工具方法
@@ -473,6 +482,73 @@ public class SystemUtil {
             return bitmap;  
         }  
         return null;  
+    }
+    
+    /**
+     * 获取assets的内容
+     * @update 2014年10月27日 上午11:27:27
+     * @return
+     */
+    public static List<String> getEmojiFromFile(String filename) {
+    	List<String> list = null;
+    	BufferedReader br = null;
+    	try {
+    		InputStream is = ChatApplication.getInstance().getResources().getAssets().open(filename);
+    		list = new ArrayList<>();
+    		br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+    		String line = null;
+    		while((line = br.readLine()) != null) {
+    			list.add(line);
+    		}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				br = null;
+			}
+		}
+    	return list;
+    }
+    
+    /**
+     * 根据文件名获取文件的资源id
+     * @update 2014年10月27日 上午11:31:25
+     * @param fileName
+     * @return
+     */
+    public static int getRespurceIdByName(String fileName) {
+    	Context context = ChatApplication.getInstance();
+    	int resID = context.getResources().getIdentifier(fileName,
+				"drawable", context.getPackageName());
+    	return resID;
+    }
+    
+    /**
+     * 添加表情到editext输入框
+     * @update 2014年10月27日 下午4:51:25
+     * @param emoji
+     * @return
+     */
+    public static SpannableStringBuilder addEmojiString(Emoji emoji) {
+    	SpannableStringBuilder sb = new SpannableStringBuilder();
+    	int resId = emoji.getResId();
+    	String description = emoji.getDescription();
+    	
+    	Context context = ChatApplication.getInstance();
+    	
+    	sb.append(description);
+    	Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resId);
+    	bitmap = Bitmap.createScaledBitmap(bitmap, 35, 35, true);
+    	ImageSpan imageSpan = new ImageSpan(context, bitmap);
+    	
+    	sb.setSpan(imageSpan, 0, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    	return sb;
     }
 	
 }

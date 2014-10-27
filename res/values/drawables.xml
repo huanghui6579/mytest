@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <drawable name="chat_emoji_tab_pressed">#56888888</drawable>
+    
+    <drawable name="list_divider_drawable">@color/divider_color</drawable>
+</resources>

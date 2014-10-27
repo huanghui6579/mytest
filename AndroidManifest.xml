@@ -61,6 +61,10 @@
             android:name="com.example.chat.activity.ChatActivity"
             android:label="@string/activity_lable_chat"
             android:configChanges="orientation|screenSize"/>
+        <activity
+            android:name="com.example.chat.activity.ChatActivity1"
+            android:label="@string/activity_lable_chat"
+            android:configChanges="orientation|screenSize"/>
         
         <provider android:name="com.example.chat.provider.UserProvider"
             android:authorities="com.example.chat.provider.user"

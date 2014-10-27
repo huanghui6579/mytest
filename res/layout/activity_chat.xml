@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res/com.example.chat">
     
     <ListView 
         android:id="@+id/lv_msgs"
@@ -103,8 +103,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1.1"
-        android:background="@android:color/white"
-        android:visibility="gone">
+        android:background="#68FDFDFD"
+        android:visibility="visible">
         <LinearLayout
             android:id="@+id/layout_facial"
 		    android:orientation="vertical"
@@ -123,6 +123,8 @@
 		        android:padding="10dip"
 		        android:layout_height="wrap_content"
 		        android:layout_width="match_parent"
+		        app:fillColor="@color/contact_chat_emoji_indicator_fill"
+		        app:pageColor="@color/contact_chat_emoji_indicator_pager"
 		        />
 		</LinearLayout>
 		<GridView 
@@ -132,6 +134,7 @@
 		    android:layout_gravity="center"
 		    android:listSelector="@drawable/common_list_selector"
 		    android:cacheColorHint="@android:color/transparent"
-		    android:numColumns="4"/>
+		    android:numColumns="4"
+		    android:visibility="gone"/>
     </FrameLayout>
 </LinearLayout>

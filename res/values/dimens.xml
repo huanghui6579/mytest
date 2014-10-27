@@ -25,6 +25,9 @@
     <dimen name="contact_text_index_padding_top">5dp</dimen>
     <dimen name="contact_text_index_padding_bottom">5dp</dimen>
     
+    <dimen name="chat_edit_panel_padding">8dp</dimen>
+    <dimen name="chat_voice_btn_padding">8dp</dimen>
+    
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>
     <dimen name="login_font_button">18sp</dimen>
@@ -42,8 +45,4 @@
     <dimen name="contact_text_dialog">32sp</dimen>
     <dimen name="contact_text_index">14sp</dimen>
     
-    <dimen name="chat_edit_panel_padding">8dp</dimen>
-    <dimen name="chat_voice_btn_padding">8dp</dimen>
-    
-
 </resources>
