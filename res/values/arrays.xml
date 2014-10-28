@@ -6,6 +6,15 @@
         <item>我</item>
     </string-array>
     
+    <string-array name="att_item_name">
+        <item>图片</item>
+        <item>音频</item>
+        <item>视频</item>
+        <item>位置</item>
+        <item>名片</item>
+        <item>文件</item>
+    </string-array>
+    
     <string-array name="data">
         <item>阿妹</item>
         <item>阿郎</item>

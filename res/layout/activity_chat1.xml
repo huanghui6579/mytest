@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res/com.example.chat">
+    android:orientation="vertical">
     
     <ListView 
         android:id="@+id/lv_msgs"
@@ -34,6 +34,8 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
+            android:textColor="@android:color/white"
+            android:padding="@dimen/chat_send_btn_padding"
             android:background="@drawable/chat_attach_selector"/>
         
         <FrameLayout 
@@ -75,8 +77,8 @@
 		            android:gravity="center_vertical"
 		            android:layout_alignParentLeft="true"
 		            android:layout_alignParentStart="true"
-		            android:layout_toLeftOf="@id/btn_facial"
-		            android:layout_toStartOf="@id/btn_facial"
+		            android:layout_toLeftOf="@id/btn_emoji"
+		            android:layout_toStartOf="@id/btn_emoji"
 		            android:background="@null"
 		            android:hint="@string/chat_msg_edit_hint"/>
 	        </RelativeLayout>
@@ -103,7 +105,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="#68FDFDFD"
+        android:background="@color/contact_chat_bottom_layout"
         android:visibility="gone">
         <!-- 表情 -->
         <LinearLayout
@@ -111,7 +113,8 @@
 		    android:orientation="vertical"
 		    android:layout_width="match_parent"
 		    android:layout_height="match_parent"
-		    android:layout_gravity="center">
+		    android:layout_gravity="center"
+		    android:visibility="gone">
 		
 		    <!-- 这个布局决定了标签在上面还是在下面显示 -->
 		    <FrameLayout
@@ -140,8 +143,13 @@
 		    android:layout_width="match_parent"
 		    android:layout_height="match_parent"
 		    android:layout_gravity="center"
-		    android:listSelector="@drawable/common_list_selector"
+		    android:listSelector="@android:color/transparent"
 		    android:cacheColorHint="@android:color/transparent"
+		    android:horizontalSpacing="10dp"
+    		android:verticalSpacing="10dp"
+    		android:paddingTop="20dp"
+    		android:paddingRight="10dp"
+    		android:paddingLeft="10dp"
 		    android:numColumns="4"
 		    android:visibility="gone"/>
     </FrameLayout>

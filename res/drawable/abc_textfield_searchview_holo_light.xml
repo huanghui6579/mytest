@@ -21,6 +21,8 @@
         android:drawable="@drawable/abc_textfield_search_selected_holo_light" />
     <item android:state_selected="true"
         android:drawable="@drawable/abc_textfield_search_selected_holo_light" />
+    <item android:state_activated="true"
+        android:drawable="@drawable/abc_textfield_search_selected_holo_light" />
     <item android:drawable="@drawable/abc_textfield_search_default_holo_light" />
 </selector>
 

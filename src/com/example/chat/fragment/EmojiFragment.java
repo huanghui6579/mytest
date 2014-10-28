@@ -173,11 +173,11 @@ public class EmojiFragment extends BaseFragment implements OnItemClickListener{
 				holder.ivEmoji.setImageResource(resId);
 				break;
 			case Emoji.TYPE_DEL:	//删除类型
-//				convertView.setBackgroundDrawable(null);
+				convertView.setBackgroundDrawable(null);
 				holder.ivEmoji.setImageResource(resId);
 				break;
 			case Emoji.TYPE_EMPTY:	//空的类型
-//				convertView.setBackgroundDrawable(null);
+				convertView.setBackgroundDrawable(null);
 				holder.ivEmoji.setImageDrawable(null);
 				break;
 			default:

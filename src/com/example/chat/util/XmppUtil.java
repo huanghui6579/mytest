@@ -6,11 +6,16 @@ import java.util.Collection;
 import java.util.List;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.RosterPacket.ItemStatus;
 import org.jivesoftware.smackx.search.ReportedData;
@@ -213,6 +218,16 @@ public class XmppUtil {
 	 * @return
 	 */
 	public static Bitmap getUserIcon(AbstractXMPPConnection connection, String user) {
+		ChatManager chatManager = ChatManager.getInstanceFor(connection);
+		chatManager.createChat("", new MessageListener() {
+			
+			@Override
+			public void processMessage(Chat chat, Message message) {
+//				Message.Type.fromString("dsd");
+				// TODO Auto-generated method stub
+//				message.
+			}
+		});
 		Bitmap icon = null;
 		VCard card = getUserVcard(connection, user);
 		if(card != null) {

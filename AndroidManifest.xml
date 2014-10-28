@@ -64,7 +64,8 @@
         <activity
             android:name="com.example.chat.activity.ChatActivity1"
             android:label="@string/activity_lable_chat"
-            android:configChanges="orientation|screenSize"/>
+            android:configChanges="orientation|screenSize"
+            android:windowSoftInputMode="stateUnchanged|adjustResize"/>
         
         <provider android:name="com.example.chat.provider.UserProvider"
             android:authorities="com.example.chat.provider.user"

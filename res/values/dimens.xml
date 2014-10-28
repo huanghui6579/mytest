@@ -27,6 +27,7 @@
     
     <dimen name="chat_edit_panel_padding">8dp</dimen>
     <dimen name="chat_voice_btn_padding">8dp</dimen>
+    <dimen name="chat_send_btn_padding">6dp</dimen>
     
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>

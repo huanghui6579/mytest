@@ -22,5 +22,6 @@
     <color name="contact_chat_make_voioce_btn_pressed">#45999999</color>
     <color name="contact_chat_emoji_indicator_fill">#999999</color>
     <color name="contact_chat_emoji_indicator_pager">#99999999</color>
+    <color name="contact_chat_bottom_layout">#68FDFDFD</color>
     
 </resources>
