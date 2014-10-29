@@ -1,10 +1,16 @@
 package com.example.chat.activity;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 import android.app.ActionBar;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.Fragment;
@@ -24,6 +30,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.RelativeLayout;
@@ -42,6 +50,10 @@ import com.example.chat.fragment.EmojiFragment;
 import com.example.chat.model.AttachItem;
 import com.example.chat.model.Emoji;
 import com.example.chat.model.EmojiType;
+import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgInfo.SendState;
+import com.example.chat.util.DensityUtil;
+import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.view.CirclePageIndicator;
 
@@ -52,6 +64,7 @@ import com.example.chat.view.CirclePageIndicator;
  * @update 2014年10月25日 上午10:38:11
  */
 public class ChatActivity1 extends BaseActivity implements OnClickListener/*, OnItemClickListener*/ {
+	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 	/**
 	 * 默认的编辑模式，文本框内没有任何内容
 	 */
@@ -135,6 +148,23 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 */
 	private List<AttachItem> mAttachItems = new ArrayList<>();
 	
+	private LinkedList<MsgInfo> mMsgInfos = new LinkedList<>();
+	
+	private MsgAdapter msgAdapter;
+	
+	/**
+	 * 屏幕尺寸
+	 */
+	public static int[] screenSize = null;
+	
+	private static SendState[] states = {
+		SendState.SENDING,
+		SendState.FAILED,
+		SendState.SUCCESS
+	};
+	
+	private static boolean[] comtype = {true, false};
+	
 	@Override
 	protected void initWidow() {
 		
@@ -170,9 +200,30 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 //		mTabHost.getTabWidget().setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
 //		mTabHost.getTabWidget().setDividerDrawable(R.drawable.list_divider_drawable);
 	}
+	
+	private SendState getRandomState() {
+		Random random = new Random();
+		int index = random.nextInt(states.length);
+		return states[index];
+	}
+	
+	private void initMsgInfo() {
+		for (int i = 0; i < 23; i++) {
+			MsgInfo mi = new MsgInfo();
+			mi.setContent("测试内容方erence to my TextView (to access in the onGlobalLayout() method). Next, I get the ViewTreeObserver from my TextView, and add an OnGlobalLayoutListener, overriding onGLobalLayout (there does not seem to be a superclass method to invoke here...) and adding my code which requires knowing the measurements of the view into" + i);
+			mi.setCreationDate(new Date().getTime());
+			mi.setSendState(getRandomState());
+			mi.setComming(comtype[new Random().nextInt(2)]);
+			mMsgInfos.add(mi);
+		}
+	}
 
 	@Override
 	protected void initData() {
+		
+		if (screenSize == null) {
+			screenSize = SystemUtil.getScreenSize();
+		}
 		
 		//初始化表情分类数据
 		List<EmojiType> emojiTypes = ChatApplication.geEmojiTypes();
@@ -197,8 +248,15 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			mAttachItems.add(item);
 		}
 		
+		initMsgInfo();
+		
+		msgAdapter = new MsgAdapter(mMsgInfos, mContext);
+		lvMsgs.setAdapter(msgAdapter);
+		
 		attachPannelAdapter = new AttachPannelAdapter(mAttachItems, mContext);
 		gvAttach.setAdapter(attachPannelAdapter);
+		
+		scrollMyListViewToBottom(lvMsgs);
 	}
 	
 	/**
@@ -437,10 +495,10 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 * @update 2014年10月28日 上午9:17:27
 	 */
 	private void editHideKeybroadWithFocus() {
-		//文本框获取焦点
-		etContent.requestFocus();
 		//显示键盘
 		SystemUtil.hideSoftInput(etContent);
+		//文本框获取焦点
+		etContent.requestFocus();
 	}
 	
 	/**
@@ -528,6 +586,21 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			btnSend.setBackgroundResource(R.drawable.chat_attach_selector);
 		}
 	}
+	
+	/**
+	 * listview滚动到最底部
+	 * @update 2014年10月29日 下午5:57:29
+	 * @param listView
+	 */
+	private void scrollMyListViewToBottom(final ListView listView) {
+		listView.post(new Runnable() {
+	        @Override
+	        public void run() {
+	            // Select the last row so it will scroll into view...
+	        	listView.setSelection(listView.getCount() - 1);
+	        }
+	    });
+	}
 
 	/**
 	 * 切换到表情选择模式
@@ -553,7 +626,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			case MODE_DEFAULT:
 			case MODE_SEND:
 				//2、消息输入文本框获得焦点
-				hideKeybroad();
+				editHideKeybroadWithFocus();
 				//显示表情面板
 				showEmojiLayout();
 				break;
@@ -575,7 +648,26 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		}
 		switch (editMode) {
 		case MODE_SEND:	//发送文本消息
-			SystemUtil.makeShortToast("发送文本消息！！！");
+			MsgInfo msg = new MsgInfo();
+			String content = etContent.getText().toString();
+			if (content.startsWith("0")) {	//发送
+				msg.setComming(false);
+			} else {
+				msg.setComming(true);
+			}
+			msg.setCreationDate(new Date().getTime());
+			msg.setContent(content);
+			msg.setSendState(getRandomState());
+			mMsgInfos.add(msg);
+			msgAdapter.notifyDataSetChanged();
+			
+			scrollMyListViewToBottom(lvMsgs);
+			
+			etContent.setText("");
+			//隐藏底部面板
+			hideBottomLayout(false);
+			editMode = MODE_DEFAULT;
+			setChangeSendBtnStyle(editMode);
 			break;
 		case MODE_ATTACH:	//点击之前是附件模式
 			//隐藏附件面板
@@ -681,6 +773,141 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	final static class AttItemViewHolder {
 		ImageView ivIcon;
 		TextView tvName;
+	}
+	
+	/**
+	 * 聊天消息的适配器
+	 * @author huanghui1
+	 * @update 2014年10月29日 下午4:36:14
+	 */
+	class MsgAdapter extends CommonAdapter<MsgInfo> {
+		private static final int TYPE_OUT = 0;
+		private static final int TYPE_IN = 1;
+		/**
+		 * item有两种类型
+		 */
+		private static final int TYPE_COUNT = 2;
+		
+		/**
+		 * 消息内容view最大的宽度
+		 */
+		private int maxConentWidth = 0; 
+
+		public MsgAdapter(List<MsgInfo> list, Context context) {
+			super(list, context);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			MsgViewHolder holder = null;
+			final MsgInfo msgInfo = list.get(position);
+			LayoutInflater inflater = LayoutInflater.from(context);
+			int type = getItemViewType(position);
+			
+			if (convertView == null) {
+				holder = new MsgViewHolder();
+				switch (type) {
+				case TYPE_OUT:	//发出的消息
+					convertView = inflater.inflate(R.layout.item_chat_msg_out, parent, false);
+					
+					break;
+				case TYPE_IN:	//接收的消息
+					convertView = inflater.inflate(R.layout.item_chat_msg_in, parent, false);
+					
+					break;
+				}
+				
+				holder.tvMsgTime = (TextView) convertView.findViewById(R.id.tv_msg_time);
+				holder.layoutBody = (RelativeLayout) convertView.findViewById(R.id.layout_body);
+				holder.ivHeadIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);
+				holder.ivMsgState = (ImageView) convertView.findViewById(R.id.iv_msg_state);
+				holder.tvContent = (TextView) convertView.findViewById(R.id.tv_content);
+				
+				convertView.setTag(holder);
+			} else {
+				holder = (MsgViewHolder) convertView.getTag();
+			}
+			
+			if (maxConentWidth == 0) {
+				//获取头像的宽度
+				int iconWith = SystemUtil.getViewSize(holder.ivHeadIcon)[0];
+				int stateWidth = SystemUtil.getViewSize(holder.ivMsgState)[0];
+				int textMargin = DensityUtil.dip2px(context, getResources().getDimension(R.dimen.chat_msg_item_content_margin_left_right));
+				int stateMargin = DensityUtil.dip2px(context, getResources().getDimension(R.dimen.chat_msg_item_send_state_margin_left_right));
+				maxConentWidth = screenSize[0] - 2 * (iconWith + textMargin) - stateWidth - stateMargin;
+			}
+			holder.tvContent.setMaxWidth(maxConentWidth);
+			
+			holder.tvMsgTime.setText(dateFormat.format(new Date(msgInfo.getCreationDate())));
+//			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
+			holder.tvContent.setText(msgInfo.getContent());
+			switch (msgInfo.getSendState()) {
+			case SENDING:	//正在发送
+				holder.ivMsgState.setVisibility(View.VISIBLE);
+				holder.ivMsgState.setImageResource(R.drawable.chat_msg_state_sending);
+				Animation rotateAnim = AnimationUtils.loadAnimation(context, R.anim.chat_msg_sending);
+				holder.ivMsgState.startAnimation(rotateAnim);
+				break;
+			case SUCCESS:	//发送成功
+				holder.ivMsgState.clearAnimation();
+				holder.ivMsgState.setVisibility(View.GONE);
+				break;
+			case FAILED:
+				holder.ivMsgState.setVisibility(View.VISIBLE);
+				holder.ivMsgState.clearAnimation();
+				holder.ivMsgState.setImageResource(R.drawable.chat_msg_state_failed_selector);
+				break;
+			default:
+				break;
+			}
+			holder.tvContent.setOnLongClickListener(new View.OnLongClickListener() {
+				
+				@Override
+				public boolean onLongClick(View v) {
+					SystemUtil.makeShortToast("长按了内容");
+					return true;
+				}
+			});
+			holder.ivHeadIcon.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					SystemUtil.makeShortToast("点击了头像");
+				}
+			});
+			holder.ivMsgState.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					//TODO 
+				}
+			});
+			return convertView;
+		}
+
+		@Override
+		public int getItemViewType(int position) {
+			MsgInfo mi = list.get(position);
+			if (mi.isComming()) {	//接收的消息
+				return TYPE_IN;
+			} else {	//发送的消息
+				return TYPE_OUT;
+			}
+		}
+
+		@Override
+		public int getViewTypeCount() {
+			return TYPE_COUNT;
+		}
+		
+	}
+	
+	final static class MsgViewHolder {
+		TextView tvMsgTime;
+		RelativeLayout layoutBody;
+		ImageView ivHeadIcon;
+		TextView tvContent;
+		ImageView ivMsgState;
 	}
 
 }

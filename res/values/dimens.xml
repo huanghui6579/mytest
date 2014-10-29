@@ -29,6 +29,18 @@
     <dimen name="chat_voice_btn_padding">8dp</dimen>
     <dimen name="chat_send_btn_padding">6dp</dimen>
     
+    <dimen name="chat_msg_item_padding">10dp</dimen>
+    <dimen name="chat_msg_item_time_padding">4dp</dimen>
+    <dimen name="chat_msg_item_time_margin_top">16dp</dimen>
+    <dimen name="chat_msg_item_time_margin_bottom">10dp</dimen>
+    <dimen name="chat_msg_item_content_margin_left_right">4dp</dimen>
+    <dimen name="chat_msg_item_in_content_padding_left">10dp</dimen>
+    <dimen name="chat_msg_item_in_content_padding_right">6dp</dimen>
+    <dimen name="chat_msg_item_content_padding_top_bottom">10dp</dimen>
+    <dimen name="chat_msg_item_out_content_padding_left">6dp</dimen>
+    <dimen name="chat_msg_item_out_content_padding_right">10dp</dimen>
+    <dimen name="chat_msg_item_send_state_margin_left_right">10dp</dimen>
+    
     <dimen name="login_font_account">16sp</dimen>
     <dimen name="login_font_password">16sp</dimen>
     <dimen name="login_font_button">18sp</dimen>
@@ -45,5 +57,6 @@
     
     <dimen name="contact_text_dialog">32sp</dimen>
     <dimen name="contact_text_index">14sp</dimen>
+    <dimen name="contact_chat_msg">16sp</dimen>
     
 </resources>

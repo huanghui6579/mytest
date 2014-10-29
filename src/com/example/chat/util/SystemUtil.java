@@ -15,17 +15,24 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Environment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
+import android.view.Display;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -549,6 +556,57 @@ public class SystemUtil {
     	
     	sb.setSpan(imageSpan, 0, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     	return sb;
+    }
+    
+    /**
+     * 获得屏幕的大小,size[0]:屏幕的宽，size[1]:屏幕的高
+     * @update 2014年10月29日 下午9:16:12
+     * @return
+     */
+    public static int[] getScreenSize() {
+    	int[] size = new int[2];
+    	WindowManager wm = (WindowManager) ChatApplication.getInstance().getSystemService(Context.WINDOW_SERVICE);
+    	Display display = wm.getDefaultDisplay();
+    	Point point = new Point();
+    	display.getSize(point);
+    	size[0] = point.x;
+    	size[1] = point.y;
+    	return size;
+    }
+    
+    /**
+     * 获取控件的尺寸大小,size[0]:view的宽，size[1]:view的高
+     * @update 2014年10月29日 下午9:25:46
+     * @param view
+     * @return
+     */
+	public static int[] getViewSize(final View view) {
+    	final int[] size = new int[2];
+    	/*ViewTreeObserver vto = view.getViewTreeObserver();   
+    	vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() { 
+    	    @SuppressWarnings("deprecation")
+			@Override   
+    	    public void onGlobalLayout() {
+    	    	ViewTreeObserver obs = view.getViewTreeObserver();
+    	    	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+    	    		obs.removeOnGlobalLayoutListener(this);
+    	        } else {
+    	        	obs.removeGlobalOnLayoutListener(this);
+    	        }
+    	    	size[0] = view.getWidth();
+    	    	size[1] = view.getHeight();
+    	    	Log.d("-----onGlobalLayout-----" + size[0] + "--,--" + size[1]);
+    	    }   
+    	});*/
+    	
+    	int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED); 
+    	int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED); 
+    	view.measure(w, h); 
+    	int height = view.getMeasuredHeight(); 
+    	int width = view.getMeasuredWidth();
+    	size[0] = width;
+    	size[1] = height;
+    	return size;
     }
 	
 }

@@ -23,5 +23,6 @@
     <color name="contact_chat_emoji_indicator_fill">#999999</color>
     <color name="contact_chat_emoji_indicator_pager">#99999999</color>
     <color name="contact_chat_bottom_layout">#68FDFDFD</color>
+    <color name="contact_chat_msg_time">#89737373</color>
     
 </resources>

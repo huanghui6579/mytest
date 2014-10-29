@@ -64,7 +64,6 @@ public class ChatApplication extends Application {
 	public void onCreate() {
 		super.onCreate();
 		instance = this;
-		
 		preferences = getSharedPreferences(Constants.SETTTING_LOGIN, Context.MODE_PRIVATE);
 		systemConfig = new SystemConfig();
 		currentUser = new Personal();
