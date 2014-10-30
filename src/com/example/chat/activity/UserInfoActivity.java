@@ -262,7 +262,6 @@ public class UserInfoActivity extends BaseActivity {
 					});
 					break;
 				case TYPE_FRIEND:	//是本地好友，则发送消息
-					SystemUtil.makeShortToast("发送消息");
 					Intent intent = new Intent(mContext, ChatActivity1.class);
 					startActivity(intent);
 					break;

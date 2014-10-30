@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 
 import android.app.ActionBar;
@@ -89,6 +90,12 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 */
 	private static final int MODE_SEND = 3;
 	
+	public static final String ARG_CHECK_THREAD = "arg_check_Thread";
+	
+	/**
+	 * 是否需要检查该会话是否存才，若不存在就创建
+	 */
+	private boolean needCheckThread = false;
 	
 	/**
 	 * 编辑模式
@@ -220,6 +227,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 
 	@Override
 	protected void initData() {
+		
+		needCheckThread = getIntent().getBooleanExtra(ARG_CHECK_THREAD, false);
 		
 		if (screenSize == null) {
 			screenSize = SystemUtil.getScreenSize();
@@ -792,6 +801,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		 * 消息内容view最大的宽度
 		 */
 		private int maxConentWidth = 0; 
+		//十分钟，单位毫秒
+		private long spliteTimeUnit = 600000;
 
 		public MsgAdapter(List<MsgInfo> list, Context context) {
 			super(list, context);
@@ -837,8 +848,21 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				maxConentWidth = screenSize[0] - 2 * (iconWith + textMargin) - stateWidth - stateMargin;
 			}
 			holder.tvContent.setMaxWidth(maxConentWidth);
-			
-			holder.tvMsgTime.setText(dateFormat.format(new Date(msgInfo.getCreationDate())));
+			long curDate = msgInfo.getCreationDate();
+			if (position == 0) {	//第一条记录，一定显示时间
+				holder.tvMsgTime.setVisibility(View.VISIBLE);
+				holder.tvMsgTime.setText(dateFormat.format(new Date(curDate)));
+			} else if (position >= 1) {	//至少有两条数据时才显示
+				//当条记录的时间
+				//上一条记录的时间
+				long preDate = list.get(position - 1).getCreationDate();
+				if (curDate - preDate > spliteTimeUnit) {	//时间间隔超过10分钟，则显示时间分割条
+					holder.tvMsgTime.setVisibility(View.VISIBLE);
+					holder.tvMsgTime.setText(dateFormat.format(new Date(curDate)));
+				} else {
+					holder.tvMsgTime.setVisibility(View.GONE);
+				}
+			}
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
 			holder.tvContent.setText(msgInfo.getContent());
 			switch (msgInfo.getSendState()) {

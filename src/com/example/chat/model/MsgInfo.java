@@ -1,5 +1,7 @@
 package com.example.chat.model;
 
+import com.example.chat.util.Constants;
+
 /**
  * 聊天消息实体类
  * @author huanghui1
@@ -14,15 +16,15 @@ public class MsgInfo {
 	/**
 	 * 会话id
 	 */
-	private String threadID;
+	private int threadID;
 	/**
-	 * 发送人jid,格式为xxx@domain或者xxx@domain/resource
+	 * 发送人用户名
 	 */
-	private String fromJid;
+	private String fromUser;
 	/**
-	 * 收件人jid,格式为xxx@domain或者xxx@domain/resource
+	 * 收件人用户名
 	 */
-	private String toJid;
+	private String toUser;
 	/**
 	 * 消息内容
 	 */
@@ -41,6 +43,11 @@ public class MsgInfo {
 	 * 是否是进来的消息
 	 */
 	private boolean isComming;
+	
+	/**
+	 * 该消息是否已读，默认为未读
+	 */
+	private boolean isRead;
 	
 	/**
 	 * 消息的附件
@@ -65,28 +72,28 @@ public class MsgInfo {
 		this.id = id;
 	}
 
-	public String getThreadID() {
+	public int getThreadID() {
 		return threadID;
 	}
 
-	public void setThreadID(String threadID) {
+	public void setThreadID(int threadID) {
 		this.threadID = threadID;
 	}
 
-	public String getFromJid() {
-		return fromJid;
+	public String getFromUser() {
+		return fromUser;
 	}
 
-	public void setFromJid(String fromJid) {
-		this.fromJid = fromJid;
+	public void setFromUser(String fromUser) {
+		this.fromUser = fromUser;
 	}
 
-	public String getToJid() {
-		return toJid;
+	public String getToUser() {
+		return toUser;
 	}
 
-	public void setToJid(String toJid) {
-		this.toJid = toJid;
+	public void setToUser(String toUser) {
+		this.toUser = toUser;
 	}
 
 	public String getContent() {
@@ -144,6 +151,33 @@ public class MsgInfo {
 	public void setMsgPart(MsgPart msgPart) {
 		this.msgPart = msgPart;
 	}
+	
+	public boolean isRead() {
+		return isRead;
+	}
+
+	public void setRead(boolean isRead) {
+		this.isRead = isRead;
+	}
+
+	public String getFromJid() {
+		return fromUser + "@" + Constants.SERVER_NAME;
+	}
+	
+	public String getToJid() {
+		return toUser + "@" + Constants.SERVER_NAME;
+	}
+
+	@Override
+	public String toString() {
+		return "MsgInfo [id=" + id + ", threadID=" + threadID + ", fromUser="
+				+ fromUser + ", toUser=" + toUser + ", content=" + content
+				+ ", subject=" + subject + ", creationDate=" + creationDate
+				+ ", isComming=" + isComming + ", isRead=" + isRead
+				+ ", msgPart=" + msgPart + ", msgType=" + msgType
+				+ ", sendState=" + sendState + "]";
+	}
+
 
 	/**
 	 * 消息的分类，主要有:

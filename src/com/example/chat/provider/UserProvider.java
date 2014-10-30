@@ -43,13 +43,13 @@ public class UserProvider extends ContentProvider {
 	
 	static {
 		mUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-		mUriMatcher.addURI(Provider.AUTHORITY, "users", USERS);
-		mUriMatcher.addURI(Provider.AUTHORITY, "users/#", USER_ID);
-		mUriMatcher.addURI(Provider.AUTHORITY, "users/search/*", USER_CONDITION);
-		mUriMatcher.addURI(Provider.AUTHORITY, "userVcards", USER_VCARDS);
-		mUriMatcher.addURI(Provider.AUTHORITY, "userVcards/#", USER_VCARD_ID);
-		mUriMatcher.addURI(Provider.AUTHORITY, "personals", PERSONALS);
-		mUriMatcher.addURI(Provider.AUTHORITY, "personals/#", PERSONAL_ID);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "users", USERS);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "users/#", USER_ID);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "users/search/*", USER_CONDITION);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "userVcards", USER_VCARDS);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "userVcards/#", USER_VCARD_ID);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "personals", PERSONALS);
+		mUriMatcher.addURI(Provider.AUTHORITY_USER, "personals/#", PERSONAL_ID);
 		
 		mUserProjectionMap = new HashMap<String, String>();
 		mUserProjectionMap.put(Provider.UserColumns._ID, Provider.UserColumns._ID);

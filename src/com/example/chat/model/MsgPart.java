@@ -32,6 +32,11 @@ public class MsgPart {
 	 * 文件的类型
 	 */
 	private String mimeTye;
+	
+	/**
+	 * 文件创建时间
+	 */
+	private long creationDate;
 
 	public int getId() {
 		return id;
@@ -81,10 +86,19 @@ public class MsgPart {
 		this.mimeTye = mimeTye;
 	}
 
+	public long getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(long creationDate) {
+		this.creationDate = creationDate;
+	}
+
 	@Override
 	public String toString() {
 		return "MsgPart [id=" + id + ", msgId=" + msgId + ", fileName="
 				+ fileName + ", filePath=" + filePath + ", size=" + size
-				+ ", mimeTye=" + mimeTye + "]";
+				+ ", mimeTye=" + mimeTye + ", creationDate=" + creationDate
+				+ "]";
 	}
 }
