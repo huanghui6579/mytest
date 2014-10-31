@@ -12,17 +12,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.os.Environment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -30,8 +32,6 @@ import android.text.TextUtils;
 import android.text.style.ImageSpan;
 import android.view.Display;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
@@ -608,5 +608,43 @@ public class SystemUtil {
     	size[1] = height;
     	return size;
     }
+	
+	/**
+	 * 判断集合是否为空
+	 * @update 2014年10月31日 下午3:22:19
+	 * @param collection
+	 * @return
+	 */
+	public static boolean isEmpty(Collection<?> collection) {
+		if (collection != null && collection.size() > 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * 判断一个数组是否为空
+	 * @update 2014年10月31日 下午3:24:11
+	 * @param array
+	 * @return
+	 */
+	public static <T> boolean isEmpty(T[] array) {
+		if (array != null && array.length > 0) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 格式化会话的时间，时间格式为MM-dd HH:mm
+	 * @update 2014年10月31日 下午10:32:10
+	 * @param time
+	 * @return
+	 */
+	public static String formatMsgThreadTime(long time) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.DATEFORMA_TPATTERN_THREAD, Locale.getDefault());
+		return dateFormat.format(new Date(time));
+	}
 	
 }

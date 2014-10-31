@@ -38,6 +38,16 @@ public class Constants {
 	public static final String NAME_SERVER_NAME = "name_server_name";
 	
 	/**
+	 * 会话的时间格式化模板
+	 */
+	public static final String DATEFORMA_TPATTERN_THREAD = "MM月dd日 HH:mm";
+	
+	/**
+	 * 默认的聊天消息分页加载的页面大小
+	 */
+	public static int PAGE_SIZE_MSG = 20;
+	
+	/**
 	 * 【1】成功的结果码
 	 */
 	public static final int MSG_SUCCESS = 0x000001;

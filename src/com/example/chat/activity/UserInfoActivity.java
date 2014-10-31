@@ -263,6 +263,12 @@ public class UserInfoActivity extends BaseActivity {
 					break;
 				case TYPE_FRIEND:	//是本地好友，则发送消息
 					Intent intent = new Intent(mContext, ChatActivity1.class);
+					User arg = new User();
+					arg.setId(user.getId());
+					arg.setUsername(user.getUsername());
+					arg.setNickname(user.getNickname());
+					arg.setUserVcard(user.getUserVcard());
+					intent.putExtra(ARG_USER, arg);
 					startActivity(intent);
 					break;
 				case TYPE_SELF:	//自己
@@ -274,6 +280,7 @@ public class UserInfoActivity extends BaseActivity {
 			}
 		});
 	}
+	
 	
 	/**
 	 * 加载好友电子名片

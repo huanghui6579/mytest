@@ -2,6 +2,7 @@ package com.example.chat.activity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +12,9 @@ import java.util.Random;
 
 import android.app.ActionBar;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.Fragment;
@@ -48,11 +51,17 @@ import android.widget.TextView;
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.fragment.EmojiFragment;
+import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AttachItem;
 import com.example.chat.model.Emoji;
 import com.example.chat.model.EmojiType;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgThread;
+import com.example.chat.model.Personal;
 import com.example.chat.model.MsgInfo.SendState;
+import com.example.chat.model.User;
+import com.example.chat.provider.Provider;
+import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
 import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
@@ -90,12 +99,20 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 */
 	private static final int MODE_SEND = 3;
 	
-	public static final String ARG_CHECK_THREAD = "arg_check_Thread";
+	public static final String ARG_THREAD = "arg_thread";
 	
 	/**
-	 * 是否需要检查该会话是否存才，若不存在就创建
+	 * 聊天的对方
 	 */
-	private boolean needCheckThread = false;
+	private User otherSide = null;
+	private Personal mine = null;
+	
+	/**
+	 * 当前的会话
+	 */
+	private MsgThread msgThread;
+	
+	private MsgManager msgManager = MsgManager.getInstance();
 	
 	/**
 	 * 编辑模式
@@ -172,6 +189,11 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	
 	private static boolean[] comtype = {true, false};
 	
+	/**
+	 * 加开始加载数据的索引
+	 */
+	private int pageOffset = 0;
+	
 	@Override
 	protected void initWidow() {
 		
@@ -214,25 +236,33 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		return states[index];
 	}
 	
+	/**
+	 * 初始化会话消息
+	 * @update 2014年10月31日 下午3:26:57
+	 */
 	private void initMsgInfo() {
-		for (int i = 0; i < 23; i++) {
-			MsgInfo mi = new MsgInfo();
-			mi.setContent("测试内容方erence to my TextView (to access in the onGlobalLayout() method). Next, I get the ViewTreeObserver from my TextView, and add an OnGlobalLayoutListener, overriding onGLobalLayout (there does not seem to be a superclass method to invoke here...) and adding my code which requires knowing the measurements of the view into" + i);
-			mi.setCreationDate(new Date().getTime());
-			mi.setSendState(getRandomState());
-			mi.setComming(comtype[new Random().nextInt(2)]);
-			mMsgInfos.add(mi);
-		}
+		new LoadDataTask().execute();
 	}
 
 	@Override
 	protected void initData() {
 		
-		needCheckThread = getIntent().getBooleanExtra(ARG_CHECK_THREAD, false);
-		
 		if (screenSize == null) {
 			screenSize = SystemUtil.getScreenSize();
 		}
+		
+		Intent intent = getIntent();
+		
+		otherSide = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
+		//获取个人信息
+		mine = ChatApplication.getInstance().getCurrentUser();
+		
+		msgThread = intent.getParcelableExtra(ARG_THREAD);
+		
+		initMsgInfo();
+		
+		msgAdapter = new MsgAdapter(mMsgInfos, mContext);
+		lvMsgs.setAdapter(msgAdapter);
 		
 		//初始化表情分类数据
 		List<EmojiType> emojiTypes = ChatApplication.geEmojiTypes();
@@ -257,15 +287,105 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			mAttachItems.add(item);
 		}
 		
-		initMsgInfo();
-		
-		msgAdapter = new MsgAdapter(mMsgInfos, mContext);
-		lvMsgs.setAdapter(msgAdapter);
-		
 		attachPannelAdapter = new AttachPannelAdapter(mAttachItems, mContext);
 		gvAttach.setAdapter(attachPannelAdapter);
 		
-		scrollMyListViewToBottom(lvMsgs);
+	}
+	
+	/**
+	 * 加载聊天消息数据的后台任务
+	 * @author huanghui1
+	 * @update 2014年10月31日 上午9:18:23
+	 */
+	class LoadDataTask extends AsyncTask<Void, Void, List<MsgInfo>> {
+
+		@Override
+		protected List<MsgInfo> doInBackground(Void... params) {
+			//根据参与者查询对应的会话
+			MsgThread mt = null;
+			List<MsgInfo> list = new ArrayList<>();
+			if (otherSide != null) {
+				mt = msgManager.getThreadByMember(otherSide);
+				if (mt != null) {	//有该会话，才查询该会话下的消息
+					msgThread = mt;
+					list = msgManager.getMsgInfosByThreadId(mt.getId(), getPageOffset());
+				} else {	//没有改会话，就创建一个
+					mt = new MsgThread();
+					mt.setMembers(Arrays.asList(otherSide));
+					mt.setMsgThreadName(otherSide.getName());
+					msgThread = msgManager.createMsgThread(mt);
+				}
+			} else {	//已经有会话了
+				list = msgManager.getMsgInfosByThreadId(msgThread.getId(), getPageOffset());
+			}
+			if (!SystemUtil.isEmpty(list)) {
+				mMsgInfos.clear();
+				mMsgInfos.addAll(list);
+				
+				setPageOffset(list);
+			}
+			return list;
+		}
+		
+		@Override
+		protected void onPostExecute(List<MsgInfo> result) {
+			if (!SystemUtil.isEmpty(result)) {
+				msgAdapter.notifyDataSetChanged();
+				
+				scrollMyListViewToBottom(lvMsgs);
+			}
+		}
+	}
+	
+	/**
+	 * 加载更多消息记录的后台任务
+	 * @author huanghui1
+	 * @update 2014年10月31日 下午3:16:09
+	 */
+	class LoadMoreDataTask extends AsyncTask<Integer, Void, List<MsgInfo>> {
+
+		@Override
+		protected List<MsgInfo> doInBackground(Integer... params) {
+			List<MsgInfo> list = null;
+			if (params != null && params.length == 2) {
+				int msgThreadId = params[0];
+				int offset = params[1];	//开始查询的索引
+				list = msgManager.getMsgInfosByThreadId(msgThreadId, offset);
+				if (!SystemUtil.isEmpty(list)) {	//有数据
+					mMsgInfos.addAll(list);
+					setPageOffset(mMsgInfos);
+				}
+			}
+			return list;
+		}
+		
+		@Override
+		protected void onPostExecute(List<MsgInfo> result) {
+			if (!SystemUtil.isEmpty(result)) {
+				msgAdapter.notifyDataSetChanged();
+			}
+		}
+		
+	}
+	
+	/**
+	 * 获取分页时每次的分页开始索引
+	 * @update 2014年10月31日 上午9:27:50
+	 * @return
+	 */
+	private int getPageOffset() {
+		return pageOffset * Constants.PAGE_SIZE_MSG;
+	}
+	
+	/**
+	 * 根据当前已经加载过的列表来设置新的开始查询索引
+	 * @update 2014年10月31日 下午3:10:59
+	 * @param list
+	 */
+	private void setPageOffset(List<MsgInfo> list) {
+		if (list != null && list.size() > 0) {
+			pageOffset = list.size() - 1;
+		}
 	}
 	
 	/**

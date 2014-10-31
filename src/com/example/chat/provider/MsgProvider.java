@@ -144,7 +144,7 @@ public class MsgProvider extends ContentProvider {
 		case MSG_INFO_ID:
 		case MSG_PART_ID:
 		case MSG_THREAD_ID:
-			return Provider.CONTENT_TYPE;
+			return Provider.CONTENT_ITEM_TYPE;
 
 		default:
 			break;

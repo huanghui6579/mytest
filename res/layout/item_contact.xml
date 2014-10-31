@@ -26,8 +26,7 @@
 	        android:id="@+id/iv_head_icon"
 	        android:layout_width="@dimen/contact_item_head_icon_width"
 	        android:layout_height="@dimen/contact_item_head_icon_height"
-	        android:adjustViewBounds="true"
-	        android:scaleType="centerCrop"
+	        android:scaleType="centerInside"
 	        android:layout_centerVertical="true"
 	        android:src="@drawable/contact_head_icon_default"
 	        android:contentDescription="@null"/>

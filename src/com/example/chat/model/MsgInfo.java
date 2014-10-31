@@ -257,7 +257,7 @@ public class MsgInfo {
 		 */
 		FAILED;
 		
-		public static SendState vauleOf(int vaule) {
+		public static SendState valueOf(int vaule) {
 			switch (vaule) {
 			case 0:
 				return SendState.SENDING;

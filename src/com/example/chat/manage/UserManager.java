@@ -227,6 +227,64 @@ public class UserManager {
 	}
 	
 	/**
+	 * 根据用户id获取用户信息
+	 * @update 2014年10月31日 下午10:00:48
+	 * @param userId 用户的id
+	 * @return
+	 */
+	public User getUserById(int userId) {
+		User user = null;
+		String[] projection = {
+				Provider.UserColumns.USERNAME,
+				Provider.UserColumns.NICKNAME,
+		};
+		Cursor cursor = mContext.getContentResolver().query(Provider.UserColumns.CONTENT_URI, projection, Provider.UserColumns._ID + " = ?", new String[] {String.valueOf(userId)}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			user = new User();
+			user.setId(userId);
+			user.setUsername(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.USERNAME)));
+			user.setNickname(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.NICKNAME)));
+			
+			UserVcard uCard = getSimpleUserVcardByUserId(userId);
+			
+			user.setUserVcard(uCard);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return user;
+	}
+	
+	/**
+	 * 获取指定用户的名片
+	 * @update 2014年10月24日 下午3:36:39
+	 * @param user
+	 * @return
+	 */
+	public UserVcard getSimpleUserVcardByUserId(int userId) {
+		UserVcard uCard = null;
+		String[] projection = {
+				Provider.UserVcardColumns._ID,
+				Provider.UserVcardColumns.NICKNAME,
+				Provider.UserVcardColumns.ICONPATH,
+				Provider.UserVcardColumns.ICONHASH
+		};
+		Cursor cursor = mContext.getContentResolver().query(Provider.UserVcardColumns.CONTENT_URI, projection, Provider.UserVcardColumns.USERID + " = ?", new String[] {String.valueOf(userId)}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			uCard = new UserVcard();
+			uCard.setId(cursor.getInt(cursor.getColumnIndex(Provider.UserVcardColumns._ID)));
+			uCard.setUserId(userId);
+			uCard.setNickname(cursor.getString(cursor.getColumnIndex(Provider.UserVcardColumns.NICKNAME)));
+			uCard.setIconPath(cursor.getString(cursor.getColumnIndex(Provider.UserVcardColumns.ICONPATH)));
+			uCard.setIconHash(cursor.getString(cursor.getColumnIndex(Provider.UserVcardColumns.ICONHASH)));
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return uCard;
+	}
+	
+	/**
 	 * 获取指定用户的名片
 	 * @update 2014年10月24日 下午3:36:39
 	 * @param user

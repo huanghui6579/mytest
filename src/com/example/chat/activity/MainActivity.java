@@ -28,7 +28,7 @@ import android.view.Window;
 import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment;
 import com.example.chat.fragment.MineFragment;
-import com.example.chat.fragment.SessionListFragment;
+import com.example.chat.fragment.ThreadListFragment;
 import com.example.chat.model.Personal;
 import com.example.chat.model.SystemConfig;
 import com.example.chat.service.CoreService;
@@ -272,7 +272,7 @@ public class MainActivity extends BaseActivity {
 			Fragment fragment = null;
 			switch (position) {
 			case FRAGMENT_SESSION_LIST:	//会话聊天列表
-				fragment = SessionListFragment.newInstance();
+				fragment = ThreadListFragment.newInstance();
 				break;
 			case FRAGMENT_CONTACT:	//好友列表
 				fragment = ContactFragment.newInstance();
@@ -281,7 +281,7 @@ public class MainActivity extends BaseActivity {
 				fragment = MineFragment.newInstance();
 				break;
 			default:
-				fragment = SessionListFragment.newInstance();
+				fragment = ThreadListFragment.newInstance();
 				break;
 			}
 			return fragment;
