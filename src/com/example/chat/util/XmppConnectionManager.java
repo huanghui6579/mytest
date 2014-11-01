@@ -51,8 +51,8 @@ public class XmppConnectionManager {
 		configuration = new ConnectionConfiguration(Constants.SERVER_HOST, Constants.SERVER_PORT, Constants.SERVER_NAME);
 		configuration.setSecurityMode(SecurityMode.disabled);
 		
-		//不允许自动连接
-		configuration.setReconnectionAllowed(false);
+		//允许自动连接
+		configuration.setReconnectionAllowed(true);
 		//允许登录成功后更新状态
 		configuration.setSendPresence(true);
 		// 收到好友邀请后manual表示需要经过同意,accept_all表示不经同意自动为好友

@@ -26,6 +26,7 @@ import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Selection;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -984,7 +985,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				}
 			}
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
-			holder.tvContent.setText(msgInfo.getContent());
+			SpannableString spannableString = SystemUtil.getExpressionString(mContext, msgInfo.getContent());
+			holder.tvContent.setText(spannableString);
 			switch (msgInfo.getSendState()) {
 			case SENDING:	//正在发送
 				holder.ivMsgState.setVisibility(View.VISIBLE);

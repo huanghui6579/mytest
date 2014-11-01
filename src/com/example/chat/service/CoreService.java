@@ -1,8 +1,16 @@
 package com.example.chat.service;
 
+import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Message.Type;
 
 import android.app.Service;
 import android.content.Intent;
@@ -10,11 +18,15 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 
+import com.example.chat.ChatApplication;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.UserManager;
+import com.example.chat.model.MsgInfo;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
+import com.example.chat.util.Constants;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
 
@@ -34,9 +46,41 @@ public class CoreService extends Service {
 	
 	private UserManager userManager = UserManager.getInstance();
 	
-	private Handler mHandler = null;
+	private MyHandler mHandler = null;
 	
 	private HandlerThread mHandlerThread = null;
+	
+	private class MyHandler extends Handler {
+		
+		public MyHandler() {
+			super();
+		}
+		
+		public MyHandler(Callback callback) {
+			super(callback);
+		}
+
+		public MyHandler(Looper looper, Callback callback) {
+			super(looper, callback);
+		}
+
+		public MyHandler(Looper looper) {
+			super(looper);
+		}
+
+		@Override
+		public void handleMessage(android.os.Message msg) {
+			switch (msg.what) {
+			case Constants.MSG_RECEIVE_CHAT_MSG:	//接收聊天消息
+				Message message = (Message) msg.obj;
+				processMsg(message);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
 	
 	/**
 	 * 初始化当前用户的个人信息
@@ -64,7 +108,7 @@ public class CoreService extends Service {
 		if (mHandlerThread == null) {
 			mHandlerThread = new HandlerThread(this.getClass().getCanonicalName());
 			mHandlerThread.start();
-			mHandler = new Handler(mHandlerThread.getLooper());
+			mHandler = new MyHandler(mHandlerThread.getLooper());
 		}
 		super.onCreate();
 	}
@@ -78,6 +122,7 @@ public class CoreService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent != null) {
+			//监听消息
 			int flag = intent.getIntExtra(FLAG_SYNC, 0);
 			switch (flag) {
 			case FLAG_SYNC_FRENDS:	//从服务器上同步所有的好友列表到本地
@@ -91,6 +136,64 @@ public class CoreService extends Service {
 		}
 		
 		return Service.START_REDELIVER_INTENT;
+	}
+	
+	/**
+	 * 接收openfie的消息
+	 * @author huanghui1
+	 * @update 2014年11月1日 下午5:24:55
+	 */
+	class ReceiveMessageTask implements Runnable {
+
+		@Override
+		public void run() {
+			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+			if (connection.isAuthenticated()) {	//是否登录
+				ChatManager chatManager = ChatManager.getInstanceFor(connection);
+				chatManager.addChatListener(new ChatManagerListener() {
+					
+					@Override
+					public void chatCreated(Chat chat, boolean createdLocally) {
+						if (!createdLocally) {
+							chat.addMessageListener(new MessageListener() {
+								
+								@Override
+								public void processMessage(Chat chat, Message message) {
+									android.os.Message msg = mHandler.obtainMessage();
+									msg.obj = message;
+									msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
+									mHandler.sendMessage(msg);
+								}
+							});
+						}
+					}
+				});
+			} else {	//重新登录
+				
+			}
+		}
+		
+	}
+	
+	/**
+	 * 处理聊天消息
+	 * @update 2014年11月1日 下午5:46:44
+	 * @param objs
+	 */
+	private void processMsg(Message message) {
+		if (Type.chat == message.getType()) {	//聊天信息
+			String from = message.getFrom().split("@")[0];
+			MsgInfo msgInfo = new MsgInfo();
+			msgInfo.setComming(true);
+			msgInfo.setContent(message.getBody());
+			msgInfo.setCreationDate(System.currentTimeMillis());
+			msgInfo.setFromUser(from);
+			msgInfo.setMsgType(com.example.chat.model.MsgInfo.Type.TEXT);
+			msgInfo.setRead(false);
+			msgInfo.setSubject(message.getSubject());
+			msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
+			msgInfo.setThreadID(Integer.parseInt(message.getThread()));
+		}
 	}
 	
 	/**

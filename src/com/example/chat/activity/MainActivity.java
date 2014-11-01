@@ -25,6 +25,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.Window;
 
+import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment;
 import com.example.chat.fragment.MineFragment;
@@ -163,6 +164,8 @@ public class MainActivity extends BaseActivity {
     	temp.setStatus(Presence.Type.available.name());
     	temp.setMode(Presence.Mode.available.name());
     	temp.setResource(Constants.CLIENT_RESOURCE);
+    	
+    	application.setCurrentAccount(temp.getUsername());
     	return temp;
     }
 

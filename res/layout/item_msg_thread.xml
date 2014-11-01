@@ -7,11 +7,12 @@
     
     <ImageView 
         android:id="@+id/iv_head_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/contact_item_head_icon_width"
+        android:layout_height="@dimen/contact_item_head_icon_height"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:src="@drawable/ic_launcher"
+        android:scaleType="centerInside"
         android:contentDescription="@null"/>
     
     <TextView 

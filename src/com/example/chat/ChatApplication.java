@@ -1,8 +1,18 @@
 package com.example.chat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import android.app.Activity;
+import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.graphics.Bitmap;
 
 import com.example.chat.model.Emoji;
 import com.example.chat.model.EmojiType;
@@ -19,14 +29,6 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
-import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.graphics.Bitmap;
-
 /**
  * 应用程序入口
  * @author huanghui1
@@ -41,11 +43,19 @@ public class ChatApplication extends Application {
 	
 	private SharedPreferences preferences;
 	
+	/**
+	 * 当前的用户
+	 */
 	private static Personal currentUser = null;
+	/**
+	 * 当前用户的账号
+	 */
+	private static String currentAccount = null;
 	
 	/**
 	 * 经典表情集合
 	 */
+	private static Map<String, Emoji> mEmojiMap = null;
 	private static List<Emoji> mEmojis = null;
 	/**
 	 * 表情类型集合
@@ -77,12 +87,25 @@ public class ChatApplication extends Application {
 		initEmoji();
 		
 	}
-	
+
+	public String getCurrentAccount() {
+		return currentAccount;
+	}
+
+	public void setCurrentAccount(String currentAccount) {
+		ChatApplication.currentAccount = currentAccount;
+	}
+
 	/**
 	 * 初始化表情
 	 * @update 2014年10月27日 上午11:20:53
 	 */
 	private void initEmoji() {
+		if (mEmojiMap == null) {
+			mEmojiMap = new HashMap<>();
+		} else {
+			mEmojiMap.clear();
+		}
 		if (mEmojis == null) {
 			mEmojis = new ArrayList<>();
 		} else {
@@ -101,8 +124,8 @@ public class ChatApplication extends Application {
 					emoji.setResId(resId);
 					emoji.setFaceName(faceName);
 					emoji.setDescription(description);
-					
 					mEmojis.add(emoji);
+					mEmojiMap.put(description, emoji);
 				}
 			}
 		}
@@ -154,6 +177,15 @@ public class ChatApplication extends Application {
 		return mEmojis;
 	}
 	
+	/**
+	 * 获得所有的表情集合
+	 * @update 2014年10月27日 下午3:02:25
+	 * @return
+	 */
+	public static Map<String, Emoji> getEmojiMap() {
+		return mEmojiMap;
+	}
+	
 	public static List<EmojiType> geEmojiTypes() {
 		return mEmojiTypes;
 	}
@@ -167,7 +199,7 @@ public class ChatApplication extends Application {
 	public static List<Emoji> getCurrentPageEmojis(int position) {
 		int startIndex = position * PAGE_SIZE;
 		int endIndex = startIndex + PAGE_SIZE;
-		int emojiSize = mEmojis.size();
+		int emojiSize = mEmojiMap.size();
 		if (endIndex > emojiSize) {
 			endIndex = emojiSize;
 		}

@@ -79,4 +79,9 @@ public class Constants {
 	 * 【8】服务器没有响应
 	 */
 	public static final int MSG_NO_RESPONSE = 0x000008;
+	
+	/**
+	 * 【9】接收聊天消息
+	 */
+	public static final int MSG_RECEIVE_CHAT_MSG = 0x000009;
 }
