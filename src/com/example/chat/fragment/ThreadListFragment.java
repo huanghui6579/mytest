@@ -92,7 +92,8 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 				
 			}
 		});
-		
+		mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
+		mListView.setAdapter(mThreadAdapter);
 		getLoaderManager().initLoader(0, null, this);
 	}
 	
@@ -201,6 +202,8 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 					mThreadAdapter.swapData(data);
 				}
 			}
+		} else {
+			mListView.setEmptyView(emptyView);
 		}
 		pbLoading.setVisibility(View.GONE);
 	}
