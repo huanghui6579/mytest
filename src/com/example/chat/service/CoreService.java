@@ -22,11 +22,14 @@ import android.os.Looper;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
+import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;
+import com.example.chat.util.Log;
+import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
 
@@ -45,6 +48,7 @@ public class CoreService extends Service {
 	private MainBinder mBinder = new MainBinder();
 	
 	private UserManager userManager = UserManager.getInstance();
+	private MsgManager msgManager = MsgManager.getInstance();
 	
 	private MyHandler mHandler = null;
 	
@@ -122,6 +126,7 @@ public class CoreService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent != null) {
+			SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 			//监听消息
 			int flag = intent.getIntExtra(FLAG_SYNC, 0);
 			switch (flag) {
@@ -159,10 +164,7 @@ public class CoreService extends Service {
 								
 								@Override
 								public void processMessage(Chat chat, Message message) {
-									android.os.Message msg = mHandler.obtainMessage();
-									msg.obj = message;
-									msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
-									mHandler.sendMessage(msg);
+									
 								}
 							});
 						}
@@ -176,11 +178,39 @@ public class CoreService extends Service {
 	}
 	
 	/**
+	 * 处理消息的后台线程，主要是将消息存入数据库
+	 * @author huanghui1
+	 * @update 2014年11月3日 下午10:40:19
+	 */
+	class ProcessMsgTask implements Runnable {
+		Chat chat;
+		Message message;
+
+		public ProcessMsgTask(Chat chat, Message message) {
+			super();
+			this.chat = chat;
+			this.message = message;
+		}
+
+		@Override
+		public void run() {
+			MsgInfo msgInfo = processMsg(message);
+			if (msgInfo != null) {
+				android.os.Message msg = mHandler.obtainMessage();
+				msg.obj = message;
+				msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
+				mHandler.sendMessage(msg);
+			}
+		}
+		
+	}
+	
+	/**
 	 * 处理聊天消息
 	 * @update 2014年11月1日 下午5:46:44
-	 * @param objs
+	 * @param message
 	 */
-	private void processMsg(Message message) {
+	private MsgInfo processMsg(Message message) {
 		if (Type.chat == message.getType()) {	//聊天信息
 			String from = message.getFrom().split("@")[0];
 			MsgInfo msgInfo = new MsgInfo();
@@ -192,8 +222,15 @@ public class CoreService extends Service {
 			msgInfo.setRead(false);
 			msgInfo.setSubject(message.getSubject());
 			msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
-			msgInfo.setThreadID(Integer.parseInt(message.getThread()));
+			try {
+				int threadId = Integer.parseInt(message.getThread());
+				msgInfo.setThreadID(threadId);
+			} catch (NumberFormatException e) {
+				//查询有没有threadid
+			}
+			return msgInfo;
 		}
+		return null;
 	}
 	
 	/**
