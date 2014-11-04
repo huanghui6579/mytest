@@ -256,6 +256,35 @@ public class UserManager {
 	}
 	
 	/**
+	 * 根据用户名获取用户的信息
+	 * @update 2014年10月31日 下午10:00:48
+	 * @param username 用户名
+	 * @return
+	 */
+	public User getUserByUsername(String username) {
+		User user = null;
+		String[] projection = {
+				Provider.UserColumns._ID,
+				Provider.UserColumns.NICKNAME,
+		};
+		Cursor cursor = mContext.getContentResolver().query(Provider.UserColumns.CONTENT_URI, projection, Provider.UserColumns.USERNAME + " = ?", new String[] {username}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			user = new User();
+			user.setId(cursor.getInt(cursor.getColumnIndex(Provider.UserColumns._ID)));
+			user.setUsername(username);
+			user.setNickname(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.NICKNAME)));
+			
+			UserVcard uCard = getSimpleUserVcardByUserId(user.getId());
+			
+			user.setUserVcard(uCard);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return user;
+	}
+	
+	/**
 	 * 获取指定用户的名片
 	 * @update 2014年10月24日 下午3:36:39
 	 * @param user

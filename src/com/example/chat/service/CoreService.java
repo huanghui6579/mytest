@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
@@ -76,8 +77,8 @@ public class CoreService extends Service {
 		public void handleMessage(android.os.Message msg) {
 			switch (msg.what) {
 			case Constants.MSG_RECEIVE_CHAT_MSG:	//接收聊天消息
-				Message message = (Message) msg.obj;
-				processMsg(message);
+				MsgInfo msgInfo = (MsgInfo) msg.obj;
+				//发送广播到对应的界面处理
 				break;
 
 			default:
@@ -197,7 +198,7 @@ public class CoreService extends Service {
 			MsgInfo msgInfo = processMsg(message);
 			if (msgInfo != null) {
 				android.os.Message msg = mHandler.obtainMessage();
-				msg.obj = message;
+				msg.obj = msgInfo;
 				msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
 				mHandler.sendMessage(msg);
 			}
@@ -222,11 +223,9 @@ public class CoreService extends Service {
 			msgInfo.setRead(false);
 			msgInfo.setSubject(message.getSubject());
 			msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
-			try {
-				int threadId = Integer.parseInt(message.getThread());
+			int threadId = msgManager.getThreadIdByMembers(from);	//查找本地会话，如果没有就创建
+			if (threadId > 0) {
 				msgInfo.setThreadID(threadId);
-			} catch (NumberFormatException e) {
-				//查询有没有threadid
 			}
 			return msgInfo;
 		}
