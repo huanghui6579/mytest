@@ -458,6 +458,24 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 添加附件信息
+	 * @update 2014年11月5日 上午8:34:42
+	 * @param msgPart
+	 * @return
+	 */
+	public MsgPart addMsgPart(MsgPart msgPart) {
+		if (msgPart == null) {
+			return null;
+		}
+		ContentValues partValues = initMsgPartValues(msgPart);
+		Uri uri = mContext.getContentResolver().insert(Provider.MsgPartColumns.CONTENT_URI, partValues);
+		if (uri != null) {
+			msgPart.setId(Integer.parseInt(uri.getLastPathSegment()));
+		}
+		return msgPart;
+	}
+	
+	/**
 	 * 添加一条消息记录
 	 * @update 2014年11月4日 下午10:41:46
 	 * @param msgInfo 消息记录
@@ -473,8 +491,14 @@ public class MsgManager {
 			String msgId = uri.getLastPathSegment();
 			msgInfo.setId(Integer.parseInt(msgId));
 			switch (msgInfo.getMsgType()) {
-			case TEXT:	//文本信息
-			case LOCATION:	//地理位置
+			case IMAGE:	//图片
+			case AUDIO:	//音频
+			case FILE:	//文件
+			case VIDEO:	//视频
+			case VCARD:	//电子名片
+				//添加附件信息
+				MsgPart msgPart = addMsgPart(msgInfo.getMsgPart());
+				msgInfo.setMsgPart(msgPart);
 				break;
 
 			default:

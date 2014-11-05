@@ -165,7 +165,7 @@ public class CoreService extends Service {
 								
 								@Override
 								public void processMessage(Chat chat, Message message) {
-									
+									SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
 								}
 							});
 						}
@@ -196,6 +196,7 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			MsgInfo msgInfo = processMsg(message);
+			msgInfo = msgManager.addMsgInfo(msgInfo);
 			if (msgInfo != null) {
 				android.os.Message msg = mHandler.obtainMessage();
 				msg.obj = msgInfo;
