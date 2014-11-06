@@ -246,6 +246,7 @@ public class MsgProvider extends ContentProvider {
 			default:
 				break;
 			}
+			getContext().getContentResolver().notifyChange(uri, null);
 			db.setTransactionSuccessful();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -284,6 +285,7 @@ public class MsgProvider extends ContentProvider {
 			default:
 				break;
 			}
+			getContext().getContentResolver().notifyChange(uri, null);
 			db.setTransactionSuccessful();
 		} catch (Exception e) {
 			e.printStackTrace();

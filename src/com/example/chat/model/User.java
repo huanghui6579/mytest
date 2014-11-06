@@ -83,6 +83,9 @@ public class User implements Parcelable, Comparator<User> {
 	}
 
 	public String getJID() {
+		if (JID == null) {
+			return initJID(username);
+		}
 		return JID;
 	}
 

@@ -84,4 +84,9 @@ public class Constants {
 	 * 【9】接收聊天消息
 	 */
 	public static final int MSG_RECEIVE_CHAT_MSG = 0x000009;
+	
+	/**
+	 * 【10】改变聊天消息的发送状态
+	 */
+	public static final int MSG_MODIFY_CHAT_MSG_SEND_STATE = 0x00000A;
 }

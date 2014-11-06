@@ -10,6 +10,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.text.TextUtils;
 
@@ -334,6 +335,60 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 根据msgid获得消息对象
+	 * @update 2014年11月6日 下午9:08:40
+	 * @param msgId
+	 * @return
+	 */
+	public MsgInfo getMsgInfoById(int msgId) {
+		if (msgId <= 0) {
+			return null;
+		}
+		Uri uri = ContentUris.withAppendedId(Provider.MsgInfoColumns.CONTENT_URI, msgId);
+		Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+		MsgInfo msg = null;
+		if (cursor != null && cursor.moveToFirst()) {
+			msg = new MsgInfo();
+			msg.setId(msgId);
+			msg.setThreadID(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.THREAD_ID)));
+			msg.setFromUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.FROM_USER)));
+			msg.setToUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.TO_USER)));
+			msg.setContent(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.CONTENT)));
+			msg.setSubject(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.SUBJECT)));
+			msg.setCreationDate(cursor.getLong(cursor.getColumnIndex(Provider.MsgInfoColumns.CREATIO_NDATE)));
+			msg.setComming(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_COMMING)) == 0 ? false : true);
+			msg.setRead(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_READ)) == 0 ? false : true);
+			msg.setMsgType(Type.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.MSG_TYPE))));
+			msg.setSendState(SendState.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.SEND_STATE))));
+			
+			Type msgType = msg.getMsgType();
+			//如果消息不是文本类型，则加载附件
+			if (msgType != Type.TEXT && msgType != Type.LOCATION) {	//加载附件
+				MsgPart msgPart = getMsgPartByMsgId(msg.getId());
+				msg.setMsgPart(msgPart);
+			}
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return msg;
+	}
+	
+	/**
+	 * 根据uri获得消息信息
+	 * @update 2014年11月6日 下午9:15:45
+	 * @param uri
+	 * @return
+	 */
+	public MsgInfo getMsgInfoByUri(Uri uri) {
+		if (uri == null) {
+			return null;
+		}
+		int msgId = Integer.parseInt(uri.getLastPathSegment());
+		return getMsgInfoById(msgId);
+	}
+	
+	/**
 	 * 根据会话成员id查询会话的id
 	 * @update 2014年11月4日 下午9:35:56
 	 * @param memberIds 会话成员id
@@ -505,6 +560,19 @@ public class MsgManager {
 				break;
 			}
 		}
+		return msgInfo;
+	}
+	
+	/**
+	 * 更新消息的发送状态
+	 * @update 2014年11月6日 下午10:09:06
+	 * @param msgInfo
+	 * @return
+	 */
+	public MsgInfo updateMsgSendState(MsgInfo msgInfo) {
+		Uri uri = ContentUris.withAppendedId(Provider.MsgInfoColumns.CONTENT_URI, msgInfo.getId());
+		ContentValues values = initMsgInfoValues(msgInfo);
+		mContext.getContentResolver().update(uri, values, null, null);
 		return msgInfo;
 	}
 }

@@ -126,8 +126,8 @@ public class CoreService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 		if (intent != null) {
-			SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 			//监听消息
 			int flag = intent.getIntExtra(FLAG_SYNC, 0);
 			switch (flag) {
@@ -223,6 +223,7 @@ public class CoreService extends Service {
 			msgInfo.setMsgType(com.example.chat.model.MsgInfo.Type.TEXT);
 			msgInfo.setRead(false);
 			msgInfo.setSubject(message.getSubject());
+			msgInfo.setSendState(null);
 			msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
 			int threadId = msgManager.getThreadIdByMembers(from);	//查找本地会话，如果没有就创建
 			if (threadId > 0) {

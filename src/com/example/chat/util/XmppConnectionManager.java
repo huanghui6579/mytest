@@ -51,6 +51,11 @@ public class XmppConnectionManager {
 		configuration = new ConnectionConfiguration(Constants.SERVER_HOST, Constants.SERVER_PORT, Constants.SERVER_NAME);
 		configuration.setSecurityMode(SecurityMode.disabled);
 		
+		try {
+			Class.forName("org.jivesoftware.smack.ReconnectionManager");
+		} catch (Exception e) {
+		}
+		
 		//允许自动连接
 		configuration.setReconnectionAllowed(true);
 		//允许登录成功后更新状态

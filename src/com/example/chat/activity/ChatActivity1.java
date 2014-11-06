@@ -10,12 +10,24 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
+
 import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -66,6 +78,7 @@ import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
 import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.view.CirclePageIndicator;
 
 /**
@@ -177,6 +190,21 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	
 	private MsgAdapter msgAdapter;
 	
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(android.os.Message msg) {
+			switch (msg.what) {
+			case Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE:	//改变聊天消息的发送状态
+				msgAdapter.notifyDataSetChanged();
+				break;
+
+			default:
+				break;
+			}
+		}
+	};
+	
 	/**
 	 * 屏幕尺寸
 	 */
@@ -194,6 +222,10 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 * 加开始加载数据的索引
 	 */
 	private int pageOffset = 0;
+	
+	private AbstractXMPPConnection connection;
+	private ChatManager chatManager = null;
+	private Chat chat = null;
 	
 	@Override
 	protected void initWidow() {
@@ -291,6 +323,43 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		attachPannelAdapter = new AttachPannelAdapter(mAttachItems, mContext);
 		gvAttach.setAdapter(attachPannelAdapter);
 		
+		connection = XmppConnectionManager.getInstance().getConnection();
+		chat = createChat(connection);
+		//注册消息观察者
+		registerContentOberver();
+	}
+	
+	/**
+	 * 创建聊天对象
+	 * @update 2014年11月6日 下午9:38:50
+	 * @return
+	 */
+	private Chat createChat(AbstractXMPPConnection connection) {
+		if (connection.isAuthenticated()) {	//是否登录
+			if (chatManager == null) {
+				chatManager = ChatManager.getInstanceFor(connection);
+			}
+			if (chat == null) {
+				chat = chatManager.createChat(otherSide.getJID(), new MessageListener() {
+					@Override
+					public void processMessage(Chat chat, Message message) {
+						// TODO Auto-generated method stub
+					}
+				});
+			}
+			return chat;
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * 注册消息观察者
+	 * @update 2014年11月6日 下午7:32:34
+	 */
+	private void registerContentOberver() {
+		MsgContentObserver msgContentObserver = new MsgContentObserver(mHandler);
+		getContentResolver().registerContentObserver(Provider.MsgInfoColumns.CONTENT_URI, true, msgContentObserver);
 	}
 	
 	/**
@@ -767,6 +836,26 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	}
 	
 	/**
+	 * 发送文本消息
+	 * @update 2014年11月6日 下午9:46:44
+	 * @param chat
+	 * @param content
+	 * @return
+	 */
+	private MsgInfo sendMsg(Chat chat, String content) {
+		MsgInfo msg = new MsgInfo();
+		msg.setComming(false);
+		msg.setCreationDate(System.currentTimeMillis());
+		msg.setContent(content);
+		msg.setSendState(SendState.SENDING);
+		mMsgInfos.add(msg);
+		
+		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(msg));
+		
+		return msg;
+	}
+	
+	/**
 	 * 
 	 * 处理发送文本消息或者切换到附件模式
 	 * @update 2014年10月28日 上午11:55:35
@@ -778,17 +867,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		}
 		switch (editMode) {
 		case MODE_SEND:	//发送文本消息
-			MsgInfo msg = new MsgInfo();
 			String content = etContent.getText().toString();
-			if (content.startsWith("0")) {	//发送
-				msg.setComming(false);
-			} else {
-				msg.setComming(true);
-			}
-			msg.setCreationDate(new Date().getTime());
-			msg.setContent(content);
-			msg.setSendState(getRandomState());
-			mMsgInfos.add(msg);
+			sendMsg(chat, content);
+			
 			msgAdapter.notifyDataSetChanged();
 			
 			scrollMyListViewToBottom(lvMsgs);
@@ -861,6 +942,38 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		//隐藏键盘
 		hideKeybroad();
 		super.onPause();
+	}
+	
+	/**
+	 * 发送消息的线程
+	 * @author huanghui1
+	 * @update 2014年11月6日 下午9:56:22
+	 */
+	class SendMsgTask implements Runnable {
+		private MsgInfo msgInfo;
+
+		public SendMsgTask(MsgInfo msgInfo) {
+			this.msgInfo = msgInfo;
+		}
+
+		@Override
+		public void run() {
+			try {
+				msgInfo = msgManager.addMsgInfo(msgInfo);
+				if (msgInfo != null) {
+					chat.sendMessage(msgInfo.getContent());
+					msgInfo.setSendState(SendState.SUCCESS);
+				} else {
+					return;
+				}
+			} catch (NotConnectedException | XMPPException e) {
+				msgInfo.setSendState(SendState.FAILED);
+				e.printStackTrace();
+			}
+			msgInfo = msgManager.updateMsgSendState(msgInfo);
+			mHandler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
+		}
+		
 	}
 	
 	/**
@@ -987,25 +1100,30 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
 			SpannableString spannableString = SystemUtil.getExpressionString(mContext, msgInfo.getContent());
 			holder.tvContent.setText(spannableString);
-			switch (msgInfo.getSendState()) {
-			case SENDING:	//正在发送
-				holder.ivMsgState.setVisibility(View.VISIBLE);
-				holder.ivMsgState.setImageResource(R.drawable.chat_msg_state_sending);
-				Animation rotateAnim = AnimationUtils.loadAnimation(context, R.anim.chat_msg_sending);
-				holder.ivMsgState.startAnimation(rotateAnim);
-				break;
-			case SUCCESS:	//发送成功
-				holder.ivMsgState.clearAnimation();
+			if (type == TYPE_OUT) {	//发送的消息
+				switch (msgInfo.getSendState()) {
+				case SENDING:	//正在发送
+					holder.ivMsgState.setVisibility(View.VISIBLE);
+					holder.ivMsgState.setImageResource(R.drawable.chat_msg_state_sending);
+					Animation rotateAnim = AnimationUtils.loadAnimation(context, R.anim.chat_msg_sending);
+					holder.ivMsgState.startAnimation(rotateAnim);
+					break;
+				case SUCCESS:	//发送成功
+					holder.ivMsgState.clearAnimation();
+					holder.ivMsgState.setVisibility(View.GONE);
+					break;
+				case FAILED:
+					holder.ivMsgState.setVisibility(View.VISIBLE);
+					holder.ivMsgState.clearAnimation();
+					holder.ivMsgState.setImageResource(R.drawable.chat_msg_state_failed_selector);
+					break;
+				default:
+					break;
+				}
+			} else {
 				holder.ivMsgState.setVisibility(View.GONE);
-				break;
-			case FAILED:
-				holder.ivMsgState.setVisibility(View.VISIBLE);
-				holder.ivMsgState.clearAnimation();
-				holder.ivMsgState.setImageResource(R.drawable.chat_msg_state_failed_selector);
-				break;
-			default:
-				break;
 			}
+			
 			holder.tvContent.setOnLongClickListener(new View.OnLongClickListener() {
 				
 				@Override
@@ -1054,6 +1172,41 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		ImageView ivHeadIcon;
 		TextView tvContent;
 		ImageView ivMsgState;
+	}
+	
+	/**
+	 * 消息监听的观察者
+	 * @author huanghui1
+	 * @update 2014年11月6日 下午7:27:19
+	 */
+	class MsgContentObserver extends ContentObserver {
+
+		public MsgContentObserver(Handler handler) {
+			super(handler);
+		}
+
+		@Override
+		public void onChange(boolean selfChange, Uri uri) {
+			if (uri != null) {
+				MsgInfo msgInfo = msgManager.getMsgInfoByUri(uri);
+				if (msgInfo != null) {
+					mMsgInfos.add(msgInfo);
+					msgAdapter.notifyDataSetChanged();
+					if (etContent.hasFocus()) {	//有焦点就滚动到最后一条记录
+						scrollMyListViewToBottom(lvMsgs);
+					}
+				}
+			} else {
+				onChange(selfChange);
+			}
+		}
+
+		@Override
+		public void onChange(boolean selfChange) {
+			pageOffset = 0;
+			new LoadDataTask().execute();
+		}
+		
 	}
 
 }

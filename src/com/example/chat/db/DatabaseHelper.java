@@ -14,7 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "example_chat.db";
-	private static final int DB_VERSION = 3;
+	private static final int DB_VERSION = 4;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -73,7 +73,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//创建聊天消息表
 		db.execSQL("CREATE TABLE " + Provider.MsgInfoColumns.TABLE_NAME + " ("
 				+ Provider.MsgInfoColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-				+ Provider.MsgInfoColumns.THREAD_ID + " INTEGER UNIQUE NOT NULL, "
+				+ Provider.MsgInfoColumns.THREAD_ID + " INTEGER NOT NULL, "
 				+ Provider.MsgInfoColumns.FROM_USER + " TEXT NOT NULL, "
 				+ Provider.MsgInfoColumns.TO_USER + " TEXT NOT NULL, "
 				+ Provider.MsgInfoColumns.CONTENT + " TEXT, "

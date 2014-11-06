@@ -5,6 +5,8 @@ import java.util.List;
 
 import android.app.ActionBar;
 import android.content.Context;
+import android.database.ContentObserver;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -318,5 +320,5 @@ public class ChatActivity extends BaseActivity implements OnClickListener, OnIte
 			break;
 		}
 	}
-
+	
 }
