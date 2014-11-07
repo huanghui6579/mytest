@@ -69,6 +69,7 @@ import com.example.chat.model.AttachItem;
 import com.example.chat.model.Emoji;
 import com.example.chat.model.EmojiType;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
 import com.example.chat.model.MsgInfo.SendState;
@@ -210,14 +211,6 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 */
 	public static int[] screenSize = null;
 	
-	private static SendState[] states = {
-		SendState.SENDING,
-		SendState.FAILED,
-		SendState.SUCCESS
-	};
-	
-	private static boolean[] comtype = {true, false};
-	
 	/**
 	 * 加开始加载数据的索引
 	 */
@@ -263,18 +256,12 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 //		mTabHost.getTabWidget().setDividerDrawable(R.drawable.list_divider_drawable);
 	}
 	
-	private SendState getRandomState() {
-		Random random = new Random();
-		int index = random.nextInt(states.length);
-		return states[index];
-	}
-	
 	/**
 	 * 初始化会话消息
 	 * @update 2014年10月31日 下午3:26:57
 	 */
 	private void initMsgInfo() {
-		new LoadDataTask().execute();
+		new LoadDataTask(true).execute();
 	}
 
 	@Override
@@ -287,10 +274,10 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		Intent intent = getIntent();
 		
 		otherSide = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
+		msgThread = intent.getParcelableExtra(ARG_THREAD);
+
 		//获取个人信息
 		mine = ChatApplication.getInstance().getCurrentUser();
-		
-		msgThread = intent.getParcelableExtra(ARG_THREAD);
 		
 		initMsgInfo();
 		
@@ -324,7 +311,6 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		gvAttach.setAdapter(attachPannelAdapter);
 		
 		connection = XmppConnectionManager.getInstance().getConnection();
-		chat = createChat(connection);
 		//注册消息观察者
 		registerContentOberver();
 	}
@@ -368,6 +354,14 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 * @update 2014年10月31日 上午9:18:23
 	 */
 	class LoadDataTask extends AsyncTask<Void, Void, List<MsgInfo>> {
+		/**
+		 * 是否需要滚动到最底部
+		 */
+		private boolean needScroll = true;
+
+		public LoadDataTask(boolean needScroll) {
+			this.needScroll = needScroll;
+		}
 
 		@Override
 		protected List<MsgInfo> doInBackground(Void... params) {
@@ -387,6 +381,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				}
 			} else {	//已经有会话了
 				list = msgManager.getMsgInfosByThreadId(msgThread.getId(), getPageOffset());
+				msgThread = msgManager.getThreadById(msgThread.getId());
+				//TODO 目前固定写死，有、后期会改有群聊的模式
+				otherSide = msgThread.getMembers().get(0);
 			}
 			if (!SystemUtil.isEmpty(list)) {
 				mMsgInfos.clear();
@@ -401,8 +398,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		protected void onPostExecute(List<MsgInfo> result) {
 			if (!SystemUtil.isEmpty(result)) {
 				msgAdapter.notifyDataSetChanged();
-				
-				scrollMyListViewToBottom(lvMsgs);
+				if (needScroll) {
+					scrollMyListViewToBottom(lvMsgs);
+				}
 			}
 		}
 	}
@@ -842,12 +840,19 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 * @param content
 	 * @return
 	 */
-	private MsgInfo sendMsg(Chat chat, String content) {
+	private MsgInfo sendMsg(String content) {
 		MsgInfo msg = new MsgInfo();
 		msg.setComming(false);
 		msg.setCreationDate(System.currentTimeMillis());
 		msg.setContent(content);
 		msg.setSendState(SendState.SENDING);
+		msg.setFromUser(otherSide.getUsername());
+		msg.setToUser(mine.getUsername());
+		msg.setMsgType(Type.TEXT);
+		msg.setRead(true);
+		msg.setMsgPart(null);
+		msg.setSubject(null);
+		msg.setThreadID(msgThread.getId());
 		mMsgInfos.add(msg);
 		
 		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(msg));
@@ -868,7 +873,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		switch (editMode) {
 		case MODE_SEND:	//发送文本消息
 			String content = etContent.getText().toString();
-			sendMsg(chat, content);
+			sendMsg(content);
 			
 			msgAdapter.notifyDataSetChanged();
 			
@@ -960,9 +965,19 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		public void run() {
 			try {
 				msgInfo = msgManager.addMsgInfo(msgInfo);
+				msgThread.setSnippetId(msgInfo.getId());
+				msgThread.setSnippetContent(msgInfo.getContent());
+				msgThread.setModifyDate(System.currentTimeMillis());
 				if (msgInfo != null) {
-					chat.sendMessage(msgInfo.getContent());
-					msgInfo.setSendState(SendState.SUCCESS);
+					if (chat == null) {
+						chat = createChat(connection);
+					}
+					if (chat != null) {
+						chat.sendMessage(msgInfo.getContent());
+						msgInfo.setSendState(SendState.SUCCESS);
+					} else {
+						msgInfo.setSendState(SendState.FAILED);
+					}
 				} else {
 					return;
 				}
@@ -970,7 +985,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				msgInfo.setSendState(SendState.FAILED);
 				e.printStackTrace();
 			}
-			msgInfo = msgManager.updateMsgSendState(msgInfo);
+			msgInfo = msgManager.updateMsgInfo(msgInfo);
 			mHandler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
 		}
 		
@@ -1045,7 +1060,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			MsgViewHolder holder = null;
-			final MsgInfo msgInfo = list.get(position);
+			MsgInfo msgInfo = list.get(position);
 			LayoutInflater inflater = LayoutInflater.from(context);
 			int type = getItemViewType(position);
 			
@@ -1120,8 +1135,12 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				default:
 					break;
 				}
-			} else {
+			} else {	//接收的消息
 				holder.ivMsgState.setVisibility(View.GONE);
+				if (!msgInfo.isRead()) {	//未读，则更新读取状态
+					msgInfo.setRead(true);
+					msgInfo = msgManager.updateMsgInfo(msgInfo);
+				}
 			}
 			
 			holder.tvContent.setOnLongClickListener(new View.OnLongClickListener() {
@@ -1190,9 +1209,11 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			if (uri != null) {
 				MsgInfo msgInfo = msgManager.getMsgInfoByUri(uri);
 				if (msgInfo != null) {
-					mMsgInfos.add(msgInfo);
+					if (!mMsgInfos.contains(msgInfo)) {
+						mMsgInfos.add(msgInfo);
+					}
 					msgAdapter.notifyDataSetChanged();
-					if (etContent.hasFocus()) {	//有焦点就滚动到最后一条记录
+					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
 						scrollMyListViewToBottom(lvMsgs);
 					}
 				}
@@ -1204,7 +1225,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		@Override
 		public void onChange(boolean selfChange) {
 			pageOffset = 0;
-			new LoadDataTask().execute();
+			new LoadDataTask(false).execute();
 		}
 		
 	}

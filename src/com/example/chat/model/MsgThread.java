@@ -1,5 +1,6 @@
 package com.example.chat.model;
 
+import java.util.Comparator;
 import java.util.List;
 
 import android.graphics.Bitmap;
@@ -12,7 +13,7 @@ import android.os.Parcelable;
  * @version 1.0.0
  * @update 2014年10月30日 下午4:50:41
  */
-public class MsgThread implements Parcelable {
+public class MsgThread implements Parcelable, Comparator<MsgThread> {
 	/**
 	 * 主键
 	 */
@@ -154,5 +155,40 @@ public class MsgThread implements Parcelable {
 			return new MsgThread(source);
 		}
 	};
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MsgThread other = (MsgThread) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
+
+	@Override
+	public int compare(MsgThread lhs, MsgThread rhs) {
+		long ltime = lhs.getModifyDate();
+		long rtime = rhs.getModifyDate();
+		if (ltime > rtime) {
+			return -1;
+		} else if (ltime < rtime) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
 
 }

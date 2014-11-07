@@ -1,5 +1,7 @@
 package com.example.chat.model;
 
+import java.util.Comparator;
+
 import com.example.chat.util.Constants;
 
 /**
@@ -8,7 +10,7 @@ import com.example.chat.util.Constants;
  * @version 1.0.0
  * @update 2014年10月28日 下午9:25:58
  */
-public class MsgInfo {
+public class MsgInfo implements Comparator<MsgInfo> {
 	/**
 	 * 主键
 	 */
@@ -269,6 +271,44 @@ public class MsgInfo {
 			default:
 				return SendState.SENDING;
 			}
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		result = prime * result + threadID;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MsgInfo other = (MsgInfo) obj;
+		if (id != other.id)
+			return false;
+		if (threadID != other.threadID)
+			return false;
+		return true;
+	}
+
+	@Override
+	public int compare(MsgInfo lhs, MsgInfo rhs) {
+		int lId = lhs.getId();
+		int rId = rhs.getId();
+		if (lId > rId) {
+			return 1;
+		} else if (lId < rId) {
+			return -1;
+		} else {
+			return 0;
 		}
 	}
 	

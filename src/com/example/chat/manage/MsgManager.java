@@ -2,7 +2,6 @@ package com.example.chat.manage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,7 +9,6 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.text.TextUtils;
 
@@ -61,13 +59,32 @@ public class MsgManager {
 		MsgThread mt = null;
 		if (cursor != null && cursor.moveToFirst()) {
 			mt = new MsgThread();
-			mt.setId(cursor.getInt(cursor.getColumnIndex(Provider.MsgThreadColumns._ID)));
+			mt.setId(id);
 			mt.setMsgThreadName(cursor.getString(cursor.getColumnIndex(Provider.MsgThreadColumns.MSG_THREAD_NAME)));
+			mt.setModifyDate(cursor.getLong(cursor.getColumnIndex(Provider.MsgThreadColumns.MODIFY_DATE)));
+			mt.setSnippetId(cursor.getInt(cursor.getColumnIndex(Provider.MsgThreadColumns.SNIPPET_ID)));
+			mt.setSnippetContent(cursor.getString(cursor.getColumnIndex(Provider.MsgThreadColumns.SNIPPET_CONTENT)));
+			mt.setUnReadCount(cursor.getInt(cursor.getColumnIndex(Provider.MsgThreadColumns.UNREAD_COUNT)));
+			String memberIds = cursor.getString(cursor.getColumnIndex(Provider.MsgThreadColumns.MEMBER_IDS));
+			
+			List<User> members = getMemebersByMemberIds(memberIds);
+			mt.setMembers(members);
 		}
 		if (cursor != null) {
 			cursor.close();
 		}
 		return mt;
+	}
+	
+	/**
+	 * 根据uri获取会话信息
+	 * @update 2014年10月31日 上午10:55:25
+	 * @param uri
+	 * @return
+	 */
+	public MsgThread getThreadByUri(Uri uri) {
+		int id = Integer.parseInt(uri.getLastPathSegment());
+		return getThreadById(id);
 	}
 	
 	/**
@@ -96,7 +113,7 @@ public class MsgManager {
 	}
 	
 	/**
-	 * 舒适化MsgThread的数据源
+	 * 初始化MsgThread的数据源
 	 * @update 2014年10月31日 下午2:06:34
 	 * @param msgThread
 	 * @return
@@ -110,7 +127,18 @@ public class MsgManager {
 		}
 		values.put(Provider.MsgThreadColumns.MSG_THREAD_NAME, threadNme);
 		values.put(Provider.MsgThreadColumns.MEMBER_IDS, memberIds);
-		values.put(Provider.MsgThreadColumns.MODIFY_DATE, new Date().getTime());
+		values.put(Provider.MsgThreadColumns.UNREAD_COUNT, msgThread.getUnReadCount());
+		values.put(Provider.MsgThreadColumns.SNIPPET_ID, msgThread.getSnippetId());
+		String snippetContent = msgThread.getSnippetContent();
+		if (snippetContent == null) {
+			snippetContent = "";
+		}
+		values.put(Provider.MsgThreadColumns.SNIPPET_CONTENT, snippetContent);
+		long time = msgThread.getModifyDate();
+		if (time <= 0) {
+			time = System.currentTimeMillis();
+		}
+		values.put(Provider.MsgThreadColumns.MODIFY_DATE, time);
 		return values;
 	}
 	
@@ -430,6 +458,9 @@ public class MsgManager {
 				msgThread = createMsgThread(msgThread);
 				tid = msgThread.getId();
 			}
+			if (cursor != null) {
+				cursor.close();
+			}
 		}
 		return tid;
 	}
@@ -470,6 +501,9 @@ public class MsgManager {
 				msgThread = createMsgThread(msgThread);
 				tid = msgThread.getId();
 			}
+			if (cursor != null) {
+				cursor.close();
+			}
 		}
 		return tid;
 	}
@@ -490,8 +524,16 @@ public class MsgManager {
 		values.put(Provider.MsgInfoColumns.CREATIO_NDATE, msgInfo.getCreationDate());
 		values.put(Provider.MsgInfoColumns.IS_COMMING, msgInfo.isComming() ? 1 : 0);
 		values.put(Provider.MsgInfoColumns.IS_READ, msgInfo.isRead() ? 1 : 0);
-		values.put(Provider.MsgInfoColumns.MSG_TYPE, msgInfo.getMsgType().ordinal());
-		values.put(Provider.MsgInfoColumns.SEND_STATE, msgInfo.getSendState().ordinal());
+		Type type = msgInfo.getMsgType();
+		if (type == null) {
+			type = Type.TEXT;
+		}
+		values.put(Provider.MsgInfoColumns.MSG_TYPE, type.ordinal());
+		SendState sendState = msgInfo.getSendState();
+		if (sendState == null) {
+			sendState = SendState.SUCCESS;
+		}
+		values.put(Provider.MsgInfoColumns.SEND_STATE, sendState.ordinal());
 		return values;
 	}
 	
@@ -564,12 +606,25 @@ public class MsgManager {
 	}
 	
 	/**
-	 * 更新消息的发送状态
+	 * 更新该会话的最后一条消息记录
+	 * @update 2014年11月7日 下午8:57:42
+	 * @param msgThread
+	 * @return
+	 */
+	public MsgThread updateSnippet(MsgThread msgThread) {
+		ContentValues values = initMsgThreadVaule(msgThread);
+		Uri uri = ContentUris.withAppendedId(Provider.MsgThreadColumns.CONTENT_URI, msgThread.getId());
+		mContext.getContentResolver().update(uri, values, null, null);
+		return msgThread;
+	}
+	
+	/**
+	 * 更新消息信息
 	 * @update 2014年11月6日 下午10:09:06
 	 * @param msgInfo
 	 * @return
 	 */
-	public MsgInfo updateMsgSendState(MsgInfo msgInfo) {
+	public MsgInfo updateMsgInfo(MsgInfo msgInfo) {
 		Uri uri = ContentUris.withAppendedId(Provider.MsgInfoColumns.CONTENT_URI, msgInfo.getId());
 		ContentValues values = initMsgInfoValues(msgInfo);
 		mContext.getContentResolver().update(uri, values, null, null);

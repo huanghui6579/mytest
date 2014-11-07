@@ -1,11 +1,18 @@
 package com.example.chat.fragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.database.ContentObserver;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -19,10 +26,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.chat.R;
+import com.example.chat.activity.ChatActivity1;
 import com.example.chat.activity.CommonAdapter;
+import com.example.chat.manage.MsgManager;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
+import com.example.chat.provider.Provider;
 import com.example.chat.util.SystemUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -43,10 +53,20 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	private ProgressBar pbLoading;
 	private View emptyView;
 	
+	private MsgManager msgManager = MsgManager.getInstance();
+	
 	/**
 	 * 是否需要listview重设置adapter,一般用在fragment的stop后载onresume时需要
 	 */
 	private boolean resetAdapter = false;
+	
+	/**
+	 * 会话集合
+	 */
+	private List<MsgThread> mMsgThreads = new ArrayList<>();
+	private MsgThreadAdapter mThreadAdapter;
+	
+	private Handler mHandler = new Handler();
 	
 	@Override
 	public void onStop() {
@@ -54,12 +74,6 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 		super.onStop();
 	}
 
-	/**
-	 * 会话集合
-	 */
-	private List<MsgThread> mMsgThreads = new ArrayList<>();
-	private MsgThreadAdapter mThreadAdapter;
-	
 	/**
 	 * 初始化fragment
 	 * @update 2014年10月8日 下午10:09:08
@@ -83,18 +97,32 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		//注册会话观察者
+		registerContentOberver();
+		
 		mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				// TODO Auto-generated method stub
-				
+				MsgThread msgThread = mMsgThreads.get(position);
+				Intent intent = new Intent(mContext, ChatActivity1.class);
+				intent.putExtra(ChatActivity1.ARG_THREAD, msgThread);
+				startActivity(intent);
 			}
 		});
 		mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
 		mListView.setAdapter(mThreadAdapter);
 		getLoaderManager().initLoader(0, null, this);
+	}
+	
+	/**
+	 * 注册会话观察者
+	 * @update 2014年11月7日 下午10:05:30
+	 */
+	private void registerContentOberver() {
+		MsgThreadContentObserver msgContentObserver = new MsgThreadContentObserver(mHandler);
+		mContext.getContentResolver().registerContentObserver(Provider.MsgThreadColumns.CONTENT_URI, true, msgContentObserver);
 	}
 	
 	/**
@@ -154,7 +182,11 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			final MsgThread msgThread = list.get(position);
 			holder.tvTitle.setText(msgThread.getMsgThreadName());
 			holder.tvTime.setText(SystemUtil.formatMsgThreadTime(msgThread.getModifyDate()));
-			holder.tvContent.setText(msgThread.getSnippetContent());
+			String snippetContent = msgThread.getSnippetContent();
+			if (TextUtils.isEmpty(snippetContent)) {
+				snippetContent = "";
+			}
+			holder.tvContent.setText(snippetContent);
 			Bitmap icon = msgThread.getIcon();
 			final User member = msgThread.getMembers().get(0);
 			final UserVcard uCard = member.getUserVcard();
@@ -211,5 +243,48 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	@Override
 	public void onLoaderReset(Loader<List<MsgThread>> loader) {
 		mThreadAdapter.swapData(null);
+	}
+	
+	/**
+	 * 重新加载数据
+	 * @update 2014年11月7日 下午10:01:23
+	 */
+	private void reLoadData() {
+		getLoaderManager().restartLoader(0, null, this);
+	}
+	
+	/**
+	 * 会话的内容观察者
+	 * @author huanghui1
+	 * @update 2014年11月7日 下午9:39:06
+	 */
+	class MsgThreadContentObserver extends ContentObserver {
+
+		public MsgThreadContentObserver(Handler handler) {
+			super(handler);
+			// TODO Auto-generated constructor stub
+		}
+
+		@Override
+		public void onChange(boolean selfChange) {
+			reLoadData();
+		}
+
+		@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+		@Override
+		public void onChange(boolean selfChange, Uri uri) {
+			if (uri != null) {
+				MsgThread thread = msgManager.getThreadByUri(uri);
+				if (mMsgThreads.contains(thread)) {
+					mMsgThreads.remove(thread);
+				}
+				mMsgThreads.add(thread);
+				Collections.sort(mMsgThreads, thread);
+				mThreadAdapter.notifyDataSetChanged();
+			} else {
+				onChange(selfChange);
+			}
+		}
+		
 	}
 }
