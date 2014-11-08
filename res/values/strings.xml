@@ -64,6 +64,8 @@
     <string name="contact_mobile">手机</string>
     <string name="contact_address">地区</string>
     <string name="contact_send_add_friend_request_success">发送添加好友请求成功</string>
+    <string name="contact_list_new_friend">新的朋友</string>
+    <string name="contact_list_group_chat">群聊</string>
     
     <string name="chat_msg_edit_hint">请输入内容</string>
     <string name="chat_btn_make_voice_start">按住 说话</string>

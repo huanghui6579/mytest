@@ -24,11 +24,8 @@
         android:layout_margin="@dimen/list_item_padding">
         <ImageView 
 	        android:id="@+id/iv_head_icon"
-	        android:layout_width="@dimen/contact_item_head_icon_width"
-	        android:layout_height="@dimen/contact_item_head_icon_height"
-	        android:scaleType="centerInside"
+	        style="@style/ChatItemHeadIconStyle"
 	        android:layout_centerVertical="true"
-	        android:src="@drawable/contact_head_icon_default"
 	        android:contentDescription="@null"/>
 	    
 	    <TextView 
@@ -44,6 +41,5 @@
 	        android:layout_marginLeft="@dimen/list_item_padding"
 	        android:layout_marginStart="@dimen/list_item_padding"/>
     </RelativeLayout>
-    
 
 </RelativeLayout>

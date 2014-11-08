@@ -630,4 +630,17 @@ public class MsgManager {
 		mContext.getContentResolver().update(uri, values, null, null);
 		return msgInfo;
 	}
+	
+	/**
+	 * 更新会话的基本信息
+	 * @update 2014年11月8日 上午10:44:48
+	 * @param msgThread
+	 * @return
+	 */
+	public MsgThread updateMsgThread(MsgThread msgThread) {
+		Uri uri = ContentUris.withAppendedId(Provider.MsgThreadColumns.CONTENT_URI, msgThread.getId());
+		ContentValues values = initMsgThreadVaule(msgThread);
+		mContext.getContentResolver().update(uri, values, null, null);
+		return msgThread;
+	}
 }

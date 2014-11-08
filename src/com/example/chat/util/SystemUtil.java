@@ -43,7 +43,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.R;
 import com.example.chat.model.Emoji;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
 /**
  * 系统常用的工具方法
@@ -733,4 +737,36 @@ public class SystemUtil {
 		return cachedThreadPool;
 	}
 	
+	/**
+	 * 获得一般的图片加载选项，用户会话列表、聊天界面等的图片显示，该选项没有磁盘缓存图片
+	 * @update 2014年11月8日 上午11:43:13
+	 * @return
+	 */
+	public static DisplayImageOptions getGeneralImageOptions() {
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
+			.showImageOnLoading(R.drawable.contact_head_icon_default)
+			.showImageForEmptyUri(R.drawable.contact_head_icon_default)
+			.showImageOnFail(R.drawable.contact_head_icon_default)
+			.cacheInMemory(true)
+			.cacheOnDisk(false)
+			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+			.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+			.displayer(new FadeInBitmapDisplayer(200))
+			.build();
+		return options;
+	}
+	
+	/**
+	 * 获得通讯录列表的特殊符号的选择器，特殊符号为：“↑”<br />
+	 * <pre>
+	 * String s = "↑";
+	 * char c = s.charAt(0);
+	 * System.out.println((int)c);
+	 * </pre>
+	 * @update 2014年11月8日 下午3:44:14
+	 * @return
+	 */
+	public static int getContactListFirtSection() {
+		return 8593;
+	}
 }

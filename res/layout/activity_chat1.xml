@@ -2,8 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/contact_chat_list_bg">
     
+    <!-- 聊天消息列表 -->
     <ListView 
         android:id="@+id/lv_msgs"
         android:layout_width="match_parent"
@@ -12,8 +14,12 @@
         android:listSelector="@android:color/transparent"
         android:divider="@android:color/transparent"
         android:layout_weight="1"
-        android:background="@color/contact_chat_list_bg"/>
+        android:layout_marginLeft="@dimen/chat_msg_list_spacing_left_right"
+        android:layout_marginStart="@dimen/chat_msg_list_spacing_left_right"
+        android:layout_marginRight="@dimen/chat_msg_list_spacing_left_right"
+        android:layout_marginEnd="@dimen/chat_msg_list_spacing_left_right"/>
     
+    <!-- 信息编辑框 -->
     <RelativeLayout 
         android:id="@+id/layout_content"
         android:layout_width="match_parent"
@@ -109,7 +115,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@color/contact_chat_bottom_layout"
+        android:background="@android:color/white"
         android:visibility="gone">
         <!-- 表情 -->
         <LinearLayout

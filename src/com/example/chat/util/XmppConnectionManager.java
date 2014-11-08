@@ -54,6 +54,7 @@ public class XmppConnectionManager {
 		try {
 			Class.forName("org.jivesoftware.smack.ReconnectionManager");
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
 		//允许自动连接

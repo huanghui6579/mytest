@@ -124,7 +124,7 @@
     <!-- 公共的分割线样式 -->
     <style name="CommonDividerStyle">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_height">0.5dp</item>
         <item name="android:background">@color/divider_color</item>
     </style>
     
@@ -160,9 +160,15 @@
     
     <!-- 聊天用户头像样式 -->
     <style name="ChatItemHeadIconStyle">
+        <item name="android:layout_width">@dimen/chat_msg_item_head_icon_width</item>
+    	<item name="android:layout_height">@dimen/chat_msg_item_head_icon_height</item>
+    	<item name="android:src">@drawable/ic_chat_default_big_head_icon</item>
+    </style>
+    
+    <!-- 用户列表头像样式 -->
+    <style name="ThreadListItemHeadIconStyle" parent="ChatItemHeadIconStyle">
         <item name="android:layout_width">@dimen/contact_item_head_icon_width</item>
     	<item name="android:layout_height">@dimen/contact_item_head_icon_height</item>
-    	<item name="android:src">@drawable/ic_chat_default_big_head_icon</item>
     </style>
     
     <!-- 聊天消息内容样式 -->

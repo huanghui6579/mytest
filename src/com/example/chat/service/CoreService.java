@@ -1,14 +1,18 @@
 package com.example.chat.service;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.TimerTask;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
 
@@ -26,7 +30,9 @@ import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
+import com.example.chat.model.SystemConfig;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
@@ -144,6 +150,13 @@ public class CoreService extends Service {
 		return Service.START_REDELIVER_INTENT;
 	}
 	
+	@Override
+	public void onDestroy() {
+		AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+		connection.removeConnectionListener(new ChatConnectionListener());
+		super.onDestroy();
+	}
+	
 	/**
 	 * 接收openfie的消息
 	 * @author huanghui1
@@ -154,6 +167,7 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+			connection.addConnectionListener(new ChatConnectionListener());
 			if (connection.isAuthenticated()) {	//是否登录
 				ChatManager chatManager = ChatManager.getInstanceFor(connection);
 				chatManager.addChatListener(new ChatManagerListener() {
@@ -197,6 +211,14 @@ public class CoreService extends Service {
 		public void run() {
 			MsgInfo msgInfo = processMsg(message);
 			msgInfo = msgManager.addMsgInfo(msgInfo);
+			int threadId = msgInfo.getThreadID();
+			MsgThread msgThread = msgManager.getThreadById(threadId);
+			if (msgThread != null) {
+				msgThread.setModifyDate(System.currentTimeMillis());
+				msgThread.setSnippetId(msgInfo.getId());
+				msgThread.setSnippetContent(msgInfo.getContent());
+				msgManager.updateMsgThread(msgThread);
+			}
 			if (msgInfo != null) {
 				android.os.Message msg = mHandler.obtainMessage();
 				msg.obj = msgInfo;
@@ -266,5 +288,5 @@ public class CoreService extends Service {
 			return CoreService.this;
 		}
 	}
-
+	
 }

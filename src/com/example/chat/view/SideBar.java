@@ -19,8 +19,8 @@ import com.example.chat.util.SystemUtil;
 public class SideBar extends View {
 	// 触摸事件
 	private OnTouchingLetterChangedListener onTouchingLetterChangedListener;
-	// 26个字母
-	public static String[] b = {"A", "B", "C", "D", "E", "F", "G", "H", "I",
+	// 26个字母加上两个特殊符号
+	public static String[] b = {"↑", "A", "B", "C", "D", "E", "F", "G", "H", "I",
 			"J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
 			"W", "X", "Y", "Z", "#" };
 	private int choose = -1;// 选中

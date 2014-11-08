@@ -74,6 +74,7 @@ import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.User;
+import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
@@ -81,6 +82,9 @@ import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.view.CirclePageIndicator;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 
 /**
  * 聊天界面
@@ -220,6 +224,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	private ChatManager chatManager = null;
 	private Chat chat = null;
 	
+	//图片加载器
+	private ImageLoader mImageLoader = null;
+	
 	@Override
 	protected void initWidow() {
 		
@@ -266,6 +273,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 
 	@Override
 	protected void initData() {
+		
+		mImageLoader = ImageLoader.getInstance();
 		
 		if (screenSize == null) {
 			screenSize = SystemUtil.getScreenSize();
@@ -968,6 +977,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				msgThread.setSnippetId(msgInfo.getId());
 				msgThread.setSnippetContent(msgInfo.getContent());
 				msgThread.setModifyDate(System.currentTimeMillis());
+				msgThread = msgManager.updateMsgThread(msgThread);
 				if (msgInfo != null) {
 					if (chat == null) {
 						chat = createChat(connection);
@@ -1039,6 +1049,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 * @update 2014年10月29日 下午4:36:14
 	 */
 	class MsgAdapter extends CommonAdapter<MsgInfo> {
+		DisplayImageOptions options = SystemUtil.getGeneralImageOptions();
+		
 		private static final int TYPE_OUT = 0;
 		private static final int TYPE_IN = 1;
 		/**
@@ -1105,7 +1117,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				//当条记录的时间
 				//上一条记录的时间
 				long preDate = list.get(position - 1).getCreationDate();
-				if (curDate - preDate > spliteTimeUnit) {	//时间间隔超过10分钟，则显示时间分割条
+				if (Math.abs(curDate - preDate) > spliteTimeUnit) {	//时间间隔超过10分钟，则显示时间分割条
 					holder.tvMsgTime.setVisibility(View.VISIBLE);
 					holder.tvMsgTime.setText(dateFormat.format(new Date(curDate)));
 				} else {
@@ -1115,7 +1127,16 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
 			SpannableString spannableString = SystemUtil.getExpressionString(mContext, msgInfo.getContent());
 			holder.tvContent.setText(spannableString);
-			if (type == TYPE_OUT) {	//发送的消息
+			if (type == TYPE_OUT) {	//自己发送的消息
+				
+				//显示自己的头像
+				String iconPath = mine.getIconPath();
+				if (SystemUtil.isFileExists(iconPath)) {
+					mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, options);
+				} else {
+					mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+				}
+				
 				switch (msgInfo.getSendState()) {
 				case SENDING:	//正在发送
 					holder.ivMsgState.setVisibility(View.VISIBLE);
@@ -1135,7 +1156,20 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				default:
 					break;
 				}
-			} else {	//接收的消息
+			} else {	//接收的消息，对方发送的消息
+				//显示用户图像
+				UserVcard otherVcard = otherSide.getUserVcard();
+				if (otherVcard != null) {
+					String iconPath = otherVcard.getIconPath();
+					if (SystemUtil.isFileExists(iconPath)) {
+						mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, options);
+					} else {
+						mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+					}
+	 			} else {
+	 				mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+	 			}
+				
 				holder.ivMsgState.setVisibility(View.GONE);
 				if (!msgInfo.isRead()) {	//未读，则更新读取状态
 					msgInfo.setRead(true);

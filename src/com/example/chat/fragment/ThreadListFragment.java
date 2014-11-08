@@ -132,17 +132,8 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	 */
 	class MsgThreadAdapter extends CommonAdapter<MsgThread> {
 		
-		DisplayImageOptions options = new DisplayImageOptions.Builder()
-			.showImageOnLoading(R.drawable.contact_head_icon_default)
-			.showImageForEmptyUri(R.drawable.contact_head_icon_default)
-			.showImageOnFail(R.drawable.contact_head_icon_default)
-			.cacheInMemory(true)
-			.cacheOnDisk(false)
-			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
-			.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
-			.displayer(new FadeInBitmapDisplayer(200))
-			.build();
-
+		DisplayImageOptions options = SystemUtil.getGeneralImageOptions();
+		
 		public MsgThreadAdapter(List<MsgThread> list, Context context) {
 			super(list, context);
 		}
@@ -194,10 +185,10 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			if (icon != null) {
 				holder.ivHeadIcon.setImageBitmap(icon);
 			} else {
-				if (TextUtils.isEmpty(iconPath)) {
-					mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+				if (SystemUtil.isFileExists(iconPath)) {
+					mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, options);
 				} else {
-					mImageLoader.displayImage(Scheme.FILE.wrap(uCard.getIconPath()), holder.ivHeadIcon, options);
+					mImageLoader.displayImage(null, holder.ivHeadIcon, options);
 				}
 			}
 			return convertView;

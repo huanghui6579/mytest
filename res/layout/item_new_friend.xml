@@ -10,29 +10,33 @@
         style="@style/ThreadListItemHeadIconStyle"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
-        android:src="@drawable/ic_launcher"
+        android:src="@drawable/ic_chat_default_big_head_icon"
         android:contentDescription="@null"/>
     
     <TextView 
-        android:id="@+id/tv_time"
+        android:id="@+id/tv_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:gravity="top|end"
-        android:textSize="@dimen/session_list_item_time"
-        android:textColor="@color/session_list_item_time"/>
+        android:gravity="center_vertical|end"
+        android:layout_centerVertical="true"
+        android:layout_alignBottom="@id/iv_head_icon"
+        android:layout_alignTop="@id/iv_head_icon"
+        android:textSize="@dimen/session_list_item_content"
+        android:textColor="@color/session_list_item_content"/>
     
     <LinearLayout 
         android:layout_width="match_parent"
-        android:layout_height="@dimen/contact_item_head_icon_height"
+        android:layout_height="match_parent"
         android:orientation="vertical"
+        android:layout_centerVertical="true"
         android:layout_marginLeft="@dimen/list_item_padding"
         android:layout_marginStart="@dimen/list_item_padding"
         android:layout_toRightOf="@id/iv_head_icon"
         android:layout_toEndOf="@id/iv_head_icon"
-        android:layout_toStartOf="@id/tv_time"
-        android:layout_toLeftOf="@id/tv_time"
+        android:layout_toStartOf="@id/tv_state"
+        android:layout_toLeftOf="@id/tv_state"
         android:layout_alignBottom="@id/iv_head_icon"
         android:layout_alignTop="@id/iv_head_icon">
         <TextView 

@@ -120,17 +120,36 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 			}
 		});
 		
+//		View headView = LayoutInflater.from(mContext).inflate(R.layout.layout_contact_head, null);
+//		lvContact.addHeaderView(headView, null, false);
+		/*TextView headView = new TextView(mContext);
+		headView.setText("头部");
+		lvContact.addHeaderView(headView);*/
+		
 		lvContact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				// TODO Auto-generated method stub
-				User target = users.get(position);
-				Intent intent = new Intent(mContext, UserInfoActivity.class);
-				intent.putExtra(UserInfoActivity.ARG_USER, target);
-				intent.putExtra(UserInfoActivity.ARG_OPTION, UserInfoActivity.OPTION_LOAD);
-				startActivity(intent);
+				int type = mAdapter.getItemViewType(position);
+				switch (type) {
+				case ContactAdapter.TYPE_NEW_FRIEND:	//新的朋友
+					SystemUtil.makeShortToast("选择的新朋友");
+					break;
+				case ContactAdapter.TYPE_GROUP_CHAT:	//群聊
+					SystemUtil.makeShortToast("选择群聊");
+					
+					break;
+				case ContactAdapter.TYPE_CONTACT:	//联系人列表
+					User target = (User) mAdapter.getItem(position);
+					Intent intent = new Intent(mContext, UserInfoActivity.class);
+					intent.putExtra(UserInfoActivity.ARG_USER, target);
+					intent.putExtra(UserInfoActivity.ARG_OPTION, UserInfoActivity.OPTION_LOAD);
+					startActivity(intent);
+					break;
+				default:
+					break;
+				}
 			}
 		});
 		return view;
@@ -224,6 +243,21 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	 * @update 2014年10月11日 下午10:10:14
 	 */
 	class ContactAdapter extends CommonAdapter<User> implements SectionIndexer {
+		//listview头部的特殊分类数量
+		int headCount = 2;
+		/**
+		 * 新的好友
+		 */
+		private static final int TYPE_NEW_FRIEND = 0;
+		/**
+		 * 群聊
+		 */
+		private static final int TYPE_GROUP_CHAT = 1;
+		/**
+		 * 好友列表
+		 */
+		private static final int TYPE_CONTACT = 2;
+		
 		private ImageLoader imageLoader = ImageLoader.getInstance();
 		
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
@@ -244,42 +278,67 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ViewHolder holder = null;
+			int type = getItemViewType(position);
 			if (convertView == null) {
 				holder = new ViewHolder();
 				LayoutInflater inflater = LayoutInflater.from(context);
-				convertView = inflater.inflate(R.layout.item_contact, parent, false);
+				
+				switch (type) {
+				case TYPE_NEW_FRIEND:	//新的朋友
+				case TYPE_GROUP_CHAT:	//群聊
+					convertView = inflater.inflate(R.layout.layout_contact_head, parent, false);
+					break;
+				case TYPE_CONTACT:	//联系人
+					convertView = inflater.inflate(R.layout.item_contact, parent, false);
+					holder.tvCatalog = (TextView) convertView.findViewById(R.id.tv_catalog);
+					break;
+				}
 				
 				holder.tvName = (TextView) convertView.findViewById(R.id.tv_name);
-				holder.tvCatalog = (TextView) convertView.findViewById(R.id.tv_catalog);
 				holder.ivIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);
 				
 				convertView.setTag(holder);
 			} else {
 				holder = (ViewHolder) convertView.getTag();
 			}
-
-			final User user = list.get(position);
-			final UserVcard userVcard = user.getUserVcard();
-			holder.tvName.setText(user.getName());
-			
-			if (userVcard != null) {
-				String iconPath = userVcard.getIconPath();
-				if (SystemUtil.isFileExists(iconPath)) {
-					imageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivIcon, options);
-				} else {
-					imageLoader.displayImage(Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.contact_head_icon_default)), holder.ivIcon, options);
+			switch (type) {
+			case TYPE_NEW_FRIEND:	//新的朋友
+				holder.tvName.setText(R.string.contact_list_new_friend);
+				holder.ivIcon.setImageResource(R.drawable.contact_new_friend);
+				break;
+			case TYPE_GROUP_CHAT:	//群聊
+				holder.tvName.setText(R.string.contact_list_group_chat);
+				holder.ivIcon.setImageResource(R.drawable.contact_group_chat);
+				break;
+			case TYPE_CONTACT:	//联系人
+				final User user = (User) getItem(position);
+				if (user != null) {
+					String sortLetter = user.getSortLetter();
+					final UserVcard userVcard = user.getUserVcard();
+					holder.tvName.setText(user.getName());
+					
+					if (userVcard != null) {
+						String iconPath = userVcard.getIconPath();
+						if (SystemUtil.isFileExists(iconPath)) {
+							imageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivIcon, options);
+						} else {
+							imageLoader.displayImage(Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.contact_head_icon_default)), holder.ivIcon, options);
+						}
+					} else {
+						imageLoader.displayImage(Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.contact_head_icon_default)), holder.ivIcon, options);
+					}
+					
+					//根据position获取分类的首字母的Char ascii值
+					int section = getSectionForPosition(position);
+					if (position == getPositionForSection(section)) {
+						holder.tvCatalog.setVisibility(View.VISIBLE);
+						holder.tvCatalog.setText(sortLetter);
+					} else {
+						holder.tvCatalog.setVisibility(View.GONE);
+					}
 				}
-			} else {
-				imageLoader.displayImage(Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.contact_head_icon_default)), holder.ivIcon, options);
-			}
-			
-			//根据position获取分类的首字母的Char ascii值
-			int section = getSectionForPosition(position);
-			if (position == getPositionForSection(section)) {
-				holder.tvCatalog.setVisibility(View.VISIBLE);
-				holder.tvCatalog.setText(user.getSortLetter());
-			} else {
-				holder.tvCatalog.setVisibility(View.GONE);
+				
+				break;
 			}
 			
 			return convertView;
@@ -290,17 +349,57 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 			// TODO Auto-generated method stub
 			return null;
 		}
+		
+		@Override
+		public Object getItem(int position) {
+			if (position < headCount) {
+				return null;
+			} else {
+				return list.get(position - headCount);
+			}
+		}
+		
+		@Override
+		public int getItemViewType(int position) {
+			int type = TYPE_CONTACT;
+			switch (position) {
+			case 0:	//新的朋友
+				type = TYPE_NEW_FRIEND;
+				break;
+			case 1:	//群聊
+				type = TYPE_GROUP_CHAT;
+				break;
+			default:
+				type = TYPE_CONTACT;
+				break;
+			}
+			return type;
+		}
+
+		@Override
+		public int getViewTypeCount() {
+			return headCount + 1;
+		}
+
+		@Override
+		public int getCount() {
+			return list.size() + headCount;
+		}
 
 		@Override
 		public int getPositionForSection(int sectionIndex) {
-			for (int i = 0; i < getCount(); i++) {
-				String sortStr = list.get(i).getSortLetter();
-				char fisrtChar = sortStr.charAt(0);
-				if (fisrtChar == sectionIndex) {
-					return i;
+			if (sectionIndex == SystemUtil.getContactListFirtSection()) {
+				return 0;
+			} else {
+				for (int i = headCount; i < getCount(); i++) {
+					String sortStr = list.get(i - headCount).getSortLetter();
+					char fisrtChar = sortStr.charAt(0);
+					if (fisrtChar == sectionIndex) {
+						return i;
+					}
 				}
+				return -1;
 			}
-			return -1;
 		}
 
 		/*
@@ -308,7 +407,11 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		 */
 		@Override
 		public int getSectionForPosition(int position) {
-			return list.get(position).getSortLetter().charAt(0);
+			if (position < headCount) {
+				return SystemUtil.getContactListFirtSection();
+			} else {
+				return list.get(position - headCount).getSortLetter().charAt(0);
+			}
 		}
 		
 	}

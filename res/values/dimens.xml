@@ -41,6 +41,10 @@
     <dimen name="chat_msg_item_out_content_padding_right">10dp</dimen>
     <dimen name="chat_msg_item_send_state_margin_left_right">10dp</dimen>
     
+    <dimen name="chat_msg_list_spacing_left_right">4dp</dimen>
+    <dimen name="chat_msg_item_head_icon_width">40dp</dimen>
+    <dimen name="chat_msg_item_head_icon_height">40dp</dimen>
+    
     <dimen name="empty_promit_text">22sp</dimen>
     
     <dimen name="login_font_account">16sp</dimen>
