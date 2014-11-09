@@ -103,6 +103,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.MsgThreadColumns.SNIPPET_ID + " INTEGER, "
 				+ Provider.MsgThreadColumns.SNIPPET_CONTENT + " TEXT, "
 				+ Provider.MsgThreadColumns.MEMBER_IDS + " TEXT);");
+		
+		//创建新的朋友列表
+		db.execSQL("CREATE TABLE " + Provider.NewFriendColumns.TABLE_NAME + " ("
+				+ Provider.NewFriendColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ Provider.NewFriendColumns.USER_ID + " INTEGER UNIQUE NOT NULL, "
+				+ Provider.NewFriendColumns.FRIEND_STATUS + " INTEGER DEFAULT 0, "
+				+ Provider.NewFriendColumns.CONTENT + " TEXT, "
+				+ Provider.NewFriendColumns.CREATION_DATE + " LONG);");
 	}
 
 	@Override
@@ -113,6 +121,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + Provider.MsgInfoColumns.TABLE_NAME);  
         db.execSQL("DROP TABLE IF EXISTS " + Provider.MsgPartColumns.TABLE_NAME);  
         db.execSQL("DROP TABLE IF EXISTS " + Provider.MsgThreadColumns.TABLE_NAME);  
+        db.execSQL("DROP TABLE IF EXISTS " + Provider.NewFriendColumns.TABLE_NAME);  
         onCreate(db);
 	}
 

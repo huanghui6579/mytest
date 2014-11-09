@@ -12,6 +12,7 @@ import android.provider.BaseColumns;
 public class Provider {
 	public static final String AUTHORITY_USER = "com.example.chat.provider.user";
 	public static final String AUTHORITY_MSG = "com.example.chat.provider.msg";
+	public static final String AUTHORITY_NEW_FRIEND = "com.example.chat.provider.newFriend";
 	public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.example.chat";
 	public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.example.chat";
 
@@ -148,5 +149,22 @@ public class Provider {
 		public static final String SNIPPET_ID = "snippetId";
 		public static final String SNIPPET_CONTENT = "snippetContent";
 		public static final String MEMBER_IDS = "memberIds";
+	}
+	
+	/**
+	 * 新的朋友信息列表
+	 * @author Administrator
+	 * @update 2014年11月9日 下午2:57:53
+	 * @version 1.0.0
+	 */
+	public static final class NewFriendColumns implements BaseColumns {
+		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY_NEW_FRIEND + "/newFirends");
+		public static final String TABLE_NAME = "t_new_friend";
+		public static final String DEFAULT_SORT_ORDER = "creationDate DESC";	//最后修改时间的降序
+		
+		public static final String USER_ID = "userId";
+		public static final String FRIEND_STATUS = "friendStatus";
+		public static final String CONTENT = "content";
+		public static final String CREATION_DATE = "creationDate";
 	}
 }

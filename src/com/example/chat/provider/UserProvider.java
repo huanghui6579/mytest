@@ -32,12 +32,16 @@ public class UserProvider extends ContentProvider {
 	
 	private static final int PERSONALS = 6;
 	private static final int PERSONAL_ID = 7;
+	
+	private static final int NEW_FRIENDS = 8;
+	private static final int NEW_FRIEND_ID = 9;
 
 	private static final UriMatcher mUriMatcher;
 	
 	private static Map<String, String> mUserProjectionMap = null;
 	private static Map<String, String> mUserVcardProjectionMap = null;
 	private static Map<String, String> mPersonalProjectionMap = null;
+	private static Map<String, String> mNewFriendProjectionMap = null;
 	
 	private DatabaseHelper mDBHelper;
 	
@@ -95,6 +99,13 @@ public class UserProvider extends ContentProvider {
 		mPersonalProjectionMap.put(Provider.PersonalColums.ZIPCODE, Provider.PersonalColums.ZIPCODE);
 		mPersonalProjectionMap.put(Provider.PersonalColums.ICONPATH, Provider.PersonalColums.ICONPATH);
 		mPersonalProjectionMap.put(Provider.PersonalColums.ICONHASH, Provider.PersonalColums.ICONHASH);
+		
+		mNewFriendProjectionMap = new HashMap<String, String>();
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns._ID, Provider.NewFriendColumns._ID);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.USER_ID, Provider.NewFriendColumns.USER_ID);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.FRIEND_STATUS, Provider.NewFriendColumns.FRIEND_STATUS);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.CREATION_DATE, Provider.NewFriendColumns.CREATION_DATE);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.CONTENT, Provider.NewFriendColumns.CONTENT);
 	}
 
 	@Override
@@ -132,6 +143,10 @@ public class UserProvider extends ContentProvider {
 		case PERSONAL_ID:	//查询个人信息
 			qb.setTables(Provider.PersonalColums.TABLE_NAME);
 			break;
+		case NEW_FRIENDS:
+		case NEW_FRIEND_ID:	//查询新的朋友信息
+			qb.setTables(Provider.NewFriendColumns.TABLE_NAME);
+			break;
 		default:
 			break;
 		}
@@ -166,6 +181,13 @@ public class UserProvider extends ContentProvider {
 			qb.setProjectionMap(mPersonalProjectionMap);
 			qb.appendWhere(Provider.PersonalColums.USERNAME + " = " + uri.getLastPathSegment());
 			break;
+		case NEW_FRIENDS:
+			qb.setProjectionMap(mNewFriendProjectionMap);
+			break;
+		case NEW_FRIEND_ID:
+			qb.setProjectionMap(mNewFriendProjectionMap);
+			qb.appendWhere(Provider.NewFriendColumns._ID + " = " + uri.getLastPathSegment());
+			break;
 		default:
 			break;
 		}
@@ -181,9 +203,11 @@ public class UserProvider extends ContentProvider {
 		case USERS:
 		case USER_VCARDS:
 		case USER_CONDITION:
+		case NEW_FRIENDS:
 			return Provider.CONTENT_TYPE;
 		case USER_ID:
 		case USER_VCARD_ID:
+		case NEW_FRIEND_ID:
 			return Provider.CONTENT_ITEM_TYPE;
 		default:
 			break;
@@ -230,6 +254,9 @@ public class UserProvider extends ContentProvider {
 			if (!cv.containsKey(Provider.PersonalColums.PASSWORD)) {
 				cv.put(Provider.PersonalColums.PASSWORD, "");
 			}
+			break;
+		case NEW_FRIENDS:
+			tableName = Provider.NewFriendColumns.TABLE_NAME;
 			break;
 		default:
 			break;
@@ -278,6 +305,12 @@ public class UserProvider extends ContentProvider {
 			case PERSONAL_ID:
 				count = db.delete(Provider.PersonalColums.TABLE_NAME, Provider.PersonalColums._ID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
 				break;
+			case NEW_FRIENDS:
+				count = db.delete(Provider.NewFriendColumns.TABLE_NAME, selection, selectionArgs);
+				break;
+			case NEW_FRIEND_ID:
+				count = db.delete(Provider.NewFriendColumns.TABLE_NAME, Provider.NewFriendColumns._ID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
+				break;
 			default:
 				break;
 			}
@@ -317,6 +350,12 @@ public class UserProvider extends ContentProvider {
 				break;
 			case PERSONAL_ID:
 				count = db.update(Provider.PersonalColums.TABLE_NAME, values, Provider.PersonalColums._ID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
+				break;
+			case NEW_FRIENDS:
+				count = db.update(Provider.NewFriendColumns.TABLE_NAME, values, selection, selectionArgs);
+				break;
+			case NEW_FRIEND_ID:
+				count = db.update(Provider.NewFriendColumns.TABLE_NAME, values, Provider.NewFriendColumns._ID + " = " + uri.getLastPathSegment() + (TextUtils.isEmpty(selection) ? "" : " and (" + selection + ")"), selectionArgs);
 				break;
 			default:
 				break;
