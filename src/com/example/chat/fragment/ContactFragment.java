@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.activity.CommonAdapter;
+import com.example.chat.activity.NewFriendInfoActivity;
 import com.example.chat.activity.UserInfoActivity;
 import com.example.chat.activity.MainActivity.LazyLoadCallBack;
 import com.example.chat.manage.UserManager;
@@ -132,9 +133,11 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				int type = mAdapter.getItemViewType(position);
+				Intent intent = null;
 				switch (type) {
 				case ContactAdapter.TYPE_NEW_FRIEND:	//新的朋友
-					SystemUtil.makeShortToast("选择的新朋友");
+					intent = new Intent(mContext, NewFriendInfoActivity.class);
+					startActivity(intent);
 					break;
 				case ContactAdapter.TYPE_GROUP_CHAT:	//群聊
 					SystemUtil.makeShortToast("选择群聊");
@@ -142,7 +145,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 					break;
 				case ContactAdapter.TYPE_CONTACT:	//联系人列表
 					User target = (User) mAdapter.getItem(position);
-					Intent intent = new Intent(mContext, UserInfoActivity.class);
+					intent = new Intent(mContext, UserInfoActivity.class);
 					intent.putExtra(UserInfoActivity.ARG_USER, target);
 					intent.putExtra(UserInfoActivity.ARG_OPTION, UserInfoActivity.OPTION_LOAD);
 					startActivity(intent);

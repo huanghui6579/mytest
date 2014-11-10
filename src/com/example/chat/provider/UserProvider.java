@@ -54,6 +54,8 @@ public class UserProvider extends ContentProvider {
 		mUriMatcher.addURI(Provider.AUTHORITY_USER, "userVcards/#", USER_VCARD_ID);
 		mUriMatcher.addURI(Provider.AUTHORITY_USER, "personals", PERSONALS);
 		mUriMatcher.addURI(Provider.AUTHORITY_USER, "personals/#", PERSONAL_ID);
+		mUriMatcher.addURI(Provider.AUTHORITY_NEW_FRIEND, "newFirends", NEW_FRIENDS);
+		mUriMatcher.addURI(Provider.AUTHORITY_NEW_FRIEND, "newFirends/#", NEW_FRIEND_ID);
 		
 		mUserProjectionMap = new HashMap<String, String>();
 		mUserProjectionMap.put(Provider.UserColumns._ID, Provider.UserColumns._ID);
@@ -106,6 +108,10 @@ public class UserProvider extends ContentProvider {
 		mNewFriendProjectionMap.put(Provider.NewFriendColumns.FRIEND_STATUS, Provider.NewFriendColumns.FRIEND_STATUS);
 		mNewFriendProjectionMap.put(Provider.NewFriendColumns.CREATION_DATE, Provider.NewFriendColumns.CREATION_DATE);
 		mNewFriendProjectionMap.put(Provider.NewFriendColumns.CONTENT, Provider.NewFriendColumns.CONTENT);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.FROM_USER, Provider.NewFriendColumns.FROM_USER);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.TO_USER, Provider.NewFriendColumns.TO_USER);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.ICON_HASH, Provider.NewFriendColumns.ICON_HASH);
+		mNewFriendProjectionMap.put(Provider.NewFriendColumns.ICON_PATH, Provider.NewFriendColumns.ICON_PATH);
 	}
 
 	@Override

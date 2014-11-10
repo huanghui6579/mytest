@@ -7,39 +7,25 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
-import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
-import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTabHost;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.text.Editable;
-import android.text.Layout;
-import android.text.Selection;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -49,8 +35,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.RelativeLayout;
 import android.widget.TabHost.TabSpec;
 import android.widget.EditText;
@@ -66,7 +50,6 @@ import com.example.chat.R;
 import com.example.chat.fragment.EmojiFragment;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AttachItem;
-import com.example.chat.model.Emoji;
 import com.example.chat.model.EmojiType;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.Type;
@@ -78,10 +61,8 @@ import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
-import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
-import com.example.chat.view.CirclePageIndicator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -227,13 +208,6 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	//图片加载器
 	private ImageLoader mImageLoader = null;
 	
-	@Override
-	protected void initWidow() {
-		
-		ActionBar actionBar = getActionBar();
-		actionBar.setDisplayHomeAsUpEnabled(true);
-	}
-
 	@Override
 	protected int getContentView() {
 		// TODO Auto-generated method stub

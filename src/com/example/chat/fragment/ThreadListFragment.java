@@ -233,7 +233,9 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 
 	@Override
 	public void onLoaderReset(Loader<List<MsgThread>> loader) {
-		mThreadAdapter.swapData(null);
+		if (mThreadAdapter != null) {
+			mThreadAdapter.swapData(null);
+		}
 	}
 	
 	/**

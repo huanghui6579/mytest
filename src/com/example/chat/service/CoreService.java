@@ -1,20 +1,26 @@
 package com.example.chat.service;
 
-import java.io.IOException;
-import java.util.Date;
+import java.io.File;
+import java.util.Collection;
 import java.util.List;
-import java.util.TimerTask;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.filter.OrFilter;
+import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.filter.PacketTypeFilter;
+import org.jivesoftware.smack.packet.DefaultPacketExtension;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
+import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PacketExtension;
+import org.jivesoftware.smack.packet.Presence;
 
 import android.app.Service;
 import android.content.Intent;
@@ -31,8 +37,9 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgThread;
+import com.example.chat.model.NewFriendInfo;
+import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.Personal;
-import com.example.chat.model.SystemConfig;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
@@ -60,6 +67,8 @@ public class CoreService extends Service {
 	private MyHandler mHandler = null;
 	
 	private HandlerThread mHandlerThread = null;
+	private static PacketListener mChatPacketListener;
+	private static ChatManager mChatManager;
 	
 	private class MyHandler extends Handler {
 		
@@ -121,6 +130,12 @@ public class CoreService extends Service {
 			mHandlerThread.start();
 			mHandler = new MyHandler(mHandlerThread.getLooper());
 		}
+		PacketFilter packetFilter = new OrFilter(new PacketTypeFilter(IQ.class), new PacketTypeFilter(Presence.class));
+		if (mChatPacketListener == null) {
+			mChatPacketListener = new ChatPacketListener();
+			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+			connection.addPacketListener(mChatPacketListener, packetFilter);
+		}
 		super.onCreate();
 	}
 
@@ -168,23 +183,12 @@ public class CoreService extends Service {
 		public void run() {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.addConnectionListener(new ChatConnectionListener());
+//			packetCollector.nextResult();
 			if (connection.isAuthenticated()) {	//是否登录
-				ChatManager chatManager = ChatManager.getInstanceFor(connection);
-				chatManager.addChatListener(new ChatManagerListener() {
-					
-					@Override
-					public void chatCreated(Chat chat, boolean createdLocally) {
-						if (!createdLocally) {
-							chat.addMessageListener(new MessageListener() {
-								
-								@Override
-								public void processMessage(Chat chat, Message message) {
-									SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
-								}
-							});
-						}
-					}
-				});
+				if (mChatManager == null) {
+					mChatManager = ChatManager.getInstanceFor(connection);
+					mChatManager.addChatListener(new MyChatManagerListener());
+				}
 			} else {	//重新登录
 				
 			}
@@ -210,21 +214,24 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			MsgInfo msgInfo = processMsg(message);
-			msgInfo = msgManager.addMsgInfo(msgInfo);
-			int threadId = msgInfo.getThreadID();
-			MsgThread msgThread = msgManager.getThreadById(threadId);
-			if (msgThread != null) {
-				msgThread.setModifyDate(System.currentTimeMillis());
-				msgThread.setSnippetId(msgInfo.getId());
-				msgThread.setSnippetContent(msgInfo.getContent());
-				msgManager.updateMsgThread(msgThread);
-			}
 			if (msgInfo != null) {
-				android.os.Message msg = mHandler.obtainMessage();
-				msg.obj = msgInfo;
-				msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
-				mHandler.sendMessage(msg);
+				msgInfo = msgManager.addMsgInfo(msgInfo);
+				int threadId = msgInfo.getThreadID();
+				MsgThread msgThread = msgManager.getThreadById(threadId);
+				if (msgThread != null) {
+					msgThread.setModifyDate(System.currentTimeMillis());
+					msgThread.setSnippetId(msgInfo.getId());
+					msgThread.setSnippetContent(msgInfo.getContent());
+					msgManager.updateMsgThread(msgThread);
+				}
+				if (msgInfo != null) {
+					android.os.Message msg = mHandler.obtainMessage();
+					msg.obj = msgInfo;
+					msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
+					mHandler.sendMessage(msg);
+				}
 			}
+			
 		}
 		
 	}
@@ -279,6 +286,122 @@ public class CoreService extends Service {
 			userManager.updateFriends(users);
 			intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
 			sendBroadcast(intent);
+		}
+		
+	}
+	
+	/**
+	 * 接收消息的监听器
+	 * @author huanghui1
+	 * @update 2014年11月10日 下午6:10:15
+	 */
+	public class ChatPacketListener implements PacketListener {
+
+		@Override
+		public void processPacket(Packet packet) throws NotConnectedException {
+			//TODO 
+			if (packet instanceof Presence) {
+				Presence presence = (Presence) packet;
+				SystemUtil.getCachedThreadPool().execute(new HandlePresenceTask(presence));
+			}
+		}
+		
+	}
+	
+	/**
+	 * 聊天消息监听器
+	 * @author huanghui1
+	 * @update 2014年11月10日 下午6:16:07
+	 */
+	public class MyChatManagerListener implements ChatManagerListener {
+
+		@Override
+		public void chatCreated(Chat chat, boolean createdLocally) {
+			if (!createdLocally) {
+				chat.addMessageListener(new MessageListener() {
+					
+					@Override
+					public void processMessage(Chat chat, Message message) {
+						SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
+					}
+				});
+			}
+		}
+		
+	}
+	
+	/**
+	 * 处理添加好友请求等任务
+	 * @author huanghui1
+	 * @update 2014年11月10日 下午8:57:51
+	 */
+	class HandlePresenceTask implements Runnable {
+		private Presence presence;
+
+		public HandlePresenceTask(Presence presence) {
+			super();
+			this.presence = presence;
+		}
+
+		@Override
+		public void run() {
+			Collection<PacketExtension> extensions = presence.getExtensions();
+			boolean isEmpty = SystemUtil.isEmpty(extensions);
+			Presence.Type type = presence.getType();
+			/*
+			 *  •	available: 表示处于在线状态
+				•	unavailable: 表示处于离线状态
+				•	subscribe: 表示发出添加好友的申请
+				•	unsubscribe: 表示发出删除好友的申请
+				•	unsubscribed: 表示拒绝添加对方为好友
+				•	error: 表示presence信息报中包含了一个错误消息。
+
+			 */
+			Log.d("---------processPacket--------" + type.name());
+			switch (type) {
+			case subscribe:	//添加好友的申请
+				NewFriendInfo newInfo = new NewFriendInfo();
+				String from = SystemUtil.unwrapJid(presence.getFrom());
+				String to = SystemUtil.unwrapJid(presence.getTo());
+				newInfo.setFriendStatus(FriendStatus.ACCEPT);
+				newInfo.setFrom(from);
+				newInfo.setTo(to);
+				if (!isEmpty) {
+					String photoVal = null;
+					String hash = null;
+					for (PacketExtension packetExtension : extensions) {
+						if (packetExtension instanceof DefaultPacketExtension) {
+							DefaultPacketExtension defaultPacketExtension = (DefaultPacketExtension) packetExtension;
+							Collection<String> names = defaultPacketExtension.getNames();
+							if (names.contains("photo")) {
+								photoVal = defaultPacketExtension.getValue("photo");
+							}
+							if (names.contains("hash")) {
+								hash = defaultPacketExtension.getValue("hash");
+							}
+							
+						}
+					}
+					if (!TextUtils.isEmpty(hash)) {
+						//根据对方用户账号查询本地的图片
+						File icon = SystemUtil.generateIconFile(from);
+						if (icon.exists()) {	//文件已经存在，则判断hash，看是否需要更新图像
+							String oldHash = SystemUtil.getFileHash(icon);
+							if (!oldHash.equals(hash)) {	//需要更新图像
+								String savePath = icon.getAbsolutePath();
+								icon = SystemUtil.saveFile(photoVal, savePath);
+							}
+							newInfo.setIconHash(hash);
+							newInfo.setIconPath(icon.getAbsolutePath());
+						}
+					}
+				}
+				newInfo = userManager.saveOrUpdateNewFriendInfo(newInfo);
+				break;
+
+			default:
+				break;
+			}
 		}
 		
 	}

@@ -23,6 +23,8 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jivesoftware.smack.util.StringUtils;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -240,6 +242,54 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 保存文件，根据用户名动态生成文件夹，该用户名为当前登录的用户名
+	 * @update 2014年10月23日 下午5:06:50
+	 * @param data
+	 * @param filePath 保存文件的路径，不含文件名
+	 * @param filename 保存的文件名称，不含有路径
+	 * @return
+	 */
+	public static File saveFile(byte[] data, String savePath) {
+		BufferedOutputStream bos = null;
+		FileOutputStream fos = null;
+		File saveFile = null;
+		try {
+			saveFile = new File(savePath);
+			File dir = saveFile.getParentFile();
+			if (!dir.exists()) {
+				dir.mkdirs();
+			}
+			fos = new FileOutputStream(saveFile);
+			bos = new BufferedOutputStream(fos);
+			bos.write(data);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (bos != null) {
+				try {
+					bos.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				bos = null;
+			}
+			if (fos != null) {
+				try {
+					fos.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				fos = null;
+			}
+		}
+		return saveFile;
+	}
+	
+	/**
 	 * 根据文件的全路径判断文件是否存在
 	 * @update 2014年10月24日 上午9:00:51
 	 * @param filePath
@@ -302,6 +352,38 @@ public class SystemUtil {
 			}
 		}
 		return saveFile;
+	}
+	
+	/**
+	 * 保存文件，根据用户名动态生成文件夹，该用户名为当前登录的用户名
+	 * @update 2014年10月23日 下午5:06:50
+	 * @param photoVal 图片的Base64位编码字符串
+	 * @param saveFile 保存文件的路径，不含文件名
+	 * @return
+	 */
+	public static File saveFile(String photoVal, File saveFile) {
+		byte[] data = getAvatarByStringVal(photoVal);
+		if (data != null && data.length > 0) {
+			return saveFile(data, saveFile);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * 保存文件，根据用户名动态生成文件夹，该用户名为当前登录的用户名
+	 * @update 2014年10月23日 下午5:06:50
+	 * @param photoVal 图片的Base64位编码字符串
+	 * @param saveFile 保存文件的路径，不含文件名
+	 * @return
+	 */
+	public static File saveFile(String photoVal, String savePath) {
+		byte[] data = getAvatarByStringVal(photoVal);
+		if (data != null && data.length > 0) {
+			return saveFile(data, savePath);
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -431,12 +513,25 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 通过64编码将图像的字符创解析为byte数组
+	 * @update 2014年11月10日 下午9:45:31
+	 * @param val
+	 * @return
+	 */
+	public static byte[] getAvatarByStringVal(String val) {
+        if (val == null) {
+            return null;
+        }
+        return StringUtils.decodeBase64(val);
+    }
+	
+	/**
 	 * 根据当前用户获取root目录
 	 * @update 2014年10月24日 下午8:12:44
 	 * @return
 	 */
 	public static File getDefaultRoot() {
-		String currentUser = ChatApplication.getInstance().getCurrentUser().getUsername();
+		String currentUser = ChatApplication.getInstance().getCurrentAccount();
 		File root = new File(Environment.getExternalStorageDirectory(), "ChatApp" + File.separator + currentUser);
 		if (!root.exists()) {
 			root.mkdirs();
@@ -768,5 +863,33 @@ public class SystemUtil {
 	 */
 	public static int getContactListFirtSection() {
 		return 8593;
+	}
+	
+	/**
+	 * 根据用户账号来包装成完整的jid,格式为:xxx@domain
+	 * @update 2014年11月10日 下午8:47:14
+	 * @param account 账号，格式为：xxx
+	 * @return
+	 */
+	public static String wrapJid(String account) {
+		if (!TextUtils.isEmpty(account)) {
+			return account + "@" + Constants.SERVER_NAME;
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * 将完整的jid托包装为账号，格式为：xxx
+	 * @update 2014年11月10日 下午8:47:14
+	 * @param jid 账号，格式为：xxx@doamin
+	 * @return
+	 */
+	public static String unwrapJid(String jid) {
+		if (!TextUtils.isEmpty(jid)) {
+			return jid.substring(0, jid.indexOf("@"));
+		} else {
+			return null;
+		}
 	}
 }

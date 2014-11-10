@@ -14,7 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "example_chat.db";
-	private static final int DB_VERSION = 4;
+	private static final int DB_VERSION = 6;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -110,6 +110,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.NewFriendColumns.USER_ID + " INTEGER UNIQUE NOT NULL, "
 				+ Provider.NewFriendColumns.FRIEND_STATUS + " INTEGER DEFAULT 0, "
 				+ Provider.NewFriendColumns.CONTENT + " TEXT, "
+				+ Provider.NewFriendColumns.FROM_USER + " TEXT UNIQUE NOT NULL, "
+				+ Provider.NewFriendColumns.TO_USER + " TEXT UNIQUE NOT NULL, "
+				+ Provider.NewFriendColumns.ICON_HASH + " TEXT, "
+				+ Provider.NewFriendColumns.ICON_PATH + " TEXT, "
 				+ Provider.NewFriendColumns.CREATION_DATE + " LONG);");
 	}
 

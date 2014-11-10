@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.model.NewFriendInfo;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
@@ -525,5 +527,206 @@ public class UserManager {
 			cursor.close();
 		}
 		return person;
+	}
+	
+	/**
+	 * 将cursor转换为对象
+	 * @update 2014年11月10日 下午10:13:11
+	 * @param cursor
+	 * @return
+	 */
+	private NewFriendInfo cursoToInfo(Cursor cursor) {
+		NewFriendInfo newFriendInfo = new NewFriendInfo();
+		newFriendInfo.setId(cursor.getInt(cursor.getColumnIndex(Provider.NewFriendColumns._ID)));
+		newFriendInfo.setFriendStatus(NewFriendInfo.FriendStatus.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.NewFriendColumns.FRIEND_STATUS))));
+		newFriendInfo.setCreationDate(cursor.getLong(cursor.getColumnIndex(Provider.NewFriendColumns.CREATION_DATE)));
+		newFriendInfo.setContent(cursor.getString(cursor.getColumnIndex(Provider.NewFriendColumns.CONTENT)));
+		newFriendInfo.setFrom(cursor.getString(cursor.getColumnIndex(Provider.NewFriendColumns.FROM_USER)));
+		newFriendInfo.setTo(cursor.getString(cursor.getColumnIndex(Provider.NewFriendColumns.TO_USER)));
+		newFriendInfo.setIconHash(cursor.getString(cursor.getColumnIndex(Provider.NewFriendColumns.ICON_HASH)));
+		newFriendInfo.setIconPath(cursor.getString(cursor.getColumnIndex(Provider.NewFriendColumns.ICON_PATH)));
+		int userId = cursor.getInt(cursor.getColumnIndex(Provider.NewFriendColumns.USER_ID));
+		User user = getUserById(userId);
+		newFriendInfo.setUser(user);
+		return newFriendInfo;
+	}
+	
+	/**
+	 * 获取新的朋友列表信息
+	 * @update 2014年11月10日 下午2:48:16
+	 * @return
+	 */
+	public List<NewFriendInfo> getNewFriendInfos() {
+		List<NewFriendInfo> list = null;
+		Cursor cursor = mContext.getContentResolver().query(Provider.NewFriendColumns.CONTENT_URI, null, null, null, null);
+		if (cursor != null) {
+			list = new ArrayList<>();
+			while (cursor.moveToNext()) {
+				NewFriendInfo newFriendInfo = cursoToInfo(cursor);
+				
+				list.add(newFriendInfo);
+			}
+			
+			cursor.close();
+		}
+		return list;
+	}
+	
+	/**
+	 * 根据新的新的朋友信息id获得其详细信息
+	 * @update 2014年11月10日 下午10:04:20
+	 * @param infoId
+	 * @return
+	 */
+	public NewFriendInfo getNewFriendInfoById(int infoId) {
+		NewFriendInfo newInfo = null;
+		Uri uri = ContentUris.withAppendedId(Provider.NewFriendColumns.CONTENT_URI, infoId);
+		Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			newInfo = cursoToInfo(cursor);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return newInfo;
+	}
+	
+	/**
+	 * 根据新的新的朋友信息id获得其详细信息
+	 * @update 2014年11月10日 下午10:04:20
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public NewFriendInfo getNewFriendInfoByAccounts(String from, String to) {
+		NewFriendInfo newInfo = null;
+		Cursor cursor = mContext.getContentResolver().query(Provider.NewFriendColumns.CONTENT_URI, null, Provider.NewFriendColumns.FROM_USER + " = ? and " + Provider.NewFriendColumns.TO_USER + " = ?", new String[] {from, to}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			newInfo = cursoToInfo(cursor);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return newInfo;
+	}
+	
+	/**
+	 * 初始化新的朋友的数据库值
+	 * @update 2014年11月10日 下午3:18:40
+	 * @param newInfo
+	 * @return
+	 */
+	private ContentValues initNewFriendSimpleContentValues(NewFriendInfo newInfo) {
+		ContentValues values = new ContentValues();
+		values.put(Provider.NewFriendColumns.FRIEND_STATUS, newInfo.getFriendStatus().ordinal());
+		values.put(Provider.NewFriendColumns.CONTENT, newInfo.getContent());
+		return values;
+	}
+	
+	/**
+	 * 初始化新的朋友的数据库值
+	 * @update 2014年11月10日 下午3:18:40
+	 * @param newInfo
+	 * @return
+	 */
+	private ContentValues initNewFriendContentValues(NewFriendInfo newInfo) {
+		ContentValues values = new ContentValues();
+		values.put(Provider.NewFriendColumns.CREATION_DATE, newInfo.getCreationDate());
+		values.put(Provider.NewFriendColumns.FRIEND_STATUS, newInfo.getFriendStatus().ordinal());
+		values.put(Provider.NewFriendColumns.CONTENT, newInfo.getContent());
+		values.put(Provider.NewFriendColumns.FROM_USER, newInfo.getFrom());
+		values.put(Provider.NewFriendColumns.TO_USER, newInfo.getTo());
+		values.put(Provider.NewFriendColumns.ICON_HASH, newInfo.getIconHash());
+		values.put(Provider.NewFriendColumns.ICON_PATH, newInfo.getIconPath());
+		values.put(Provider.NewFriendColumns.USER_ID, newInfo.getUser().getId());
+		return values;
+	}
+	
+	/**
+	 * 
+	 * @update 2014年11月10日 下午3:24:54
+	 * @param newInfo
+	 * @return
+	 */
+	public NewFriendInfo addNewFriendInfo(NewFriendInfo newInfo) {
+		if (newInfo == null) {
+			return null;
+		}
+		ContentValues values = initNewFriendContentValues(newInfo);
+		Uri uri = mContext.getContentResolver().insert(Provider.NewFriendColumns.CONTENT_URI, values);
+		if (uri != null) {
+			int id = Integer.parseInt(uri.getLastPathSegment());
+			newInfo.setId(id);
+		}
+		return newInfo;
+	}
+	
+	/**
+	 * 保存或添加新的朋友信息
+	 * @update 2014年11月10日 下午10:02:52
+	 * @param newInfo
+	 * @return
+	 */
+	public NewFriendInfo saveOrUpdateNewFriendInfo(NewFriendInfo newInfo) {
+		if (newInfo == null) {
+			return null;
+		}
+		NewFriendInfo temp = getNewFriendInfoByAccounts(newInfo.getFrom(), newInfo.getTo());
+		if (temp == null) {	//不存在，则添加
+			newInfo = addNewFriendInfo(newInfo);
+		} else {	//更新
+			newInfo.setId(temp.getId());
+			newInfo.setUser(temp.getUser());
+			newInfo = updateNewFriendInfo(newInfo);
+		}
+		return newInfo;
+	}
+	
+	/**
+	 * 根据id删除新的朋友信息
+	 * @update 2014年11月10日 下午3:29:47
+	 * @param infoId
+	 * @return 是否删除成功
+	 */
+	public boolean deleteNewFriendInfo(int infoId) {
+		Uri uri = ContentUris.withAppendedId(Provider.NewFriendColumns.CONTENT_URI, infoId);
+		int count = mContext.getContentResolver().delete(uri, null, null);
+		if (count > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 更新新的朋友的信息的状态
+	 * @update 2014年11月10日 下午3:17:14
+	 * @param newInfo
+	 * @return
+	 */
+	public NewFriendInfo updateNewFriendInfoState(NewFriendInfo newInfo) {
+		if (newInfo == null) {
+			return null;
+		}
+		ContentValues values = initNewFriendSimpleContentValues(newInfo);
+		Uri uri = ContentUris.withAppendedId(Provider.NewFriendColumns.CONTENT_URI, newInfo.getId());
+		mContext.getContentResolver().update(uri, values, null, null);
+		return newInfo;
+	}
+	
+	/**
+	 * 更新新的朋友的信息
+	 * @update 2014年11月10日 下午3:17:14
+	 * @param newInfo
+	 * @return
+	 */
+	public NewFriendInfo updateNewFriendInfo(NewFriendInfo newInfo) {
+		if (newInfo == null) {
+			return null;
+		}
+		ContentValues values = initNewFriendContentValues(newInfo);
+		Uri uri = ContentUris.withAppendedId(Provider.NewFriendColumns.CONTENT_URI, newInfo.getId());
+		mContext.getContentResolver().update(uri, values, null, null);
+		return newInfo;
 	}
 }

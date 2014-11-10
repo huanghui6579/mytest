@@ -166,5 +166,9 @@ public class Provider {
 		public static final String FRIEND_STATUS = "friendStatus";
 		public static final String CONTENT = "content";
 		public static final String CREATION_DATE = "creationDate";
+		public static final String FROM_USER = "from_user";
+		public static final String TO_USER = "to_user";
+		public static final String ICON_HASH = "iconHash";
+		public static final String ICON_PATH = "iconPath";
 	}
 }

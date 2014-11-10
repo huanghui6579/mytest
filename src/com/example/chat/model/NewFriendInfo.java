@@ -1,5 +1,8 @@
 package com.example.chat.model;
 
+import com.example.chat.ChatApplication;
+import com.example.chat.R;
+
 /**
  * 新的朋友实体
  * @author Administrator
@@ -27,6 +30,23 @@ public class NewFriendInfo {
 	 * 创建时间
 	 */
 	private long creationDate;
+	/**
+	 * 发送申请的人账号
+	 */
+	private String from;
+	/**
+	 * 接收人的账号
+	 */
+	private String to;
+	/**
+	 * 对方头像的hash值
+	 */
+	private String iconHash;
+	/**
+	 * 对方头像的本地地址
+	 */
+	private String iconPath;
+	
 
 	/**
 	 * 好友请求的状态，目前分为四种：<br />
@@ -41,23 +61,49 @@ public class NewFriendInfo {
 	 * @version 1.0.0
 	 *
 	 */
-	enum FriendStatus {
+	public enum FriendStatus {
 		/**
 		 * 未添加，此时是陌生人
 		 */
-		UNADD,
+		UNADD {
+			@Override
+			public String getTitle() {
+				return ChatApplication.getInstance().getString(R.string.contact_new_friend_status_title_unadd);
+			}
+		},
 		/**
 		 * 已经添加，此时已经是好友
 		 */
-		ADDED,
+		ADDED {
+			@Override
+			public String getTitle() {
+				return ChatApplication.getInstance().getString(R.string.contact_new_friend_status_title_added);
+			}
+		},
 		/**
 		 * 自己像对方发送添加好友的请求，对方还没有答应或回应
 		 */
-		VERIFYING,
+		VERIFYING {
+			@Override
+			public String getTitle() {
+				return ChatApplication.getInstance().getString(R.string.contact_new_friend_status_title_added);
+			}
+		},
 		/**
 		 * 对方向自己发送添加好友的请求，自己还没有答应或者回应
 		 */
-		ACCEPT;
+		ACCEPT {
+			@Override
+			public String getTitle() {
+				return ChatApplication.getInstance().getString(R.string.contact_new_friend_status_title_accept);
+			}
+		};
+		
+		public abstract String getTitle();
+		
+		public String getValue() {
+			return this.name();
+		}
 		
 		public static FriendStatus valueOf(int value) {
 			switch (value) {
@@ -115,6 +161,38 @@ public class NewFriendInfo {
 
 	public void setCreationDate(long creationDate) {
 		this.creationDate = creationDate;
+	}
+
+	public String getFrom() {
+		return from;
+	}
+
+	public void setFrom(String from) {
+		this.from = from;
+	}
+
+	public String getTo() {
+		return to;
+	}
+
+	public void setTo(String to) {
+		this.to = to;
+	}
+
+	public String getIconHash() {
+		return iconHash;
+	}
+
+	public void setIconHash(String iconHash) {
+		this.iconHash = iconHash;
+	}
+
+	public String getIconPath() {
+		return iconPath;
+	}
+
+	public void setIconPath(String iconPath) {
+		this.iconPath = iconPath;
 	}
 	
 }

@@ -19,6 +19,7 @@
     <string name="activity_lable_add_friend">添加好友</string>
     <string name="activity_lable_friend_info">好友详情</string>
     <string name="activity_lable_chat">聊天</string>
+    <string name="activity_lable_new_friend_info">聊天</string>
     
     <string name="email">邮箱：%1$s</string>
     <string name="username">用户名：%1$s</string>
@@ -66,6 +67,11 @@
     <string name="contact_send_add_friend_request_success">发送添加好友请求成功</string>
     <string name="contact_list_new_friend">新的朋友</string>
     <string name="contact_list_group_chat">群聊</string>
+    
+    <string name="contact_new_friend_status_title_unadd">添加</string>
+    <string name="contact_new_friend_status_title_added">已添加</string>
+    <string name="contact_new_friend_status_title_verifying">等待验证</string>
+    <string name="contact_new_friend_status_title_accept">接受</string>
     
     <string name="chat_msg_edit_hint">请输入内容</string>
     <string name="chat_btn_make_voice_start">按住 说话</string>

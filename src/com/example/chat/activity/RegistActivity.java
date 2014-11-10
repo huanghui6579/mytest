@@ -67,15 +67,6 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 	
 	private SystemConfig systemConfig;
 	private ProgressDialog pDialog;
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		ActionBar actionBar = getActionBar();
-		actionBar.setDisplayHomeAsUpEnabled(true);
-		
-	}
 
 	@Override
 	protected int getContentView() {

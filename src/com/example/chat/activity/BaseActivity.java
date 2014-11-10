@@ -21,6 +21,11 @@ public abstract class BaseActivity extends FragmentActivity {
 	protected SharedPreferences preferences;
 	protected ChatApplication application;
 	
+	/**
+	 * ActionBar是否允许有返回按钮
+	 */
+	private boolean homeAsUpEnabled = true;
+	
 	protected static String TAG = null; 
 	
 	@Override
@@ -32,6 +37,8 @@ public abstract class BaseActivity extends FragmentActivity {
 		TAG = this.getClass().getCanonicalName();
 		
 		application = ChatApplication.getInstance();
+		
+		homeAsUpEnabled = isHomeAsUpEnabled();
 		
 		initWidow();
 		
@@ -49,11 +56,25 @@ public abstract class BaseActivity extends FragmentActivity {
 	}
 	
 	/**
+	 * 是否有允许ActionBar左上角显示返回按钮
+	 * @update 2014年11月10日 下午3:48:11
+	 * @return
+	 */
+	protected boolean isHomeAsUpEnabled() {
+		return homeAsUpEnabled;
+	}
+	
+	/**
 	 * 初始化一些窗口信息
 	 * @update 2014年10月10日 下午9:29:18
 	 */
 	protected void initWidow() {
-		
+		ActionBar actionBar = getActionBar();
+		if (homeAsUpEnabled) {
+			actionBar.setDisplayHomeAsUpEnabled(true);
+		} else {
+			actionBar.setDisplayHomeAsUpEnabled(false);
+		}
 	};
 	
 	/**

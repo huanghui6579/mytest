@@ -82,14 +82,6 @@ public class AddFriendActivity extends BaseActivity {
 	};
 	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		ActionBar actionBar = getActionBar();
-		actionBar.setDisplayHomeAsUpEnabled(true);
-	}
-
-	@Override
 	protected int getContentView() {
 		return R.layout.activity_search_friend;
 	}

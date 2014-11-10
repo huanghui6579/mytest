@@ -58,6 +58,11 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	protected int getContentView() {
 		return R.layout.activity_login;
 	}
+	
+	@Override
+	protected boolean isHomeAsUpEnabled() {
+		return false;
+	}
 
 	@Override
 	protected void initView() {
