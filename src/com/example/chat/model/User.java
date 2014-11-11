@@ -349,7 +349,17 @@ public class User implements Parcelable, Comparator<User> {
 		} else if (TAG_OTHER.equals(rhs.getSortLetter())) {
 			return -1;
 		} else {
-			return lhs.getSortLetter().compareTo(rhs.getSortLetter());
+			String lSort = lhs.getSortLetter();
+			String rSort = rhs.getSortLetter();
+			if (lSort == null && rSort != null) {
+				return -1;
+			} else if (lSort != null && rSort == null) {
+				return 1;
+			} else if (lSort == null && rSort == null) {
+				return 0;
+			} else {
+				return lSort.compareTo(rSort);
+			}
 		}
 	}
 }

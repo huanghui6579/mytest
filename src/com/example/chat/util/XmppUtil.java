@@ -6,16 +6,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManager;
-import org.jivesoftware.smack.ChatManagerListener;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
-import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.RosterPacket.ItemStatus;
 import org.jivesoftware.smackx.search.ReportedData;
@@ -28,6 +23,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 
+import com.example.chat.model.HeadIcon;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
@@ -108,7 +104,7 @@ public class XmppUtil {
 				} else {
 					user.setJID(jid);
 				}
-				String username = jid.substring(0, jid.indexOf("@"));
+				String username = SystemUtil.unwrapJid(jid);
 				user.setNickname(name);
 				user.setUsername(username);
 				user.setMode(mode);
@@ -218,16 +214,6 @@ public class XmppUtil {
 	 * @return
 	 */
 	public static Bitmap getUserIcon(AbstractXMPPConnection connection, String user) {
-		ChatManager chatManager = ChatManager.getInstanceFor(connection);
-		chatManager.createChat("", new MessageListener() {
-			
-			@Override
-			public void processMessage(Chat chat, Message message) {
-//				Message.Type.fromString("dsd");
-				// TODO Auto-generated method stub
-//				message.
-			}
-		});
 		Bitmap icon = null;
 		VCard card = getUserVcard(connection, user);
 		if(card != null) {
@@ -237,6 +223,28 @@ public class XmppUtil {
 			}
 		}
 		return icon;
+	}
+	
+	/**
+	 * 从服务器上保存用户的头像
+	 * @update 2014年11月11日 下午10:15:33
+	 * @param connection
+	 * @param username 用户的账号，不含有@及其之后的信息
+	 * @return
+	 */
+	public static HeadIcon downloadUserIcon(AbstractXMPPConnection connection, String username) {
+		VCard card = getUserVcard(connection, SystemUtil.wrapJid(username));
+		HeadIcon headIcon = null;
+		if (card != null) {
+			byte[] data = card.getAvatar();
+			if (data != null && data.length > 0) {
+				headIcon = new HeadIcon();
+				File file = SystemUtil.saveFile(data, SystemUtil.generateIconFile(username));
+				headIcon.setFilePath(file.getAbsolutePath());
+				headIcon.setHash(card.getAvatarHash());
+			}
+		}
+		return headIcon;
 	}
 	
 	/**

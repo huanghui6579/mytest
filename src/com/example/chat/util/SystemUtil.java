@@ -892,4 +892,31 @@ public class SystemUtil {
 			return null;
 		}
 	}
+	
+	/**
+	 * 删除文件
+	 * @update 2014年11月11日 下午7:07:25
+	 * @param filePath
+	 */
+	public static void deleteFile(String filePath) {
+		if (filePath == null) {
+			return;
+		}
+		File file = new File(filePath);
+		deleteFile(file);
+	}
+	
+	/**
+	 * 删除文件
+	 * @update 2014年11月11日 下午7:07:25
+	 * @param file
+	 */
+	public static void deleteFile(File file) {
+		if (file == null) {
+			return;
+		}
+		if (file.exists()) {
+			file.delete();
+		}
+	}
 }

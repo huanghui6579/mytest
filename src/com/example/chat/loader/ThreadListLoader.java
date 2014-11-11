@@ -1,4 +1,4 @@
-package com.example.chat.fragment;
+package com.example.chat.loader;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import com.example.chat.model.MsgThread;
  * @author huanghui1
  * @update 2014年10月31日 下午8:59:03
  */
-class ThreadListLoader extends AsyncTaskLoader<List<MsgThread>> {
+public class ThreadListLoader extends AsyncTaskLoader<List<MsgThread>> {
 	private MsgManager msgManager = MsgManager.getInstance();
 	
 	private List<MsgThread> list = null;

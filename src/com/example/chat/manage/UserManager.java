@@ -162,6 +162,27 @@ public class UserManager {
 	}
 	
 	/**
+	 * 更新用户信息，只更新nickname、uservcard等基本信息
+	 * @update 2014年11月11日 下午9:51:42
+	 * @param user
+	 * @return
+	 */
+	public User updateSimpleUser(User user) {
+		ContentValues values = new ContentValues();
+		values.put(Provider.UserColumns.NICKNAME, user.getNickname());
+		values.put(Provider.UserColumns.EMAIL, user.getEmail());
+		values.put(Provider.UserColumns.PHONE, user.getPhone());
+		mContext.getContentResolver().update(ContentUris.withAppendedId(Provider.UserColumns.CONTENT_URI, user.getId()), values, null, null);
+		//更新电子名片
+		UserVcard uCard = user.getUserVcard();
+		if (uCard != null) {
+			uCard = saveOrUpdateUserVacard(uCard);
+			user.setUserVcard(uCard);
+		}
+		return user;
+	}
+	
+	/**
 	 * 更新或保存好友的名片
 	 * @update 2014年10月23日 下午8:20:43
 	 * @param uCard
@@ -579,8 +600,19 @@ public class UserManager {
 	 * @return
 	 */
 	public NewFriendInfo getNewFriendInfoById(int infoId) {
-		NewFriendInfo newInfo = null;
 		Uri uri = ContentUris.withAppendedId(Provider.NewFriendColumns.CONTENT_URI, infoId);
+		return getNewFriendInfoByUri(uri);
+	}
+	
+	/**
+	 * 根据新的新的朋友信息uri获得其详细信息
+	 * @update 2014年11月11日 下午3:53:35
+	 * @param uri
+	 * @return
+	 */
+	public NewFriendInfo getNewFriendInfoByUri(Uri uri) {
+		NewFriendInfo newInfo = null;
+//		Uri uri = ContentUris.withAppendedId(Provider.NewFriendColumns.CONTENT_URI, infoId);
 		Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
 		if (cursor != null && cursor.moveToFirst()) {
 			newInfo = cursoToInfo(cursor);
@@ -638,7 +670,12 @@ public class UserManager {
 		values.put(Provider.NewFriendColumns.TO_USER, newInfo.getTo());
 		values.put(Provider.NewFriendColumns.ICON_HASH, newInfo.getIconHash());
 		values.put(Provider.NewFriendColumns.ICON_PATH, newInfo.getIconPath());
-		values.put(Provider.NewFriendColumns.USER_ID, newInfo.getUser().getId());
+		User user = newInfo.getUser();
+		int id = 0;
+		if (user != null) {
+			id = user.getId();
+		}
+		values.put(Provider.NewFriendColumns.USER_ID, id);
 		return values;
 	}
 	
@@ -676,7 +713,10 @@ public class UserManager {
 			newInfo = addNewFriendInfo(newInfo);
 		} else {	//更新
 			newInfo.setId(temp.getId());
-			newInfo.setUser(temp.getUser());
+			User user = newInfo.getUser();
+			if (user == null) {
+				newInfo.setUser(temp.getUser());
+			}
 			newInfo = updateNewFriendInfo(newInfo);
 		}
 		return newInfo;

@@ -19,10 +19,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:gravity="center_vertical|end"
         android:layout_centerVertical="true"
-        android:layout_alignBottom="@id/iv_head_icon"
-        android:layout_alignTop="@id/iv_head_icon"
+        android:gravity="center"
+        android:padding="8dp"
         android:textSize="@dimen/session_list_item_content"
         android:textColor="@color/session_list_item_content"/>
     

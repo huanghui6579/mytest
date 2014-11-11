@@ -28,6 +28,7 @@ import android.widget.TextView;
 import com.example.chat.R;
 import com.example.chat.activity.ChatActivity1;
 import com.example.chat.activity.CommonAdapter;
+import com.example.chat.loader.ThreadListLoader;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.User;
@@ -36,8 +37,6 @@ import com.example.chat.provider.Provider;
 import com.example.chat.util.SystemUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 
 /**
@@ -211,7 +210,7 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	@Override
 	public void onLoadFinished(Loader<List<MsgThread>> loader,
 			List<MsgThread> data) {
-		if (!SystemUtil.isEmpty(data)) {
+		/*if (!SystemUtil.isEmpty(data)) {
 			if (mThreadAdapter == null) {
 				mMsgThreads.addAll(data);
 				mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
@@ -227,7 +226,22 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			}
 		} else {
 			mListView.setEmptyView(emptyView);
+		}*/
+		if (mThreadAdapter == null) {
+			mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
+			mListView.setAdapter(mThreadAdapter);
 		}
+		if (!SystemUtil.isEmpty(data)) {
+			mMsgThreads.addAll(data);
+			if (resetAdapter) {
+				mListView.setAdapter(mThreadAdapter);
+				mListView.setEmptyView(emptyView);
+			}
+		}
+		if (mListView.getEmptyView() == null) {
+			mListView.setEmptyView(emptyView);
+		}
+		mThreadAdapter.notifyDataSetChanged();
 		pbLoading.setVisibility(View.GONE);
 	}
 

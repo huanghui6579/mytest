@@ -1,5 +1,7 @@
 package com.example.chat.model;
 
+import java.util.Comparator;
+
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 
@@ -9,7 +11,7 @@ import com.example.chat.R;
  * @update 2014年11月9日 下午2:30:42
  * @version 1.0.0
  */
-public class NewFriendInfo {
+public class NewFriendInfo implements Comparator<NewFriendInfo> {
 	/**
 	 * 主键
 	 */
@@ -22,6 +24,10 @@ public class NewFriendInfo {
 	 * 好友请求的状态，默认是UNADD
 	 */
 	private FriendStatus friendStatus = FriendStatus.UNADD;
+	/**
+	 * 标题
+	 */
+	private String title;
 	/**
 	 * 描述信息
 	 */
@@ -193,6 +199,78 @@ public class NewFriendInfo {
 
 	public void setIconPath(String iconPath) {
 		this.iconPath = iconPath;
+	}
+
+	public String getTitle() {
+		String s = null;
+		if (title == null) {
+			if (user != null) {
+				s = user.getNickname();
+			} else {
+				switch (friendStatus) {
+				case ACCEPT:	//对方发送的添加信息，等待我的同意
+					s = from;
+					break;
+				case VERIFYING:	//我发送的添加信息，等对方我的同意
+					s = to;
+					break;
+
+				default:
+					break;
+				}
+			}
+		} else {
+			s = title;
+		}
+		return s;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	@Override
+	public String toString() {
+		return "NewFriendInfo [id=" + id + ", user=" + user + ", friendStatus="
+				+ friendStatus + ", title=" + title + ", content=" + content
+				+ ", creationDate=" + creationDate + ", from=" + from + ", to="
+				+ to + ", iconHash=" + iconHash + ", iconPath=" + iconPath
+				+ "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		NewFriendInfo other = (NewFriendInfo) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
+
+	@Override
+	public int compare(NewFriendInfo lhs, NewFriendInfo rhs) {
+		long ltime = lhs.getCreationDate();
+		long rtime = rhs.getCreationDate();
+		if (ltime > rtime) {
+			return -1;
+		} else if (ltime < rtime) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 	
 }
