@@ -58,6 +58,10 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	 * 是否需要listview重设置adapter,一般用在fragment的stop后载onresume时需要
 	 */
 	private boolean resetAdapter = false;
+	/**
+	 * 是否自动刷新，当数据库数据发生变动时，只有删除时才不会自动刷新
+	 */
+	private boolean autoRefresh = true;
 	
 	/**
 	 * 会话集合
@@ -231,6 +235,7 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
 			mListView.setAdapter(mThreadAdapter);
 		}
+		mMsgThreads.clear();
 		if (!SystemUtil.isEmpty(data)) {
 			mMsgThreads.addAll(data);
 			if (resetAdapter) {
@@ -274,22 +279,30 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 
 		@Override
 		public void onChange(boolean selfChange) {
-			reLoadData();
+			if (autoRefresh) {
+				reLoadData();
+			}
 		}
 
 		@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 		@Override
 		public void onChange(boolean selfChange, Uri uri) {
-			if (uri != null) {
-				MsgThread thread = msgManager.getThreadByUri(uri);
-				if (mMsgThreads.contains(thread)) {
-					mMsgThreads.remove(thread);
+			if (autoRefresh) {
+				if (uri != null) {
+					MsgThread thread = msgManager.getThreadByUri(uri);
+					if (thread != null) {	//非删除行为
+						if (mMsgThreads.contains(thread)) {
+							mMsgThreads.remove(thread);
+						}
+						mMsgThreads.add(thread);
+						Collections.sort(mMsgThreads, thread);
+						mThreadAdapter.notifyDataSetChanged();
+					} else {
+						onChange(selfChange);
+					}
+				} else {
+					onChange(selfChange);
 				}
-				mMsgThreads.add(thread);
-				Collections.sort(mMsgThreads, thread);
-				mThreadAdapter.notifyDataSetChanged();
-			} else {
-				onChange(selfChange);
 			}
 		}
 		

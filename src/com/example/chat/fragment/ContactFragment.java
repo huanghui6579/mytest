@@ -3,17 +3,28 @@ package com.example.chat.fragment;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jivesoftware.smack.AbstractXMPPConnection;
+
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -22,14 +33,18 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.activity.CommonAdapter;
+import com.example.chat.activity.MainActivity.LazyLoadCallBack;
 import com.example.chat.activity.NewFriendInfoActivity;
 import com.example.chat.activity.UserInfoActivity;
-import com.example.chat.activity.MainActivity.LazyLoadCallBack;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
+import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.util.XmppConnectionManager;
+import com.example.chat.util.XmppUtil;
+import com.example.chat.view.MyAlertDialogFragment;
 import com.example.chat.view.SideBar;
 import com.example.chat.view.SideBar.OnTouchingLetterChangedListener;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -53,7 +68,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	
 	private ContactAdapter mAdapter;
 	
-	private List<User> users = new ArrayList<>();
+	private List<User> mUsers = new ArrayList<>();
 	
 	private UserManager userManager = UserManager.getInstance();
 	
@@ -63,6 +78,13 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	 * 是否已经加载数据，该变量作为fragment初始化是否需要加载数据的依据
 	 */
 	private boolean isLoaded = false;
+	
+	/**
+	 * 当数据库数据发生变化时，是否自动刷新该列表界面，只有删除时才不自动刷新
+	 */
+	private boolean autoRefresh = true;
+	
+	ProgressDialog pDialog;
 	
 	public static String[] USER_PROJECTION = {
 		Provider.UserColumns._ID,
@@ -76,6 +98,30 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		Provider.UserColumns.FULLPINYIN,
 		Provider.UserColumns.SHORTPINYIN,
 		Provider.UserColumns.SORTLETTER
+	};
+	
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			if (pDialog != null && pDialog.isShowing()) {
+				pDialog.dismiss();
+			}
+			autoRefresh = true;
+			switch (msg.what) {
+			case Constants.MSG_SUCCESS:	//操作成功
+				mAdapter.notifyDataSetChanged();
+				SystemUtil.makeShortToast(R.string.delete_success);
+				break;
+			case Constants.MSG_FAILED:	//操作失败
+				SystemUtil.makeShortToast(R.string.delete_failed);
+				break;
+
+			default:
+				break;
+			}
+		}
+		
 	};
 	
 	/**
@@ -158,6 +204,80 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		return view;
 	}
 	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) menuInfo;
+		User user = (User) mAdapter.getItem(acmi.position);
+		if (user != null) {	//选中的是好友
+			MenuInflater menuInflater = getActivity().getMenuInflater();
+			menuInflater.inflate(R.menu.menu_context_contacts, menu);
+			menu.setHeaderTitle(user.getName());
+		}
+		super.onCreateContextMenu(menu, v, menuInfo);
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		
+		AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) item.getMenuInfo();
+		final User user = (User) mAdapter.getItem(acmi.position);
+		if (user != null) {
+			switch (item.getItemId()) {
+			case R.id.action_context_set_nickname:	//设置备注
+				
+				return true;
+			case R.id.action_context_delete:	//删除
+				MyAlertDialogFragment alertDialogFragment = (MyAlertDialogFragment) new MyAlertDialogFragment.Builder()
+					.setTitle(getString(R.string.prompt))
+					.setMessage(getString(R.string.contact_list_content_delete_prompt, user.getName()))
+					.setPositiveButtonText(getString(android.R.string.ok))
+					.setNegativeButtonText(getString(android.R.string.cancel))
+					.setPositiveButtonListener(new DialogInterface.OnClickListener() {
+						
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), false, true);
+							
+							SystemUtil.getCachedThreadPool().execute(new Runnable() {
+								
+								@Override
+								public void run() {
+									AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+									//发送删除好友的信息
+									boolean success = XmppUtil.deleteUser(connection, user.getUsername());
+									if (success) {
+										autoRefresh = false;
+										//删除好友
+										success = userManager.deleteUser(user);
+										//是否成功删除该好友
+										if (success) {
+											mUsers.remove(user);
+											mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
+										} else {
+											mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+										}
+									} else {
+										mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+									}
+								}
+							});
+						}
+					})
+					.setNegativeButtonListener(null)
+					.create();
+				alertDialogFragment.show(getFragmentManager(), alertDialogFragment.getClass().getCanonicalName());
+				return true;
+
+			default:
+				return super.onContextItemSelected(item);
+			}
+		} else {
+			return super.onContextItemSelected(item);
+		}
+		
+	}
+	
 	/**
 	 * 改变sideBar的显示和隐藏的状态
 	 * @update 2014年10月13日 上午9:53:10
@@ -182,7 +302,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	private void initData() {
 		if (!isLoaded) {	//没有加载过数据
 			if (mAdapter == null) {
-				mAdapter = new ContactAdapter(users, mContext);
+				mAdapter = new ContactAdapter(mUsers, mContext);
 				lvContact.setAdapter(mAdapter);
 			}
 			
@@ -193,6 +313,8 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		
+		registerForContextMenu(lvContact);
 		
 		//注册加载好友列表的广播
 		loadDataReceiver = new LoadDataBroadcastReceiver();
@@ -223,12 +345,12 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		protected List<User> doInBackground(Void... params) {
 			List<User> list = userManager.getFriends();
 			if (list != null && list.size() > 0) {
-				if (users != null && users.size() > 0) {
-					users.clear();
+				if (mUsers != null && mUsers.size() > 0) {
+					mUsers.clear();
 				}
-				users.addAll(list);
+				mUsers.addAll(list);
 			}
-			return users;
+			return mUsers;
 		}
 		
 		@Override
@@ -442,7 +564,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 				switch (action) {
 				case ACTION_USER_LIST:	//更新好友列表
 				case ACTION_USER_INFOS:	//从网上更新好友列表信息到本地数据库
-					if (isLoaded) {	//只有已经加载过数据并在界面上显示了才相应service发过来的广播
+					if (isLoaded) {	//只有已经加载过数据并在界面上显示了才响应service发过来的广播
 						new LoadDataTask().execute();
 					}
 					break;
@@ -459,4 +581,5 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		// TODO Auto-generated method stub
 		initData();
 	}
+	
 }

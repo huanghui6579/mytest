@@ -8,8 +8,10 @@ import java.util.List;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.RosterPacket.ItemStatus;
@@ -275,6 +277,70 @@ public class XmppUtil {
 		Presence presence = new Presence(Presence.Type.subscribe);
 		presence.setTo(toUser);
 		connection.sendPacket(presence);
+	}
+	
+	/**
+	 * 接受别人的添加我为好友
+	 * @update 2014年11月12日 下午2:35:57
+	 * @param connection
+	 * @param toUser
+	 * @throws NotConnectedException
+	 */
+	public static void acceptFriend(AbstractXMPPConnection connection, String toUser) throws NotConnectedException {
+		Presence presence = new Presence(Presence.Type.subscribed);
+		presence.setTo(toUser);
+		connection.sendPacket(presence);
+	}
+	
+	/**
+	 * 根据用户账号获得用户基本信息
+	 * @update 2014年11月12日 下午3:39:01
+	 * @param connection
+	 * @param username
+	 * @return
+	 * @throws NotConnectedException
+	 */
+	public static User getUserEntry(AbstractXMPPConnection connection, String username) throws NotConnectedException {
+		String jid = SystemUtil.wrapJid(username);
+		Roster roster = connection.getRoster();
+		RosterEntry entry = roster.getEntry(jid);
+		Presence presence = roster.getPresence(jid);
+		User user = null;
+		if (entry != null) {
+			user = new User();
+			user.setUsername(username);
+			user.setNickname(entry.getName());
+			Presence.Mode mode = presence.getMode();
+			if (mode != null) {
+				user.setMode(mode.name());
+			}
+			user.setStatus(presence.getStatus());
+			user.setFullPinyin(user.initFullPinyin());
+			user.setShortPinyin(user.initShortPinyin());
+			user.setSortLetter(user.initSortLetter(user.getShortPinyin()));
+		}
+		return user;
+	}
+	
+	/**
+	 * 删除指定用户
+	 * @update 2014年11月12日 下午9:01:10
+	 * @param connection
+	 * @param username 用户名，不含有@及其之后的信息
+	 * @return
+	 */
+	public static boolean deleteUser(AbstractXMPPConnection connection, String username) {
+		Roster roster = connection.getRoster();
+		RosterEntry rosterEntry = roster.getEntry(SystemUtil.wrapJid(username));
+		boolean flag = false;
+		try {
+			roster.removeEntry(rosterEntry);
+			flag = true;
+		} catch (NotLoggedInException | NoResponseException
+				| XMPPErrorException | NotConnectedException e) {
+			e.printStackTrace();
+		}
+		return flag;
 	}
 	
 	/**

@@ -21,6 +21,7 @@ import com.example.chat.model.MsgThread;
 import com.example.chat.model.User;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.Constants;
+import com.example.chat.util.SystemUtil;
 
 /**
  * 聊天相关的业务逻辑层
@@ -110,6 +111,29 @@ public class MsgManager {
 			cursor.close();
 		}
 		return mt;
+	}
+	
+	/**
+	 * 根据会话的成员获得会话的id，该实体中只包含msgThreadId
+	 * @update 2014年11月12日 下午7:44:45
+	 * @param members
+	 * @return
+	 */
+	public MsgThread getMsgThreadIdByMembers(List<User> members) {
+		if (SystemUtil.isEmpty(members)) {
+			return null;
+		}
+		String memberIds = getMemberIds(members);
+		MsgThread msgThread = null;
+		Cursor cursor = mContext.getContentResolver().query(Provider.MsgThreadColumns.CONTENT_URI, new String[] {Provider.MsgThreadColumns._ID}, Provider.MsgThreadColumns.MEMBER_IDS + " = ?", new String[] {memberIds}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			msgThread = new MsgThread();
+			msgThread.setId(cursor.getInt(0));
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return msgThread;
 	}
 	
 	/**
@@ -217,6 +241,51 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 根据会话id获取该会话内的所有消息，每个msginfo值包含id和msgType
+	 * @update 2014年11月12日 下午7:59:37
+	 * @param threadId
+	 * @return
+	 */
+	public List<MsgInfo> getMsgInfoIdsByThreadId(int threadId) {
+		Cursor cursor = mContext.getContentResolver().query(Provider.MsgInfoColumns.CONTENT_URI, new String[] {Provider.MsgInfoColumns._ID, Provider.MsgInfoColumns.MSG_TYPE}, Provider.MsgInfoColumns.THREAD_ID + " = ?", new String[] {String.valueOf(threadId)}, null);
+		List<MsgInfo> list = null;
+		if (cursor != null) {
+			list = new ArrayList<>();
+			while (cursor.moveToNext()) {
+				MsgInfo msgInfo = new MsgInfo();
+				msgInfo.setId(cursor.getInt(0));
+				msgInfo.setMsgType(MsgInfo.Type.valueOf(cursor.getInt(1)));
+				list.add(msgInfo);
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * 根据会话id删除指定的会话
+	 * @update 2014年11月12日 下午7:37:41
+	 * @param threadId
+	 * @return
+	 */
+	public boolean deleteMsgThreadById(int threadId) {
+		boolean falg = false;
+		int count = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgThreadColumns.CONTENT_URI, threadId), null, null);
+		if (count > 0) {	//删除成功
+			//删除会话中的消息
+			//查找该会话中的消息
+			List<MsgInfo> msgInfos = getMsgInfoIdsByThreadId(threadId);
+			if (!SystemUtil.isEmpty(msgInfos)) {	//该会话有消息
+				//删除消息
+				for (MsgInfo msgInfo : msgInfos) {
+					deleteMsgInfoById(msgInfo);
+				}
+			}
+			falg = true;
+		}
+		return falg;
+	}
+	
+	/**
 	 * 获得所有的会话列表
 	 * @update 2014年10月31日 下午9:09:11
 	 * @return 所有的会话列表
@@ -315,6 +384,26 @@ public class MsgManager {
 			msgPart.setMimeTye(cursor.getString(cursor.getColumnIndex(Provider.MsgPartColumns.MIME_TYE)));
 			msgPart.setSize(cursor.getLong(cursor.getColumnIndex(Provider.MsgPartColumns.SIZE)));
 			msgPart.setMsgId(msgId);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return msgPart;
+	}
+	
+	/**
+	 * 根据消息id获取附件的本地存储路径，该附件实体值包含附件的路径filePath
+	 * @update 2014年11月12日 下午8:29:18
+	 * @param msgId
+	 * @return
+	 */
+	public MsgPart getMsgPartPathByMsgId(int msgId) {
+		Uri uri = ContentUris.withAppendedId(Provider.MsgPartColumns.CONTENT_URI, msgId);
+		Cursor cursor = mContext.getContentResolver().query(uri, new String[] {Provider.MsgPartColumns.FILE_PATH}, null, null, null);
+		MsgPart msgPart = null;
+		if (cursor != null && cursor.moveToFirst()) {
+			msgPart = new MsgPart();
+			msgPart.setFilePath(cursor.getString(0));
 		}
 		if (cursor != null) {
 			cursor.close();
@@ -570,6 +659,47 @@ public class MsgManager {
 			msgPart.setId(Integer.parseInt(uri.getLastPathSegment()));
 		}
 		return msgPart;
+	}
+	
+	/**
+	 * 根据消息id删除该条消息，该消息实体值包含msgId和msgType
+	 * @update 2014年11月12日 下午8:08:44
+	 * @param msgInfo
+	 * @return
+	 */
+	public boolean deleteMsgInfoById(MsgInfo msgInfo) {
+		if (msgInfo == null) {
+			return false;
+		}
+		int count = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgInfoColumns.CONTENT_URI, msgInfo.getId()), null, null);
+		if (count > 0) {	//删除消息成功
+			Type msgType = msgInfo.getMsgType();
+			if (MsgInfo.Type.TEXT != msgType && MsgInfo.Type.LOCATION != msgType) {	//有附件
+				//删除附件
+				deleteMsgPartByMsgId(msgInfo.getId());
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * 根据消息id删除消息的附件
+	 * @update 2014年11月12日 下午8:14:14
+	 * @param msgId
+	 */
+	public void deleteMsgPartByMsgId(int msgId) {
+		MsgPart msgPart = getMsgPartPathByMsgId(msgId);
+		if (msgPart != null) {	//有附件
+			//查询该消息对应的附件
+			int count = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgPartColumns.CONTENT_URI, msgId), null, null);
+			if (count > 0) {	//删除成功
+				//则删除本地附件
+				String filePath = msgPart.getFilePath();
+				SystemUtil.deleteFile(filePath);
+			}
+		}
 	}
 	
 	/**

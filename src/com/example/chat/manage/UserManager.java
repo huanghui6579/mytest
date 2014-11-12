@@ -1,6 +1,7 @@
 package com.example.chat.manage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,11 +12,14 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.model.MsgThread;
 import com.example.chat.model.NewFriendInfo;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
+import com.example.chat.util.SystemUtil;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 /**
  * 业务逻辑层
@@ -129,20 +133,22 @@ public class UserManager {
 			if (uCard != null) {	//有名片就插入或更新
 //				ContentValues cardValues = initUserVcardContentVaules(uCard);
 //				mContext.getContentResolver().update(Uri.withAppendedPath(Provider.UserVcardColumns.CONTENT_URI, String.valueOf(uCard.getId())), cardValues, null, null);
-				saveOrUpdateUserVacard(uCard);
+				uCard = saveOrUpdateUserVacard(uCard);
+				user.setUserVcard(uCard);
 			} else {	//没有名片就查询
 				uCard = new UserVcard();
 				Cursor cardCursor = mContext.getContentResolver().query(Provider.UserVcardColumns.CONTENT_URI, new String[] {Provider.UserVcardColumns._ID, Provider.UserVcardColumns.NICKNAME, Provider.UserVcardColumns.ICONHASH, Provider.UserVcardColumns.ICONPATH}, Provider.UserVcardColumns.USERID + " = ?", new String[] {String.valueOf(user.getId())}, null);
-				if (cardCursor != null) {
-					cardCursor.moveToFirst();
+				if (cardCursor != null && cardCursor.moveToFirst()) {
 					uCard.setId(cardCursor.getInt(cardCursor.getColumnIndex(Provider.UserVcardColumns._ID)));
 					uCard.setUserId(user.getId());
 					uCard.setNickname(cardCursor.getString(cardCursor.getColumnIndex(Provider.UserVcardColumns.NICKNAME)));
 					uCard.setIconHash(cardCursor.getString(cardCursor.getColumnIndex(Provider.UserVcardColumns.ICONHASH)));
 					uCard.setIconPath(cardCursor.getString(cardCursor.getColumnIndex(Provider.UserVcardColumns.ICONPATH)));
+					user.setUserVcard(uCard);
+				}
+				if (cardCursor != null) {
 					cardCursor.close();
 				}
-				user.setUserVcard(uCard);
 			}
 		} else {	//添加好友
 			Uri uri = mContext.getContentResolver().insert(Provider.UserColumns.CONTENT_URI, userVaules);
@@ -159,6 +165,71 @@ public class UserManager {
 			cursor.close();
 		}
 		return user;
+	}
+	
+	/**
+	 * 本地添加好友
+	 * @update 2014年11月12日 下午4:01:23
+	 * @param user
+	 * @return
+	 */
+	public User addFriend(User user) {
+		ContentValues userVaules = initUserContentVaules(user);
+		Uri uri;
+		try {
+			uri = mContext.getContentResolver().insert(Provider.UserColumns.CONTENT_URI, userVaules);
+			if (uri != null) {
+				user.setId(Integer.parseInt(uri.getLastPathSegment()));
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		//添加好友名片
+		UserVcard uCard = user.getUserVcard();
+		if (uCard != null) {
+			saveOrUpdateUserVacard(uCard);
+		}
+		return user;
+	}
+	
+	/**
+	 * 删除指定的用户
+	 * @update 2014年11月12日 下午7:24:54
+	 * @param user
+	 * @return
+	 */
+	public boolean deleteUser(User user) {
+		MsgManager msgManager = MsgManager.getInstance();
+		boolean flag = false;
+		if (user == null) {
+			return false;
+		}
+		int ucount = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.UserColumns.CONTENT_URI, user.getId()), null, null);
+		if (ucount > 0) {	//删除成功
+			UserVcard ucard = user.getUserVcard();
+			//删除好友的电子名片
+			if (ucard != null) {	//有电子名片
+				int vcount = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.UserVcardColumns.CONTENT_URI, user.getId()), null, null);
+				if (vcount > 0) {
+					//删除本地头像
+					String iconPath = ucard.getIconPath();
+					if (iconPath != null) {
+						//删除头像文件
+						SystemUtil.deleteFile(iconPath);
+					}
+					//查询和自己有没有会话，群聊不算
+					MsgThread msgThread = msgManager.getMsgThreadIdByMembers(Arrays.asList(user));
+					if (msgThread != null) {	//有会话
+						msgManager.deleteMsgThreadById(msgThread.getId());
+					}
+					flag = true;
+				}
+			}
+		}
+		return flag;
 	}
 	
 	/**

@@ -4,13 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.view.ContextMenu;
@@ -35,7 +40,10 @@ import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
+import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.util.XmppConnectionManager;
+import com.example.chat.util.XmppUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -59,12 +67,14 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	
 	private UserManager userManager = UserManager.getInstance();
 	
+	ProgressDialog pDialog;
+	
 	/**
 	 * 更新数据库后是否自动刷新，只有删除才不会自动刷新
 	 */
 	private boolean autoRefresh = true;
 	
-	private Handler mHandler = new Handler();
+	private Handler mHandler = new MyHandler();
 	
 	@Override
 	protected int getContentView() {
@@ -113,6 +123,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 			mNewFriendAdapter = new NewFriendAdapter(mNewInfos, mContext);
 			lvNewInfos.setAdapter(mNewFriendAdapter);
 		}
+		mNewInfos.clear();
 		if (!SystemUtil.isEmpty(data)) {
 			mNewInfos.addAll(data);
 		}
@@ -136,7 +147,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 		MenuInflater menuInflater = getMenuInflater();
-		menuInflater.inflate(R.menu.menu_new_friend_context, menu);
+		menuInflater.inflate(R.menu.menu_context_new_friend, menu);
 		AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) menuInfo;
 		NewFriendInfo newInfo = mNewInfos.get(acmi.position);
 		menu.setHeaderTitle(newInfo.getTitle());
@@ -156,7 +167,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 				mNewInfos.remove(newInfo);
 				mNewFriendAdapter.notifyDataSetChanged();
 			} else {
-				SystemUtil.makeShortToast("删除失败！");
+				SystemUtil.makeShortToast(R.string.delete_failed);
 			}
 			autoRefresh = true;
 			return true;
@@ -191,9 +202,10 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 			notifyDataSetChanged();
 		}
 		
+		@SuppressWarnings("deprecation")
 		@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
+		public View getView(final int position, View convertView, ViewGroup parent) {
 			NewInfoViewHolder holder = null;
 			if (convertView == null) {
 				holder = new NewInfoViewHolder();
@@ -209,7 +221,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 			} else {
 				holder = (NewInfoViewHolder) convertView.getTag();
 			}
-			NewFriendInfo newInfo = list.get(position);
+			final NewFriendInfo newInfo = list.get(position);
 			
 			User user = newInfo.getUser();
 			String iconPath = null;
@@ -241,8 +253,35 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 					
 					@Override
 					public void onClick(View v) {
-						// TODO Auto-generated method stub
-						
+						//接受对方添加自己为好友
+						pDialog = ProgressDialog.show(context, null, getString(R.string.loading), false, true);
+						SystemUtil.getCachedThreadPool().execute(new Runnable() {
+							
+							@Override
+							public void run() {
+								Message msg = mHandler.obtainMessage();
+								AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+								try {
+									XmppUtil.acceptFriend(connection, SystemUtil.wrapJid(newInfo.getFrom()));
+									//添加该好友
+									User user = XmppUtil.getUserEntry(connection, newInfo.getFrom());
+									if (user != null) {
+										user = userManager.saveOrUpdateFriend(user);
+										newInfo.setUser(user);
+										newInfo.setFriendStatus(FriendStatus.ADDED);
+										userManager.updateNewFriendInfoState(newInfo);
+										msg.what = Constants.MSG_SUCCESS;
+										//更改状态
+									} else {
+										msg.what = Constants.MSG_FAILED;
+									}
+								} catch (NotConnectedException e) {
+									msg.what = Constants.MSG_FAILED;
+									e.printStackTrace();
+								}
+								mHandler.sendMessage(msg);
+							}
+						});
 					}
 				});
 				break;
@@ -290,7 +329,9 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 
 		@Override
 		public void onChange(boolean selfChange) {
-			reLoadData();
+			if (autoRefresh) {
+				reLoadData();
+			}
 		}
 
 		@Override
@@ -304,11 +345,35 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 						}
 						mNewInfos.add(newInfo);
 						Collections.sort(mNewInfos, newInfo);
+						mNewFriendAdapter.notifyDataSetChanged();
+					} else {
+						onChange(selfChange);
 					}
-					mNewFriendAdapter.notifyDataSetChanged();
 				} else {
 					onChange(selfChange);
 				}
+			}
+		}
+		
+	}
+	
+	public class MyHandler extends Handler {
+
+		@Override
+		public void handleMessage(Message msg) {
+			if (pDialog != null && pDialog.isShowing()) {
+				pDialog.dismiss();
+			}
+			switch (msg.what) {
+			case Constants.MSG_SUCCESS:	//操作成功
+				SystemUtil.makeShortToast(R.string.add_success);
+				break;
+			case Constants.MSG_FAILED:	//操作失败
+				SystemUtil.makeShortToast(R.string.add_failed);
+				break;
+
+			default:
+				break;
 			}
 		}
 		

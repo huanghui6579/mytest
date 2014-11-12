@@ -42,6 +42,7 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.chat.ChatApplication;
@@ -129,7 +130,9 @@ public class SystemUtil {
 	 * @param text
 	 */
 	public static void makeShortToast(CharSequence text) {
-		Toast.makeText(ChatApplication.getInstance(), text, Toast.LENGTH_SHORT).show();
+		Toast toast = Toast.makeText(ChatApplication.getInstance(), text, Toast.LENGTH_SHORT);
+		toast = setToastStyle(toast);
+		toast.show();
 	}
 	
 	/**
@@ -139,7 +142,9 @@ public class SystemUtil {
 	 * @param text
 	 */
 	public static void makeShortToast(int resId) {
-		Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_SHORT).show();
+		Toast toast = Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_SHORT);
+		toast = setToastStyle(toast);
+		toast.show();
 	}
 	
 	/**
@@ -149,7 +154,9 @@ public class SystemUtil {
 	 * @param text
 	 */
 	public static void makeLongToast(CharSequence text) {
-		Toast.makeText(ChatApplication.getInstance(), text, Toast.LENGTH_LONG).show();
+		Toast toast = Toast.makeText(ChatApplication.getInstance(), text, Toast.LENGTH_LONG);
+		toast = setToastStyle(toast);
+		toast.show();
 	}
 	
 	/**
@@ -159,7 +166,22 @@ public class SystemUtil {
 	 * @param text
 	 */
 	public static void makeLongToast(int resId) {
-		Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_LONG).show();
+		Toast toast = Toast.makeText(ChatApplication.getInstance(), resId, Toast.LENGTH_LONG);
+		toast = setToastStyle(toast);
+		toast.show();
+	}
+	
+	/**
+	 * 设置Toast的样式
+	 * @update 2014年11月12日 下午4:22:41
+	 * @param toast
+	 * @param resId 文字的资源id
+	 * @return
+	 */
+	private static Toast setToastStyle(Toast toast) {
+		View view = toast.getView();
+		view.setBackgroundResource(R.drawable.toast_frame_holo);
+		return toast;
 	}
 	
 	/**
@@ -917,6 +939,25 @@ public class SystemUtil {
 		}
 		if (file.exists()) {
 			file.delete();
+		}
+	}
+	
+	/**
+	 * 通过索引位置获取listview的itemView
+	 * @update 2014年11月12日 下午3:08:02
+	 * @param pos
+	 * @param listView
+	 * @return
+	 */
+	public static View getViewByPosition(int pos, ListView listView) {
+		final int firstListItemPosition = listView.getFirstVisiblePosition();
+		final int lastListItemPosition = firstListItemPosition + listView.getChildCount() - 1;
+
+		if (pos < firstListItemPosition || pos > lastListItemPosition ) {
+		    return listView.getAdapter().getView(pos, null, listView);
+		} else {
+		    final int childIndex = pos - firstListItemPosition;
+		    return listView.getChildAt(childIndex);
 		}
 	}
 }

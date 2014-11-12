@@ -44,7 +44,6 @@ import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;
-import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
