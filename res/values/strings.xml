@@ -26,6 +26,7 @@
     <string name="activity_lable_friend_info">好友详情</string>
     <string name="activity_lable_chat">聊天</string>
     <string name="activity_lable_new_friend_info">新的朋友</string>
+    <string name="activity_lable_album">图片</string>
     
     <string name="email">邮箱：%1$s</string>
     <string name="username">用户名：%1$s</string>
@@ -82,7 +83,12 @@
     <string name="contact_list_content_menu_set_nickname">设置备注</string>
     <string name="contact_list_content_delete_prompt">确定删除“%1$s”吗？</string>
     
+    <string name="contact_friend_add_request">对方请求添加你为朋友</string>
+    
     <string name="chat_msg_edit_hint">请输入内容</string>
     <string name="chat_btn_make_voice_start">按住 说话</string>
+    
+    <string name="album_all_photo">所有图片</string>
+    <string name="album_preview_photo">预览</string>
 
 </resources>

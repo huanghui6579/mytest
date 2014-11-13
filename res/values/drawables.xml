@@ -3,4 +3,7 @@
     <drawable name="chat_emoji_tab_pressed">#56888888</drawable>
     
     <drawable name="list_divider_drawable">@color/divider_color</drawable>
+    
+    <drawable name="album_take_pic_bg_normal">#353535</drawable>
+    <drawable name="album_take_pic_bg_pressed">#000000</drawable>
 </resources>

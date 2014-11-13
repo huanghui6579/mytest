@@ -10,6 +10,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
@@ -18,6 +19,7 @@ import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgThread;
+import com.example.chat.model.Photo;
 import com.example.chat.model.User;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.Constants;
@@ -772,5 +774,57 @@ public class MsgManager {
 		ContentValues values = initMsgThreadVaule(msgThread);
 		mContext.getContentResolver().update(uri, values, null, null);
 		return msgThread;
+	}
+	
+	/**
+	 * 用?占位
+	 * @update 2014年11月13日 下午7:25:34
+	 * @param len
+	 * @return
+	 */
+	private String makePlaceholders(int len) {
+	    if (len < 1) {
+	        // It will lead to an invalid query anyway ..
+	        throw new RuntimeException("No placeholders");
+	    } else {
+	        StringBuilder sb = new StringBuilder(len * 2 - 1);
+	        sb.append("?");
+	        for (int i = 1; i < len; i++) {
+	            sb.append(",?");
+	        }
+	        return sb.toString();
+	    }
+	}
+	
+	/**
+	 * 在本地获取所有的图片，图片的类型为image/jpeg或者image/png
+	 * @update 2014年11月13日 下午7:18:29
+	 * @return
+	 */
+	public List<Photo> getAllPhotos() {
+		List<Photo> list = null;
+		String[] projection = {
+				MediaStore.Images.Media.DATA,
+				MediaStore.Images.Media.SIZE,
+				MediaStore.Images.Media.DISPLAY_NAME,
+		};
+		String[] selectionArgs = {
+			"image/jpeg",
+			"image/png"
+		};
+		Cursor cursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, MediaStore.Images.Media.MIME_TYPE + " in (" + makePlaceholders(selectionArgs.length) + ")", selectionArgs, MediaStore.Images.Media.DATE_MODIFIED + " DESC");
+		if (cursor != null) {
+			list = new ArrayList<>();
+			while (cursor.moveToNext()) {
+				Photo photo = new Photo();
+				photo.setFilePath(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA)));
+				photo.setSize(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.SIZE)));
+				photo.setFileName(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
+				
+				list.add(photo);
+			}
+			cursor.close();
+		}
+		return list;
 	}
 }

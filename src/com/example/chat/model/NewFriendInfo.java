@@ -205,7 +205,7 @@ public class NewFriendInfo implements Comparator<NewFriendInfo> {
 		String s = null;
 		if (title == null) {
 			if (user != null) {
-				s = user.getNickname();
+				s = user.getName();
 			} else {
 				switch (friendStatus) {
 				case ACCEPT:	//对方发送的添加信息，等待我的同意

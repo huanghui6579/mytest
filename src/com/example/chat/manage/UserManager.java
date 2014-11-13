@@ -19,7 +19,6 @@ import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.SystemUtil;
-import com.nostra13.universalimageloader.core.ImageLoader;
 
 /**
  * 业务逻辑层
@@ -158,6 +157,7 @@ public class UserManager {
 			//添加好友名片
 			UserVcard uCard = user.getUserVcard();
 			if (uCard != null) {
+				uCard.setUserId(user.getId());
 				saveOrUpdateUserVacard(uCard);
 			}
 		}
@@ -655,7 +655,6 @@ public class UserManager {
 			list = new ArrayList<>();
 			while (cursor.moveToNext()) {
 				NewFriendInfo newFriendInfo = cursoToInfo(cursor);
-				
 				list.add(newFriendInfo);
 			}
 			
@@ -723,6 +722,10 @@ public class UserManager {
 		ContentValues values = new ContentValues();
 		values.put(Provider.NewFriendColumns.FRIEND_STATUS, newInfo.getFriendStatus().ordinal());
 		values.put(Provider.NewFriendColumns.CONTENT, newInfo.getContent());
+		User user = newInfo.getUser();
+		if (user != null) {
+			values.put(Provider.NewFriendColumns.USER_ID, user.getId());
+		}
 		return values;
 	}
 	

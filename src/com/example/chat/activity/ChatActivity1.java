@@ -35,14 +35,15 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.RelativeLayout;
-import android.widget.TabHost.TabSpec;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 
 import com.example.chat.ChatApplication;
@@ -52,10 +53,10 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AttachItem;
 import com.example.chat.model.EmojiType;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
-import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
@@ -460,6 +461,24 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		btnVoice.setOnClickListener(this);
 		btnSend.setOnClickListener(this);
 //		etContent.setOnClickListener(this);
+		gvAttach.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Intent intent = null;
+				AttachItem attachItem = mAttachItems.get(position);
+				switch (attachItem.getAction()) {
+				case AttachItem.ACTION_IMAGE:	//选择图片
+					intent = new Intent(mContext, AlbumActivity.class);
+					startActivity(intent);
+					break;
+
+				default:
+					break;
+				}
+			}
+		});
 		lvMsgs.setOnTouchListener(new View.OnTouchListener() {
 			
 			@Override

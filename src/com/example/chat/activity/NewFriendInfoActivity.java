@@ -1,6 +1,7 @@
 package com.example.chat.activity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Build;
@@ -33,10 +35,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.chat.R;
+import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.loader.NewFriendInfoLoader;
+import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.NewFriendInfo;
 import com.example.chat.model.NewFriendInfo.FriendStatus;
+import com.example.chat.model.MsgThread;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
@@ -66,6 +71,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	private NewFriendAdapter mNewFriendAdapter;
 	
 	private UserManager userManager = UserManager.getInstance();
+	private MsgManager msgManager = MsgManager.getInstance();
 	
 	ProgressDialog pDialog;
 	
@@ -229,6 +235,8 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 				UserVcard uCard = user.getUserVcard();
 				if (uCard != null) {
 					iconPath = uCard.getIconPath();
+				} else {
+					iconPath = newInfo.getIconPath();
 				}
 			} else {
 				iconPath = newInfo.getIconPath();
@@ -266,10 +274,20 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 									//添加该好友
 									User user = XmppUtil.getUserEntry(connection, newInfo.getFrom());
 									if (user != null) {
+										UserVcard uCard = new UserVcard();
+										uCard.setIconPath(newInfo.getIconPath());
+										uCard.setIconHash(newInfo.getIconHash());
+										user.setUserVcard(uCard);
 										user = userManager.saveOrUpdateFriend(user);
 										newInfo.setUser(user);
 										newInfo.setFriendStatus(FriendStatus.ADDED);
+										newInfo.setTitle(user.getUsername());
+										newInfo.setContent(user.getName());
 										userManager.updateNewFriendInfoState(newInfo);
+										//通知好友列表更新好友
+										Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_LIST);
+										sendBroadcast(intent);
+										
 										msg.what = Constants.MSG_SUCCESS;
 										//更改状态
 									} else {

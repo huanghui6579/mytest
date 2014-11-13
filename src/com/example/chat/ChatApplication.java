@@ -227,7 +227,7 @@ public class ChatApplication extends Application {
 	 */
 	private void initImageLoaderConfig() {
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
-					.memoryCacheExtraOptions(480, 800) // default = device screen dimensions
+					.memoryCacheExtraOptions(480, 800)
 			        .diskCacheExtraOptions(480, 800, null)
 			        .denyCacheImageMultipleSizesInMemory()
 			        .memoryCache(new LruMemoryCache(2 * 1024 * 1024))

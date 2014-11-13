@@ -305,19 +305,18 @@ public class XmppUtil {
 		Roster roster = connection.getRoster();
 		RosterEntry entry = roster.getEntry(jid);
 		Presence presence = roster.getPresence(jid);
-		User user = null;
+		User user = new User();
+		user.setUsername(username);
+		user.setFullPinyin(user.initFullPinyin());
+		user.setShortPinyin(user.initShortPinyin());
+		user.setSortLetter(user.initSortLetter(user.getShortPinyin()));
 		if (entry != null) {
-			user = new User();
-			user.setUsername(username);
 			user.setNickname(entry.getName());
 			Presence.Mode mode = presence.getMode();
 			if (mode != null) {
 				user.setMode(mode.name());
 			}
 			user.setStatus(presence.getStatus());
-			user.setFullPinyin(user.initFullPinyin());
-			user.setShortPinyin(user.initShortPinyin());
-			user.setSortLetter(user.initSortLetter(user.getShortPinyin()));
 		}
 		return user;
 	}

@@ -32,6 +32,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.R;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
@@ -368,6 +369,8 @@ public class CoreService extends Service {
 				newInfo.setFriendStatus(FriendStatus.ACCEPT);
 				newInfo.setFrom(from);
 				newInfo.setTo(to);
+				newInfo.setTitle(from);
+				newInfo.setContent(getString(R.string.contact_friend_add_request));
 				newInfo.setCreationDate(System.currentTimeMillis());
 				if (!isEmpty) {
 					String hash = null;
@@ -451,6 +454,7 @@ public class CoreService extends Service {
 						user = userManager.updateSimpleUser(user);
 					}
 					newInfo.setUser(user);
+					newInfo.setContent(user.getName());
 				}
 				//如果本地有该好友，则看要不要更新头像
 				newInfo = userManager.saveOrUpdateNewFriendInfo(newInfo);
