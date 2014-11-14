@@ -211,7 +211,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		User user = (User) mAdapter.getItem(acmi.position);
 		if (user != null) {	//选中的是好友
 			MenuInflater menuInflater = getActivity().getMenuInflater();
-			menuInflater.inflate(R.menu.menu_context_contacts, menu);
+			menuInflater.inflate(R.menu.context_contacts, menu);
 			menu.setHeaderTitle(user.getName());
 		}
 		super.onCreateContextMenu(menu, v, menuInfo);

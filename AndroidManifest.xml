@@ -32,7 +32,8 @@
         <activity
             android:name="com.example.chat.activity.AlbumActivity"
             android:label="@string/app_name"
-            android:configChanges="orientation|screenSize" >
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/AppTheme.AlbumActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -86,6 +87,7 @@
             android:name="com.example.chat.activity.AlbumActivity"
             android:label="@string/activity_lable_album"
             android:configChanges="orientation|screenSize"
+            android:theme="@style/AppTheme.AlbumActivity"
             android:windowSoftInputMode="stateUnchanged|adjustResize"/> -->
         
         <provider android:name="com.example.chat.provider.UserProvider"

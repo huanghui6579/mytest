@@ -153,7 +153,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 		MenuInflater menuInflater = getMenuInflater();
-		menuInflater.inflate(R.menu.menu_context_new_friend, menu);
+		menuInflater.inflate(R.menu.context_new_friend, menu);
 		AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) menuInfo;
 		NewFriendInfo newInfo = mNewInfos.get(acmi.position);
 		menu.setHeaderTitle(newInfo.getTitle());

@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -28,6 +29,7 @@ import org.jivesoftware.smack.util.StringUtils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -40,9 +42,13 @@ import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.View.MeasureSpec;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chat.ChatApplication;
@@ -181,6 +187,8 @@ public class SystemUtil {
 	private static Toast setToastStyle(Toast toast) {
 		View view = toast.getView();
 		view.setBackgroundResource(R.drawable.toast_frame_holo);
+		TextView textView = (TextView) view.findViewById(android.R.id.message);
+		textView.setTextColor(Color.WHITE);
 		return toast;
 	}
 	
@@ -753,6 +761,20 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 判断map是否为空
+	 * @update 2014年10月31日 下午3:22:19
+	 * @param map
+	 * @return
+	 */
+	public static boolean isEmpty(Map<?, ?> map) {
+		if (map != null && map.size() > 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
 	 * 判断一个数组是否为空
 	 * @update 2014年10月31日 下午3:24:11
 	 * @param array
@@ -773,6 +795,17 @@ public class SystemUtil {
 	 */
 	public static String formatMsgThreadTime(long time) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.DATEFORMA_TPATTERN_THREAD, Locale.getDefault());
+		return dateFormat.format(new Date(time));
+	}
+	
+	/**
+	 * 格式化会话的时间
+	 * @update 2014年11月14日 下午8:11:37
+	 * @param time
+	 * @return
+	 */
+	public static String formatTime(long time, String pattern) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(pattern, Locale.getDefault());
 		return dateFormat.format(new Date(time));
 	}
 	
@@ -873,6 +906,26 @@ public class SystemUtil {
 		return options;
 	}
 	
+	
+	/**
+	 * 获得相册的图片加载选项该选项没有磁盘缓存图片
+	 * @update 2014年11月8日 上午11:43:13
+	 * @return
+	 */
+	public static DisplayImageOptions getAlbumImageOptions() {
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
+		.showImageOnLoading(R.drawable.ic_default_icon)
+		.showImageForEmptyUri(R.drawable.ic_default_icon)
+		.showImageOnFail(R.drawable.ic_default_icon)
+		.cacheInMemory(true)
+		.cacheOnDisk(false)
+		.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+		.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+		.displayer(new FadeInBitmapDisplayer(200))
+		.build();
+		return options;
+	}
+	
 	/**
 	 * 获得通讯录列表的特殊符号的选择器，特殊符号为：“↑”<br />
 	 * <pre>
@@ -959,5 +1012,51 @@ public class SystemUtil {
 		    final int childIndex = pos - firstListItemPosition;
 		    return listView.getChildAt(childIndex);
 		}
+	}
+	
+	/**
+	 * 获得listview的高度
+	 * @update 2014年11月14日 下午6:15:12
+	 * @param list
+	 * @return
+	 */
+	public static int getListViewHeight(ListView list) {
+        ListAdapter adapter = list.getAdapter();
+
+        int listviewHeight = 0;
+
+        list.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), 
+                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+
+        listviewHeight = list.getMeasuredHeight() * adapter.getCount() + (adapter.getCount() * list.getDividerHeight());
+
+        return listviewHeight;
+  }
+	
+	/**
+	 * 根据listview的项设置listview的高度
+	 * @update 2014年11月14日 下午6:13:05
+	 * @param listView
+	 */
+	public static void setListViewHeightBasedOnChildren(ListView listView) {
+
+	    ListAdapter mAdapter = listView.getAdapter();
+
+	    int totalHeight = 0;
+
+	    for (int i = 0; i < mAdapter.getCount(); i++) {
+	        View mView = mAdapter.getView(i, null, listView);
+
+	        mView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+	                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+
+	        totalHeight += mView.getMeasuredHeight();
+
+	    }
+	    ViewGroup.LayoutParams params = listView.getLayoutParams();
+	    params.height = totalHeight + (listView.getDividerHeight() * (mAdapter.getCount() - 1));
+	    listView.setLayoutParams(params);
+	    listView.requestLayout();
+
 	}
 }

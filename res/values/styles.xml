@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
         Base application theme, dependent on API level. This theme is replaced
@@ -18,10 +18,23 @@
         <!-- <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item> -->
         <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
         <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
+    	<item name="android:actionMenuTextColor">@android:color/white</item>
     </style>
     
+    <!-- 主界面的菜单样式 -->
     <style name="AppTheme.MainActivity" parent="AppTheme">
         <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow.MainActivty</item>
+    </style>
+    
+    <!-- 相册的菜单样式 -->
+    <style name="AppTheme.AlbumActivity" parent="AppTheme">
+        <item name="android:actionMenuTextAppearance">@style/AlbumMenuTextStyle</item>
+        <!-- <item name="android:actionBarItemBackground">@drawable/common_button_green_selector</item> -->
+    </style>
+    
+    <!-- 相册菜单字体样式 -->
+    <style name="AlbumMenuTextStyle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Menu">
+        <item name="android:textSize">16sp</item>
     </style>
     
     <!-- 系统默认的action overflow样式 -->
@@ -189,4 +202,13 @@
     	<item name="android:src">@drawable/chat_msg_state_sending</item>
     </style>
     
+    <!-- 相册标题样式 -->
+    <style name="AlbumItemTitleStyle">
+        <item name="android:textSize">@dimen/session_list_item_title</item>
+    </style>
+    <!-- 相册子标题样式 -->
+    <style name="AlbumItemSubTitleStyle">
+        <item name="android:textSize">@dimen/session_list_item_content</item>
+        <item name="android:textColor">@color/session_list_item_content</item>
+    </style>
 </resources>

@@ -7,6 +7,10 @@
     <color name="tab_text_normal">#696969</color>
     <color name="tab_text_selected">#73bf40</color>
     
+    <color name="album_text_normal">#ffffff</color>
+    <color name="album_text_selected">#aaaaaa</color>
+    <color name="album_bottom_layout_bg">#AA000000</color>
+    
     <color name="session_list_item_content">#999999</color>
     <color name="session_list_item_time">#99888888</color>
     

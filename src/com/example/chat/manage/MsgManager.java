@@ -1,9 +1,12 @@
 package com.example.chat.manage;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -14,15 +17,17 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.model.Album;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgThread;
-import com.example.chat.model.Photo;
+import com.example.chat.model.PhotoItem;
 import com.example.chat.model.User;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.Constants;
+import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 
 /**
@@ -801,30 +806,51 @@ public class MsgManager {
 	 * @update 2014年11月13日 下午7:18:29
 	 * @return
 	 */
-	public List<Photo> getAllPhotos() {
-		List<Photo> list = null;
+	public Album getAlbum() {
+		Album album = null;
 		String[] projection = {
 				MediaStore.Images.Media.DATA,
+				MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
 				MediaStore.Images.Media.SIZE,
-				MediaStore.Images.Media.DISPLAY_NAME,
+				MediaStore.Images.Media.DATE_TAKEN,
 		};
 		String[] selectionArgs = {
 			"image/jpeg",
 			"image/png"
 		};
-		Cursor cursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, MediaStore.Images.Media.MIME_TYPE + " in (" + makePlaceholders(selectionArgs.length) + ")", selectionArgs, MediaStore.Images.Media.DATE_MODIFIED + " DESC");
+		Cursor cursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, MediaStore.Images.Media.MIME_TYPE + " in (" + makePlaceholders(selectionArgs.length) + ")", selectionArgs, MediaStore.Images.Media.DATE_TAKEN + " DESC");
 		if (cursor != null) {
-			list = new ArrayList<>();
+			album = new Album();
+			List<PhotoItem>  list = new ArrayList<>();
+			Map<String, List<PhotoItem>>  map = new HashMap<>();
 			while (cursor.moveToNext()) {
-				Photo photo = new Photo();
+				PhotoItem photo = new PhotoItem();
 				photo.setFilePath(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA)));
+				String parentName = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
 				photo.setSize(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.SIZE)));
-				photo.setFileName(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
-				
+				photo.setTime(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)));
+				if (TextUtils.isEmpty(parentName)) {
+					File file = new File(photo.getFilePath()).getParentFile();
+					if (file != null) {
+						parentName = file.getName();
+					} else {
+						parentName = "/";
+					}
+				}
+				if (map.containsKey(parentName)) {
+					map.get(parentName).add(photo);
+				} else {
+					List<PhotoItem> temp = new ArrayList<>();
+					temp.add(photo);
+					map.put(parentName, temp);
+				}
 				list.add(photo);
 			}
 			cursor.close();
+			
+			album.setmPhotos(list);
+			album.setFolderMap(map);
 		}
-		return list;
+		return album;
 	}
 }

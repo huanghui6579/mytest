@@ -43,9 +43,19 @@ public class Constants {
 	public static final String DATEFORMA_TPATTERN_THREAD = "MM月dd日 HH:mm";
 	
 	/**
+	 * 相册提示时间
+	 */
+	public static final String DATEFORMA_TPATTERN_ALBUM_TIP = "yyyy-MM-dd";
+	
+	/**
 	 * 默认的聊天消息分页加载的页面大小
 	 */
-	public static int PAGE_SIZE_MSG = 20;
+	public static final int PAGE_SIZE_MSG = 20;
+	
+	/**
+	 * 默认的相册图片选择数量最多为9张
+	 */
+	public static final int ALBUM_SELECT_SIZE = 9;
 	
 	/**
 	 * 【1】成功的结果码

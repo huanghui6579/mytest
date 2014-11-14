@@ -6,4 +6,8 @@
     
     <drawable name="album_take_pic_bg_normal">#353535</drawable>
     <drawable name="album_take_pic_bg_pressed">#000000</drawable>
+
+    <drawable name="transparent">#00000000</drawable>
+    
+    
 </resources>
