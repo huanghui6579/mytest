@@ -89,7 +89,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	/**
 	 * 文件列表
 	 */
-	private List<PhotoItem> mPhotos = new ArrayList<>();
+	private ArrayList<PhotoItem> mPhotos = new ArrayList<>();
 	/**
 	 * 文件按分组的集合
 	 */
@@ -133,6 +133,22 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	protected void addListener() {
 		tvAllPhoto.setOnClickListener(this);
 		tvPreview.setOnClickListener(this);
+		gvPhoto.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				if (position == 0) {	//拍照
+					
+				} else {
+					Intent intent = new Intent(mContext, PhotoPreviewActivity.class);
+					intent.putExtra(PhotoPreviewActivity.ARG_POSITION, position - 1);
+					intent.putExtra(PhotoPreviewActivity.ARG_SHOW_MODE, PhotoPreviewActivity.MODE_BROWSE);
+					intent.putParcelableArrayListExtra(PhotoPreviewActivity.ARG_PHOTO_LIST, mPhotos);
+					startActivity(intent);
+				}
+			}
+		});
 		gvPhoto.setOnScrollListener(new AbsListView.OnScrollListener() {
 			
 			@Override
@@ -175,6 +191,15 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 		menuInflater.inflate(R.menu.alibum_select, menu);
 		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
 		btnOpt = (TextView) menuDone.getActionView();
+		btnOpt.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				List<PhotoItem> selects = mPhotoAdapter.getSelectList();
+				SystemUtil.makeShortToast("选中了" + selects.size() + "个");
+				Log.d(selects.toString());
+			}
+		});
 		/*mHandler.post(new Runnable() {
 			
 			@Override
@@ -328,12 +353,11 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 			showPopupWindow(v);
 			break;
 		case R.id.tv_preview:	//预览选中的图片
-			List<PhotoItem> selects = mPhotoAdapter.getSelectList();
-//			Intent intent = new Intent(mContext, ImagePreviewActivity.class);
-//			Bundle bundle = new Bundle();
-//			bundle.putParcelableArrayList(SELECT_ALBUM, selects);
-//			intent.putExtras(bundle);
-//			startActivity(intent);
+			ArrayList<PhotoItem> selects = mPhotoAdapter.getSelectList();
+			Intent intent = new Intent(mContext, PhotoPreviewActivity.class);
+			intent.putExtra(PhotoPreviewActivity.ARG_SHOW_MODE, PhotoPreviewActivity.MODE_CHOSE);
+			intent.putParcelableArrayListExtra(PhotoPreviewActivity.ARG_PHOTO_LIST, selects);
+			startActivity(intent);
 			break;
 		default:
 			break;
@@ -476,8 +500,8 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 		 * @update 2014年11月14日 下午10:18:54
 		 * @return
 		 */
-		public List<PhotoItem> getSelectList() {
-			List<PhotoItem> selects = new ArrayList<>();
+		public ArrayList<PhotoItem> getSelectList() {
+			ArrayList<PhotoItem> selects = new ArrayList<>();
 			int len = selectArray.size();
 			for (int i = 0; i < len; i++) {
 				boolean value = selectArray.valueAt(i);
@@ -603,8 +627,8 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 						resetActionMenu();
 					} else {
 						tvPreview.setEnabled(true);
-						btnOpt.setEnabled(true);
 						tvPreview.setText(getString(R.string.album_preview_photo_num, selectSize));
+						btnOpt.setEnabled(true);
 						btnOpt.setText(getString(R.string.action_select_complete) + "(" + selectSize + "/" + Constants.ALBUM_SELECT_SIZE + ")");
 					}
 				} else {	//多于9张

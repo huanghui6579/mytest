@@ -211,4 +211,13 @@
         <item name="android:textSize">@dimen/session_list_item_content</item>
         <item name="android:textColor">@color/session_list_item_content</item>
     </style>
+    
+    <!-- 相册底部标题样式 -->
+    <style name="AlbumBottomTitleStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/album_list_bottom_title</item>
+        <item name="android:textColor">@color/album_text_selector</item>
+        <item name="android:padding">@dimen/album_list_bottom_padding</item>
+    </style>
 </resources>

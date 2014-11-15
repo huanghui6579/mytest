@@ -28,19 +28,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:name="com.example.chat.ChatApplication" >
-        <!-- android:name="com.example.chat.activity.LoginActivity" -->
         <activity
-            android:name="com.example.chat.activity.AlbumActivity"
-            android:label="@string/app_name"
-            android:configChanges="orientation|screenSize"
-            android:theme="@style/AppTheme.AlbumActivity" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-<!--         <activity
             android:name="com.example.chat.activity.LoginActivity"
             android:label="@string/app_name"
             android:configChanges="orientation|screenSize" >
@@ -49,7 +37,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> -->
+        </activity>
         
         <activity
             android:name="com.example.chat.activity.MainActivity"
@@ -83,12 +71,18 @@
             android:label="@string/activity_lable_new_friend_info"
             android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="stateUnchanged|adjustResize"/>
-        <!-- <activity
+        <activity
             android:name="com.example.chat.activity.AlbumActivity"
             android:label="@string/activity_lable_album"
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme.AlbumActivity"
-            android:windowSoftInputMode="stateUnchanged|adjustResize"/> -->
+            android:windowSoftInputMode="stateUnchanged|adjustResize"/>
+            
+        <activity
+            android:name="com.example.chat.activity.PhotoPreviewActivity"
+            android:label="@string/activity_lable_album"
+            android:configChanges="orientation|screenSize"
+            android:windowSoftInputMode="stateUnchanged|adjustResize"/>
         
         <provider android:name="com.example.chat.provider.UserProvider"
             android:authorities="com.example.chat.provider.user;com.example.chat.provider.newFriend"

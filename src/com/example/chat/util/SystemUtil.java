@@ -54,6 +54,7 @@ import android.widget.Toast;
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.model.Emoji;
+import com.example.chat.model.PhotoItem;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
@@ -927,6 +928,24 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 获得图片加载的选项
+	 * @update 2014年11月15日 上午10:33:44
+	 * @return
+	 */
+	public static DisplayImageOptions getPhotoPreviewOptions() {
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
+		.showImageForEmptyUri(R.drawable.ic_default_icon_error)
+		.showImageOnFail(R.drawable.ic_default_icon_error)
+		.cacheInMemory(true)
+		.cacheOnDisk(false)
+		.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+		.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+		.displayer(new FadeInBitmapDisplayer(200))
+		.build();
+		return options;
+	}
+	
+	/**
 	 * 获得通讯录列表的特殊符号的选择器，特殊符号为：“↑”<br />
 	 * <pre>
 	 * String s = "↑";
@@ -1058,5 +1077,87 @@ public class SystemUtil {
 	    listView.setLayoutParams(params);
 	    listView.requestLayout();
 
+	}
+	
+	/**
+	 * 判断一个view是否可见
+	 * @update 2014年11月15日 上午10:40:26
+	 * @param view
+	 * @return
+	 */
+	public static boolean isViewVisible(View view) {
+		return view.getVisibility() == View.VISIBLE;
+	}
+	
+	/**
+	 * 将长整型的字节单位转换成字符串，单位为KB、MB、GB
+	 * @update 2014年11月15日 下午3:12:09
+	 * @param size
+	 * @return
+	 */
+	public static String sizeToString(long size) {
+		long kb = 1024;
+		long mb = kb * 1024;
+		long gb = mb * 1024;
+		String format = null;
+		if (size >= gb) {
+			if (size % gb == 0) {
+				format = "%.0f G";
+			} else {
+				format = "%.2f G";
+			}
+			return String.format(Locale.getDefault(), format, (float) size / gb);
+		} else if (size >= mb) {
+			if (size % mb == 0) {
+				format = "%.0f M";
+			} else {
+				format = "%.2f M";
+			}
+			float f = (float) size / mb;
+			return String.format(Locale.getDefault(), format, f);
+		} else if (size >= kb) {
+			if (size % kb == 0) {
+				format = "%.0f K";
+			} else {
+				format = "%.2f K";
+			}
+			float f = (float) size / kb;
+			return String.format(Locale.getDefault(), format, f);
+		} else {
+			return String.format(Locale.getDefault(), "%d B", size);
+		}
+	}
+	
+	/**
+	 * 获得相片集合的文件大小，并转换成字符串
+	 * @update 2014年11月15日 下午3:09:34
+	 * @param list
+	 * @return
+	 */
+	public static String getFileListSizeStr(List<PhotoItem> list) {
+		String sizeStr = null;
+		long byteSize = 0;
+		for (PhotoItem photoItem : list) {
+			byteSize += photoItem.getSize();
+		}
+		sizeStr = sizeToString(byteSize);
+		return sizeStr;
+	}
+	
+	/**
+	 * 获得相片集合的文件大小
+	 * @update 2014年11月15日 下午3:09:34
+	 * @param list
+	 * @return
+	 */
+	public static long getFileListSize(List<PhotoItem> list) {
+		if (SystemUtil.isEmpty(list)) {
+			return 0;
+		}
+		long byteSize = 0;
+		for (PhotoItem photoItem : list) {
+			byteSize += photoItem.getSize();
+		}
+		return byteSize;
 	}
 }

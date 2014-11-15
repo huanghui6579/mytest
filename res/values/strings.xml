@@ -11,6 +11,7 @@
     <string name="add_success">添加成功</string>
     <string name="add_failed">添加失败</string>
     
+    <string name="choice">选择</string>
     <string name="send">发送</string>
     <string name="show">查看</string>
     <string name="add">添加</string>
@@ -94,6 +95,9 @@
     <string name="album_all_photo">所有图片</string>
     <string name="album_preview_photo">预览</string>
     <string name="album_preview_photo_num">预览(%1$d)</string>
+    <string name="album_preview_photo_index">%1$d/%2$d</string>
+    <string name="album_preview_original_image">原图</string>
+    <string name="album_preview_original_image_size">原图(%1$s)</string>
     <string name="album_tip_max_select">只能选择%1$d张图片</string>
     <string name="album_item_content">"%1$s\n\n%2$d张"</string>
 
