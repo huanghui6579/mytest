@@ -507,7 +507,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 				boolean value = selectArray.valueAt(i);
 				if (value) {
 					int position = selectArray.keyAt(i);
-					selects.add(mPhotos.get(position));
+					selects.add(mPhotos.get(position - 1));
 				}
 			}
 			return selects;
@@ -567,20 +567,20 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 				holder = (PhotoViewHolder) convertView.getTag();
 			}
 			
-			holder.cbChose.setOnCheckedChangeListener(null);
-			holder.cbChose.setChecked((selectArray.indexOfKey(position) >= 0) ? selectArray.get(position) : false);
-			if(holder.cbChose.isChecked()) {
-				holder.viewAplha.setVisibility(View.VISIBLE);
-			} else {
-				holder.viewAplha.setVisibility(View.GONE);
-			}
-			holder.cbChose.setOnCheckedChangeListener(new OnCheckedChangeListenerImpl(holder, position));
 			if (position == 0) {	//拍照
 				holder.viewAplha.setVisibility(View.GONE);
 				holder.cbChose.setVisibility(View.GONE);
 				holder.ivPhoto.setScaleType(ScaleType.CENTER);
 				holder.ivPhoto.setImageResource(R.drawable.album_take_pic_selector);
 			} else {
+				holder.cbChose.setOnCheckedChangeListener(null);
+				holder.cbChose.setChecked((selectArray.indexOfKey(position) >= 0) ? selectArray.get(position) : false);
+				if(holder.cbChose.isChecked()) {
+					holder.viewAplha.setVisibility(View.VISIBLE);
+				} else {
+					holder.viewAplha.setVisibility(View.GONE);
+				}
+				holder.cbChose.setOnCheckedChangeListener(new OnCheckedChangeListenerImpl(holder, position));
 				PhotoItem photo = (PhotoItem) getItem(position);
 				holder.cbChose.setVisibility(View.VISIBLE);
 				holder.ivPhoto.setScaleType(ScaleType.FIT_XY);

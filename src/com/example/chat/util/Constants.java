@@ -15,12 +15,12 @@ public class Constants {
     <!-- <string name="server_name">tiger.com</string> -->
     <string name="server_name">huanghui4.com</string>
 	 */
-//	public static final String SERVER_HOST = "192.168.0.104";
-	public static final String SERVER_HOST = "172.16.45.16";
+	public static final String SERVER_HOST = "192.168.0.104";
+//	public static final String SERVER_HOST = "172.16.45.16";
 //	public static final String SERVER_HOST = "192.168.1.184";
 //	public static final String SERVER_NAME = "tiger.com";
-	public static final String SERVER_NAME = "huanghui4.com";
-//	public static final String SERVER_NAME = "localhost-pc.com";
+//	public static final String SERVER_NAME = "huanghui4.com";
+	public static final String SERVER_NAME = "localhost-pc.com";
 	public static final int SERVER_PORT = 5222;
 	/**
 	 * 用户的登录该系统的客户端类型，如Android、iphone、web等

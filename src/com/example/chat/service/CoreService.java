@@ -10,6 +10,7 @@ import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.filter.OrFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
@@ -38,9 +39,11 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.HeadIcon;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgSenderInfo;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.NewFriendInfo;
 import com.example.chat.model.UserVcard;
+import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
@@ -125,6 +128,54 @@ public class CoreService extends Service {
 		}).start();
 	}
 	
+	/**
+	 * 发送消息的线程
+	 * @author Administrator
+	 * @update 2014年11月16日 下午5:35:14
+	 * @param msgInfo
+	 */
+	public void sendChatMsg(MsgSenderInfo senderInfo) {
+		
+	}
+	
+	class SendMsgTask implements Runnable {
+		private MsgSenderInfo senderInfo;
+
+		public SendMsgTask(MsgSenderInfo senderInfo) {
+			this.senderInfo = senderInfo;
+		}
+
+		@Override
+		public void run() {
+			try {
+				senderInfo.msgInfo = msgManager.addMsgInfo(senderInfo.msgInfo);
+				senderInfo.msgThread.setSnippetId(senderInfo.msgInfo.getId());
+				senderInfo.msgThread.setSnippetContent(senderInfo.msgInfo.getContent());
+				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
+				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
+				if (senderInfo.msgInfo != null) {
+					if (senderInfo.chat == null) {
+						senderInfo.chat = createChat(connection);
+					}
+					if (senderInfo.chat != null) {
+						senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
+						senderInfo.msgInfo.setSendState(SendState.SUCCESS);
+					} else {
+						senderInfo.msgInfo.setSendState(SendState.FAILED);
+					}
+				} else {
+					return;
+				}
+			} catch (NotConnectedException | XMPPException e) {
+				senderInfo.msgInfo.setSendState(SendState.FAILED);
+				e.printStackTrace();
+			}
+			senderInfo.msgInfo = msgManager.updateMsgInfo(senderInfo.msgInfo);
+			mHandler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
+		}
+		
+	}
+	
 	@Override
 	public void onCreate() {
 		if (mHandlerThread == null) {
@@ -138,6 +189,7 @@ public class CoreService extends Service {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.addPacketListener(mChatPacketListener, packetFilter);
 		}
+		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 		super.onCreate();
 	}
 
@@ -149,7 +201,6 @@ public class CoreService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 		if (intent != null) {
 			//监听消息
 			int flag = intent.getIntExtra(FLAG_SYNC, 0);
@@ -187,15 +238,26 @@ public class CoreService extends Service {
 			connection.addConnectionListener(new ChatConnectionListener());
 //			packetCollector.nextResult();
 			if (connection.isAuthenticated()) {	//是否登录
-				if (mChatManager == null) {
-					mChatManager = ChatManager.getInstanceFor(connection);
-					mChatManager.addChatListener(new MyChatManagerListener());
-				}
+				initChatManager(connection);
 			} else {	//重新登录
 				
 			}
 		}
 		
+	}
+	
+	/**
+	 * 初始化ChatManager
+	 * @author Administrator
+	 * @update 2014年11月16日 下午5:41:28
+	 */
+	private void initChatManager(AbstractXMPPConnection connection) {
+		if (mChatManager == null) {
+			synchronized (CoreService.class) {
+				mChatManager = ChatManager.getInstanceFor(connection);
+				mChatManager.addChatListener(new MyChatManagerListener());
+			}
+		}
 	}
 	
 	/**
