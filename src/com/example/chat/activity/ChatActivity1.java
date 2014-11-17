@@ -16,13 +16,18 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.app.FragmentTabHost;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -55,11 +60,14 @@ import com.example.chat.model.EmojiType;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
+import com.example.chat.model.MsgSenderInfo;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
+import com.example.chat.service.CoreService;
+import com.example.chat.service.CoreService.MainBinder;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
 import com.example.chat.util.SystemUtil;
@@ -76,6 +84,9 @@ import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
  */
 public class ChatActivity1 extends BaseActivity implements OnClickListener/*, OnItemClickListener*/ {
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+	
+	public static final String ARG_MSG_INFO = "arg_msg_info";
+	
 	/**
 	 * 默认的编辑模式，文本框内没有任何内容
 	 */
@@ -177,6 +188,11 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	
 	private MsgAdapter msgAdapter;
 	
+	/**
+	 * 消息处理的广播
+	 */
+	MsgProcessReceiver msgProcessReceiver;
+	
 	private Handler mHandler = new Handler() {
 
 		@Override
@@ -208,6 +224,24 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	
 	//图片加载器
 	private ImageLoader mImageLoader = null;
+	
+	CoreService coreService;
+	
+	private ServiceConnection serviceConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			MainBinder mBinder = (MainBinder) service;
+			coreService = mBinder.getService();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	};
 	
 	@Override
 	protected int getContentView() {
@@ -248,6 +282,14 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 
 	@Override
 	protected void initData() {
+		
+		Intent service = new Intent(mContext, CoreService.class);
+		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
+		
+		//注册处理聊天消息的广播
+		msgProcessReceiver = new MsgProcessReceiver();
+		IntentFilter intentFilter = new IntentFilter(MsgProcessReceiver.ACTION_PROCESS_MSG);
+		registerReceiver(msgProcessReceiver, intentFilter);
 		
 		mImageLoader = ImageLoader.getInstance();
 		
@@ -296,7 +338,14 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		
 		connection = XmppConnectionManager.getInstance().getConnection();
 		//注册消息观察者
-		registerContentOberver();
+//		registerContentOberver();
+	}
+	
+	@Override
+	protected void onDestroy() {
+		unbindService(serviceConnection);
+		unregisterReceiver(msgProcessReceiver);
+		super.onDestroy();
 	}
 	
 	/**
@@ -471,6 +520,16 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				switch (attachItem.getAction()) {
 				case AttachItem.ACTION_IMAGE:	//选择图片
 					intent = new Intent(mContext, AlbumActivity.class);
+					MsgInfo msgInfo = new MsgInfo();
+					msgInfo.setComming(false);
+					msgInfo.setFromUser(mine.getUsername());
+					msgInfo.setToUser(otherSide.getUsername());
+					msgInfo.setMsgType(MsgInfo.Type.IMAGE);
+					msgInfo.setRead(true);
+					msgInfo.setSendState(MsgInfo.SendState.SENDING);
+					msgInfo.setThreadID(msgThread.getId());
+					MsgSenderInfo msgSenderInfo = new MsgSenderInfo(chat, msgInfo, msgThread, mHandler);
+//					intent.putExtra(ARG_MSG_INFO, msgInfo);
 					startActivity(intent);
 					break;
 
@@ -856,8 +915,12 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		msg.setSubject(null);
 		msg.setThreadID(msgThread.getId());
 		mMsgInfos.add(msg);
-		
-		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(msg));
+		if (chat == null) {
+			chat = createChat(connection);
+		}
+		MsgSenderInfo msgSenderInfo = new MsgSenderInfo(chat, msg, msgThread, mHandler);
+		coreService.sendChatMsg(msgSenderInfo);
+//		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(msg));
 		
 		return msg;
 	}
@@ -951,48 +1014,48 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		super.onPause();
 	}
 	
-	/**
-	 * 发送消息的线程
-	 * @author huanghui1
-	 * @update 2014年11月6日 下午9:56:22
-	 */
-	class SendMsgTask implements Runnable {
-		private MsgInfo msgInfo;
-
-		public SendMsgTask(MsgInfo msgInfo) {
-			this.msgInfo = msgInfo;
-		}
-
-		@Override
-		public void run() {
-			try {
-				msgInfo = msgManager.addMsgInfo(msgInfo);
-				msgThread.setSnippetId(msgInfo.getId());
-				msgThread.setSnippetContent(msgInfo.getContent());
-				msgThread.setModifyDate(System.currentTimeMillis());
-				msgThread = msgManager.updateMsgThread(msgThread);
-				if (msgInfo != null) {
-					if (chat == null) {
-						chat = createChat(connection);
-					}
-					if (chat != null) {
-						chat.sendMessage(msgInfo.getContent());
-						msgInfo.setSendState(SendState.SUCCESS);
-					} else {
-						msgInfo.setSendState(SendState.FAILED);
-					}
-				} else {
-					return;
-				}
-			} catch (NotConnectedException | XMPPException e) {
-				msgInfo.setSendState(SendState.FAILED);
-				e.printStackTrace();
-			}
-			msgInfo = msgManager.updateMsgInfo(msgInfo);
-			mHandler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
-		}
-		
-	}
+//	/**
+//	 * 发送消息的线程
+//	 * @author huanghui1
+//	 * @update 2014年11月6日 下午9:56:22
+//	 */
+//	class SendMsgTask implements Runnable {
+//		private MsgInfo msgInfo;
+//
+//		public SendMsgTask(MsgInfo msgInfo) {
+//			this.msgInfo = msgInfo;
+//		}
+//
+//		@Override
+//		public void run() {
+//			try {
+//				msgInfo = msgManager.addMsgInfo(msgInfo);
+//				msgThread.setSnippetId(msgInfo.getId());
+//				msgThread.setSnippetContent(msgInfo.getContent());
+//				msgThread.setModifyDate(System.currentTimeMillis());
+//				msgThread = msgManager.updateMsgThread(msgThread);
+//				if (msgInfo != null) {
+//					if (chat == null) {
+//						chat = createChat(connection);
+//					}
+//					if (chat != null) {
+//						chat.sendMessage(msgInfo.getContent());
+//						msgInfo.setSendState(SendState.SUCCESS);
+//					} else {
+//						msgInfo.setSendState(SendState.FAILED);
+//					}
+//				} else {
+//					return;
+//				}
+//			} catch (NotConnectedException | XMPPException e) {
+//				msgInfo.setSendState(SendState.FAILED);
+//				e.printStackTrace();
+//			}
+//			msgInfo = msgManager.updateMsgInfo(msgInfo);
+//			mHandler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
+//		}
+//		
+//	}
 	
 	/**
 	 * 添加附件的适配器
@@ -1218,6 +1281,30 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		ImageView ivHeadIcon;
 		TextView tvContent;
 		ImageView ivMsgState;
+	}
+	
+	/**
+	 * 处理消息的广播
+	 * @author huanghui1
+	 * @update 2014年11月17日 上午9:20:42
+	 */
+	public class MsgProcessReceiver extends BroadcastReceiver {
+		public static final String ACTION_PROCESS_MSG = "com.example.chat.PROCESS_ACCEPT_MSG_RECEIVER";
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (ACTION_PROCESS_MSG.equals(intent.getAction())) {	//处理接收的聊天消息
+				MsgInfo msgInfo = intent.getParcelableExtra(ARG_MSG_INFO);
+				if (msgInfo != null) {
+					mMsgInfos.add(msgInfo);
+					msgAdapter.notifyDataSetChanged();
+					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
+						scrollMyListViewToBottom(lvMsgs);
+					}
+				}
+			}
+		}
+		
 	}
 	
 	/**

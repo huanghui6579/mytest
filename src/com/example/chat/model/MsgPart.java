@@ -1,5 +1,8 @@
 package com.example.chat.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * 消息的附件类
  * 
@@ -7,7 +10,7 @@ package com.example.chat.model;
  * @version 1.0.0
  * @update 2014年10月29日 上午10:07:09
  */
-public class MsgPart {
+public class MsgPart implements Parcelable, Cloneable {
 	/**
 	 * 主键
 	 */
@@ -95,10 +98,88 @@ public class MsgPart {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		result = prime * result + msgId;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MsgPart other = (MsgPart) obj;
+		if (id != other.id)
+			return false;
+		if (msgId != other.msgId)
+			return false;
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return "MsgPart [id=" + id + ", msgId=" + msgId + ", fileName="
 				+ fileName + ", filePath=" + filePath + ", size=" + size
 				+ ", mimeTye=" + mimeTye + ", creationDate=" + creationDate
 				+ "]";
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		MsgPart part = null;
+		try {
+			part = (MsgPart) super.clone();
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+		}
+		return part;
+	}
+	
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(id);
+		dest.writeInt(msgId);
+		dest.writeString(fileName);
+		dest.writeString(filePath);
+		dest.writeString(mimeTye);
+		dest.writeLong(size);
+		dest.writeLong(creationDate);
+	}
+	
+	public MsgPart() {
+	}
+	
+	public MsgPart(Parcel in) {
+		id = in.readInt();
+		msgId = in.readInt();
+		fileName = in.readString();
+		filePath = in.readString();
+		mimeTye = in.readString();
+		size = in.readLong();
+		creationDate = in.readLong();
+	}
+	
+	public static final Parcelable.Creator<MsgPart> CREATOR = new Creator<MsgPart>() {
+		
+		@Override
+		public MsgPart[] newArray(int size) {
+			return new MsgPart[size];
+		}
+		
+		@Override
+		public MsgPart createFromParcel(Parcel source) {
+			return new MsgPart(source);
+		}
+	};
 }

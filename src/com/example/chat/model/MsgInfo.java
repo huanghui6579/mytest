@@ -2,6 +2,9 @@ package com.example.chat.model;
 
 import java.util.Comparator;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.example.chat.util.Constants;
 
 /**
@@ -10,7 +13,7 @@ import com.example.chat.util.Constants;
  * @version 1.0.0
  * @update 2014年10月28日 下午9:25:58
  */
-public class MsgInfo implements Comparator<MsgInfo> {
+public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 	/**
 	 * 主键
 	 */
@@ -273,6 +276,20 @@ public class MsgInfo implements Comparator<MsgInfo> {
 			}
 		}
 	}
+	
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		MsgInfo mi = null;
+		try {
+			mi = (MsgInfo) super.clone();
+			mi.sendState = sendState;	//枚举是单例的，所以只需拷贝引用就行了
+			mi.msgType = msgType;
+			mi.msgPart = (MsgPart) msgPart.clone();
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+		}
+		return mi;
+	}
 
 	@Override
 	public int hashCode() {
@@ -311,5 +328,57 @@ public class MsgInfo implements Comparator<MsgInfo> {
 			return 0;
 		}
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(id);
+		dest.writeInt(threadID);
+		dest.writeString(fromUser);
+		dest.writeString(toUser);
+		dest.writeString(content);
+		dest.writeString(subject);
+		dest.writeLong(creationDate);
+		dest.writeInt(isComming ? 1 : 0);
+		dest.writeInt(isRead ? 1 : 0);
+		dest.writeParcelable(msgPart, flags);
+		dest.writeInt(msgType.ordinal());
+		dest.writeInt(sendState.ordinal());
+	}
+	
+	public MsgInfo() {
+	}
+	
+	public MsgInfo(Parcel in) {
+		id = in.readInt();
+		threadID = in.readInt();
+		fromUser = in.readString();
+		toUser = in.readString();
+		content = in.readString();
+		subject = in.readString();
+		creationDate = in.readLong();
+		isComming = in.readInt() == 1 ? true : false;
+		isRead = in.readInt() == 1 ? true : false;
+		msgPart = in.readParcelable(MsgPart.class.getClassLoader());
+		msgType = Type.valueOf(in.readInt());
+		sendState = SendState.valueOf(in.readInt());
+	}
+	
+	public static final Parcelable.Creator<MsgInfo> CREATOR = new Creator<MsgInfo>() {
+		
+		@Override
+		public MsgInfo[] newArray(int size) {
+			return new MsgInfo[size];
+		}
+		
+		@Override
+		public MsgInfo createFromParcel(Parcel source) {
+			return new MsgInfo(source);
+		}
+	};
 	
 }

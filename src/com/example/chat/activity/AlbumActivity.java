@@ -1,18 +1,20 @@
 package com.example.chat.activity;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -28,11 +30,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AbsListView.LayoutParams;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
@@ -50,14 +50,19 @@ import android.widget.TextView;
 import com.example.chat.R;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.Album;
+import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgPart;
+import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
+import com.example.chat.service.CoreService;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
-import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.nostra13.universalimageloader.utils.MemoryCacheUtils;
 
 /**
  * 图片选择界面
@@ -98,8 +103,12 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	private PhotoAdapter mPhotoAdapter;
 	
 	PopupWindow mPopupWindow;
+	
+	private ProgressDialog pDialog;
 
 	static int[] screenSize = null;
+	
+	private MsgInfo msgInfo;
 	
 	private Handler mHandler = new Handler();
 
@@ -125,6 +134,8 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	protected void initData() {
 		mPhotoAdapter = new PhotoAdapter(mPhotos, mContext);
 		gvPhoto.setAdapter(mPhotoAdapter);
+		
+		msgInfo = getIntent().getParcelableExtra(ChatActivity1.ARG_MSG_INFO);
 		
 		new LoadPhotoTask().execute();
 	}
@@ -195,9 +206,62 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 			
 			@Override
 			public void onClick(View v) {
-				List<PhotoItem> selects = mPhotoAdapter.getSelectList();
-				SystemUtil.makeShortToast("选中了" + selects.size() + "个");
-				Log.d(selects.toString());
+				final List<PhotoItem> selects = mPhotoAdapter.getSelectList();
+				if (pDialog == null) {
+					pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
+				} else {
+					pDialog.show();
+				}
+				//发送图片
+				SystemUtil.getCachedThreadPool().execute(new Runnable() {
+					
+					@Override
+					public void run() {
+						for (final PhotoItem photoItem : selects) {
+							try {
+								String filePath = photoItem.getFilePath();
+								if (!SystemUtil.isFileExists(filePath)) {
+									continue;
+								}
+								String fileUri = Scheme.FILE.wrap(filePath);
+								final MsgInfo mi = (MsgInfo) msgInfo.clone();
+								Bitmap bitmap = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, mImageLoader.getMemoryCache()).get(0);
+								if (bitmap == null) {
+									SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
+
+										@Override
+										public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+											if (loadedImage != null) {
+												MsgThread mt = new MsgThread();
+												mt.setId(mi.getThreadID());
+												File saveFile = SystemUtil.generateChatAttachFile(mt, mi.getFromUser(), photoItem.getFilePath());
+												try {
+													boolean flag = mImageLoader.getDiskCache().save(saveFile.getAbsolutePath(), loadedImage);
+													if (flag) {
+														MsgPart part = new MsgPart();
+														part.setFileName(saveFile.getName());
+														part.setFilePath(saveFile.getAbsolutePath());
+														//TODO 文件类型匹配待做
+														part.setMimeTye("image/*");
+														part.setMsgId(mi.getId());
+														part.setSize(saveFile.length());
+														mi.setMsgPart(part);
+														mi.setCreationDate(System.currentTimeMillis());
+													}
+												} catch (IOException e) {
+													e.printStackTrace();
+												}
+											}
+										}
+										
+									});
+								}
+							} catch (CloneNotSupportedException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				});
 			}
 		});
 		/*mHandler.post(new Runnable() {
@@ -210,6 +274,49 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 		});*/
 		
 		return super.onCreateOptionsMenu(menu);
+	}
+	
+	/**
+	 * 处理所选图片的 任务
+	 * @author huanghui1
+	 * @update 2014年11月17日 下午8:07:34
+	 */
+	class ProcessPhotosTask implements Runnable {
+		private MsgInfo info;
+
+		public ProcessPhotosTask(MsgInfo info) {
+			super();
+			this.info = info;
+		}
+
+		@Override
+		public void run() {
+			Intent intent = new Intent(CoreService.SendChatMessageReceiver.ACTION_SEND_CHAT_MSG);	//发送消息
+			intent.putExtra(ChatActivity1.ARG_MSG_INFO, info);
+			sendBroadcast(intent);
+		}
+		
+	}
+	
+	/**
+	 * 发送图片的任务
+	 * @author huanghui1
+	 * @update 2014年11月17日 下午8:16:13
+	 */
+	class SendPhotosTask implements Runnable {
+		private PhotoItem photo;
+
+		public SendPhotosTask(PhotoItem photo) {
+			super();
+			this.photo = photo;
+		}
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 	
 	/**

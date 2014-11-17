@@ -24,7 +24,10 @@ import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -34,6 +37,7 @@ import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
+import com.example.chat.activity.ChatActivity1;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
@@ -74,6 +78,9 @@ public class CoreService extends Service {
 	private HandlerThread mHandlerThread = null;
 	private static PacketListener mChatPacketListener;
 	private static ChatManager mChatManager;
+	AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+	
+	SendChatMessageReceiver chatMessageReceiver;
 	
 	private class MyHandler extends Handler {
 		
@@ -118,7 +125,6 @@ public class CoreService extends Service {
 				Personal localPerson = userManager.getLocalSelftInfo(person);
 				if (localPerson == null) {	//本地没有个人信息，则从服务器上同步
 					//从网上同步个人信息
-					AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 					XmppUtil.syncPersonalInfo(connection, person);
 					userManager.saveOrUpdateCurrentUser(person);
 				} else {	//本地有个人信息，则只需改变状态就行了
@@ -135,9 +141,14 @@ public class CoreService extends Service {
 	 * @param msgInfo
 	 */
 	public void sendChatMsg(MsgSenderInfo senderInfo) {
-		
+		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(senderInfo));
 	}
 	
+	/**
+	 * 发送消息的任务线程
+	 * @author huanghui1
+	 * @update 2014年11月17日 上午9:05:04
+	 */
 	class SendMsgTask implements Runnable {
 		private MsgSenderInfo senderInfo;
 
@@ -154,9 +165,6 @@ public class CoreService extends Service {
 				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
 				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
 				if (senderInfo.msgInfo != null) {
-					if (senderInfo.chat == null) {
-						senderInfo.chat = createChat(connection);
-					}
 					if (senderInfo.chat != null) {
 						senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
 						senderInfo.msgInfo.setSendState(SendState.SUCCESS);
@@ -190,6 +198,12 @@ public class CoreService extends Service {
 			connection.addPacketListener(mChatPacketListener, packetFilter);
 		}
 		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
+		
+		//注册发送消息的广播
+		chatMessageReceiver = new SendChatMessageReceiver();
+		IntentFilter intentFilter = new IntentFilter(SendChatMessageReceiver.ACTION_SEND_CHAT_MSG);
+		registerReceiver(chatMessageReceiver, intentFilter);
+		
 		super.onCreate();
 	}
 
@@ -287,6 +301,9 @@ public class CoreService extends Service {
 					msgThread.setSnippetId(msgInfo.getId());
 					msgThread.setSnippetContent(msgInfo.getContent());
 					msgManager.updateMsgThread(msgThread);
+					Intent intent = new Intent(ChatActivity1.MsgProcessReceiver.ACTION_PROCESS_MSG);
+					intent.putExtra(ChatActivity1.ARG_MSG_INFO, msgInfo);
+					sendBroadcast(intent);
 				}
 				if (msgInfo != null) {
 					android.os.Message msg = mHandler.obtainMessage();
@@ -316,7 +333,7 @@ public class CoreService extends Service {
 			msgInfo.setMsgType(com.example.chat.model.MsgInfo.Type.TEXT);
 			msgInfo.setRead(false);
 			msgInfo.setSubject(message.getSubject());
-			msgInfo.setSendState(null);
+			msgInfo.setSendState(SendState.SUCCESS);
 			msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
 			int threadId = msgManager.getThreadIdByMembers(from);	//查找本地会话，如果没有就创建
 			if (threadId > 0) {
@@ -524,6 +541,26 @@ public class CoreService extends Service {
 
 			default:
 				break;
+			}
+		}
+		
+	}
+	
+	/**
+	 * 发送聊天消息的广播
+	 * @author huanghui1
+	 * @update 2014年11月17日 下午8:20:57
+	 */
+	public class SendChatMessageReceiver extends BroadcastReceiver {
+		public static final String ACTION_SEND_CHAT_MSG = "com.example.chat.SEND_CHAT_MSG";
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (ACTION_SEND_CHAT_MSG.equals(intent.getAction())) {	//发送消息的广播
+				MsgInfo msgInfo = intent.getParcelableExtra(ChatActivity1.ARG_MSG_INFO);
+				if (msgInfo != null) {
+//					sendChatMsg(senderInfo);
+				}
 			}
 		}
 		

@@ -91,6 +91,7 @@
     
     <string name="chat_msg_edit_hint">请输入内容</string>
     <string name="chat_btn_make_voice_start">按住 说话</string>
+    <string name="chat_sending_file">正在发送文件&#8230;</string>
     
     <string name="album_all_photo">所有图片</string>
     <string name="album_preview_photo">预览</string>
