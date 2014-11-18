@@ -284,7 +284,9 @@ public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 			mi = (MsgInfo) super.clone();
 			mi.sendState = sendState;	//枚举是单例的，所以只需拷贝引用就行了
 			mi.msgType = msgType;
-			mi.msgPart = (MsgPart) msgPart.clone();
+			if (msgPart != null) {
+				mi.msgPart = (MsgPart) msgPart.clone();
+			}
 		} catch (CloneNotSupportedException e) {
 			e.printStackTrace();
 		}

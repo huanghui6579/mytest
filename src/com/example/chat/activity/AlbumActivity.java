@@ -16,6 +16,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Message;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -110,7 +111,29 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	
 	private MsgInfo msgInfo;
 	
-	private Handler mHandler = new Handler();
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case Constants.MSG_SUCCESS:
+				Intent data = new Intent();
+				data.putParcelableArrayListExtra(ChatActivity1.ARG_MSG_INFO_LIST, (ArrayList<MsgInfo>)msg.obj);
+				setResult(RESULT_OK, data);
+				break;
+			case Constants.MSG_FAILED:
+				setResult(RESULT_CANCELED);
+				break;
+			default:
+				break;
+			}
+			if (pDialog != null && pDialog.isShowing()) {
+				pDialog.dismiss();
+			}
+			finish();
+		}
+		
+	};
 
 	@Override
 	protected int getContentView() {
@@ -207,16 +230,13 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 			@Override
 			public void onClick(View v) {
 				final List<PhotoItem> selects = mPhotoAdapter.getSelectList();
-				if (pDialog == null) {
-					pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
-				} else {
-					pDialog.show();
-				}
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
 				//发送图片
 				SystemUtil.getCachedThreadPool().execute(new Runnable() {
 					
 					@Override
 					public void run() {
+						final ArrayList<MsgInfo> msgList = new ArrayList<>();
 						for (final PhotoItem photoItem : selects) {
 							try {
 								String filePath = photoItem.getFilePath();
@@ -225,32 +245,30 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 								}
 								String fileUri = Scheme.FILE.wrap(filePath);
 								final MsgInfo mi = (MsgInfo) msgInfo.clone();
-								Bitmap bitmap = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, mImageLoader.getMemoryCache()).get(0);
-								if (bitmap == null) {
+								List<Bitmap> bitmapList = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, mImageLoader.getMemoryCache());
+								if (!SystemUtil.isEmpty(bitmapList)) {
+									Bitmap bitmap = bitmapList.get(0);
+									if (bitmap == null) {	//重新加载图片
+										SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
+											
+											@Override
+											public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+												if (loadedImage != null) {
+													msgList.add(saveBitmap(mi, loadedImage, photoItem));
+												}
+											}
+											
+										});
+									} else {
+										msgList.add(saveBitmap(mi, bitmap, photoItem));
+									}
+								} else {
 									SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
-
+										
 										@Override
 										public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
 											if (loadedImage != null) {
-												MsgThread mt = new MsgThread();
-												mt.setId(mi.getThreadID());
-												File saveFile = SystemUtil.generateChatAttachFile(mt, mi.getFromUser(), photoItem.getFilePath());
-												try {
-													boolean flag = mImageLoader.getDiskCache().save(saveFile.getAbsolutePath(), loadedImage);
-													if (flag) {
-														MsgPart part = new MsgPart();
-														part.setFileName(saveFile.getName());
-														part.setFilePath(saveFile.getAbsolutePath());
-														//TODO 文件类型匹配待做
-														part.setMimeTye("image/*");
-														part.setMsgId(mi.getId());
-														part.setSize(saveFile.length());
-														mi.setMsgPart(part);
-														mi.setCreationDate(System.currentTimeMillis());
-													}
-												} catch (IOException e) {
-													e.printStackTrace();
-												}
+												msgList.add(saveBitmap(mi, loadedImage, photoItem));
 											}
 										}
 										
@@ -260,10 +278,19 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 								e.printStackTrace();
 							}
 						}
+						Message msg = mHandler.obtainMessage();
+						if (!SystemUtil.isEmpty(msgList)) {	//消息集合
+							msg.what = Constants.MSG_SUCCESS;
+							msg.obj = msgList;
+						} else {
+							msg.what = Constants.MSG_FAILED;
+						}
+						mHandler.sendMessage(msg);
 					}
 				});
 			}
 		});
+		
 		/*mHandler.post(new Runnable() {
 			
 			@Override
@@ -274,6 +301,40 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 		});*/
 		
 		return super.onCreateOptionsMenu(menu);
+	}
+	
+	/**
+	 * 保存图片
+	 * @update 2014年11月18日 上午11:32:33
+	 * @param msgInfo
+	 * @param bitmap
+	 * @return
+	 */
+	private MsgInfo saveBitmap(MsgInfo msgInfo, Bitmap bitmap, PhotoItem photoItem) {
+		MsgThread mt = new MsgThread();
+		mt.setId(msgInfo.getThreadID());
+		File saveFile = SystemUtil.generateChatAttachFile(mt, msgInfo.getFromUser(), photoItem.getFilePath());
+		try {
+			boolean flag = mImageLoader.getDiskCache().save(saveFile.getAbsolutePath(), bitmap);
+			File temp = mImageLoader.getDiskCache().get(saveFile.getAbsolutePath());
+			if (temp != null) {
+				temp.renameTo(saveFile);
+			}
+			if (flag) {
+				MsgPart part = new MsgPart();
+				part.setFileName(saveFile.getName());
+				part.setFilePath(saveFile.getAbsolutePath());
+				//TODO 文件类型匹配待做
+				part.setMimeTye("image/*");
+				part.setMsgId(msgInfo.getId());
+				part.setSize(saveFile.length());
+				msgInfo.setMsgPart(part);
+				msgInfo.setCreationDate(System.currentTimeMillis());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return msgInfo;
 	}
 	
 	/**
@@ -291,9 +352,9 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 
 		@Override
 		public void run() {
-			Intent intent = new Intent(CoreService.SendChatMessageReceiver.ACTION_SEND_CHAT_MSG);	//发送消息
-			intent.putExtra(ChatActivity1.ARG_MSG_INFO, info);
-			sendBroadcast(intent);
+//			Intent intent = new Intent(CoreService.SendChatMessageReceiver.ACTION_SEND_CHAT_MSG);	//发送消息
+//			intent.putExtra(ChatActivity1.ARG_MSG_INFO, info);
+//			sendBroadcast(intent);
 		}
 		
 	}

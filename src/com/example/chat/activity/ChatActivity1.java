@@ -11,9 +11,8 @@ import java.util.Locale;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatMessageListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
 import android.content.BroadcastReceiver;
@@ -23,6 +22,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.ContentObserver;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,8 +31,11 @@ import android.os.IBinder;
 import android.support.v4.app.FragmentTabHost;
 import android.text.Editable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ImageSpan;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -60,6 +63,7 @@ import com.example.chat.model.EmojiType;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
+import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgSenderInfo;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
@@ -74,7 +78,9 @@ import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 /**
  * 聊天界面
@@ -86,6 +92,12 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 	
 	public static final String ARG_MSG_INFO = "arg_msg_info";
+	public static final String ARG_MSG_INFO_LIST = "arg_msg_info_list";
+	
+	/**
+	 * 调用相册的请请求码
+	 */
+	public static final int REQ_ALBUM = 100;
 	
 	/**
 	 * 默认的编辑模式，文本框内没有任何内容
@@ -359,10 +371,12 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				chatManager = ChatManager.getInstanceFor(connection);
 			}
 			if (chat == null) {
-				chat = chatManager.createChat(otherSide.getJID(), new MessageListener() {
+				chat = chatManager.createChat(otherSide.getJID(), new ChatMessageListener() {
+					
 					@Override
 					public void processMessage(Chat chat, Message message) {
 						// TODO Auto-generated method stub
+						
 					}
 				});
 			}
@@ -528,9 +542,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 					msgInfo.setRead(true);
 					msgInfo.setSendState(MsgInfo.SendState.SENDING);
 					msgInfo.setThreadID(msgThread.getId());
-					MsgSenderInfo msgSenderInfo = new MsgSenderInfo(chat, msgInfo, msgThread, mHandler);
-//					intent.putExtra(ARG_MSG_INFO, msgInfo);
-					startActivity(intent);
+					intent.putExtra(ARG_MSG_INFO, msgInfo);
+					startActivityForResult(intent, REQ_ALBUM);
 					break;
 
 				default:
@@ -607,6 +620,37 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				}
 			}
 		});
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			switch (requestCode) {
+			case REQ_ALBUM:	//相册
+				if (data != null) {
+					final List<MsgInfo> msgList = data.getParcelableArrayListExtra(ARG_MSG_INFO_LIST);
+					if (!SystemUtil.isEmpty(msgList)) {
+						mMsgInfos.addAll(msgList);
+						msgAdapter.notifyDataSetChanged();
+						SystemUtil.getCachedThreadPool().execute(new Runnable() {
+							
+							@Override
+							public void run() {
+								for (MsgInfo msgInfo : msgList) {
+									MsgSenderInfo senderInfo = new MsgSenderInfo(chat, msgInfo, msgThread, mHandler);
+									coreService.sendChatMsg(senderInfo);
+								}
+							}
+						});
+					}
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
 	/**
@@ -1180,9 +1224,43 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 					holder.tvMsgTime.setVisibility(View.GONE);
 				}
 			}
+			
+			MsgInfo.Type msgType = msgInfo.getMsgType();
+			switch (msgType) {
+			case TEXT:	//文本消息
+				SpannableString spannableString = SystemUtil.getExpressionString(mContext, msgInfo.getContent());
+				holder.tvContent.setText(spannableString);
+				break;
+			case IMAGE:	//图片消息
+				MsgPart msgPart = msgInfo.getMsgPart();
+				if (msgPart != null) {
+					String filePath = msgPart.getFilePath();
+					if (SystemUtil.isFileExists(filePath)) {
+						final TextView tvImage = holder.tvContent;
+						mImageLoader.loadImage(Scheme.FILE.wrap(filePath), new ImageSize(100, 100), options, new SimpleImageLoadingListener() {
+
+							@Override
+							public void onLoadingComplete(String imageUri, View view,
+									Bitmap loadedImage) {
+								if (loadedImage != null) {
+									ImageSpan imageSpan = new ImageSpan(context, loadedImage);
+									SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
+									spannableStringBuilder.setSpan(imageSpan, 0, 0, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+									tvImage.setText(spannableStringBuilder);
+								}
+							}
+							
+						});
+					}
+				}
+				
+				break;
+			default:
+				break;
+			}
+			
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
-			SpannableString spannableString = SystemUtil.getExpressionString(mContext, msgInfo.getContent());
-			holder.tvContent.setText(spannableString);
+			
 			if (type == TYPE_OUT) {	//自己发送的消息
 				
 				//显示自己的头像

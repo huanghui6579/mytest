@@ -9,8 +9,8 @@ import org.jivesoftware.smack.PacketCollector;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.AndFilter;
 import org.jivesoftware.smack.filter.FlexiblePacketTypeFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
@@ -19,13 +19,11 @@ import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.packet.Bind;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.Registration;
+import org.jivesoftware.smackx.iqregister.packet.Registration;
 
-import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -296,9 +294,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 					return iq.getType().equals(IQ.Type.result);
 				}
 			}));
-			Registration registration = new Registration();
-			registration.setType(IQ.Type.set);
-			registration.setTo(connection.getServiceName());
+			
 			Map<String, String> attr = new HashMap<String, String>();
 			String username = etAccount.getText().toString();
 			String password = etPassword.getText().toString();
@@ -308,7 +304,10 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 			attr.put("password", password);
 			attr.put("name", etNickname.getText().toString());
 			attr.put("email", etEmail.getText().toString());
-			registration.setAttributes(attr);
+			
+			Registration registration = new Registration(attr);
+			registration.setType(IQ.Type.set);
+			registration.setTo(connection.getServiceName());
 			PacketFilter filter = new AndFilter(new PacketIDFilter(registration.getPacketID()), new PacketTypeFilter(IQ.class));
 			PacketCollector collector = connection.createPacketCollector(filter);
 			connection.sendPacket(registration);

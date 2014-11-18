@@ -2,7 +2,6 @@ package com.example.chat.activity;
 
 import java.io.IOException;
 
-import org.apache.harmony.javax.security.sasl.SaslException;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.AlreadyLoggedInException;
@@ -266,8 +265,6 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			connection.connect();
 			connection.login(account, password, Constants.CLIENT_RESOURCE);
 			code = Constants.MSG_SUCCESS;
-		} catch (SaslException e) {
-			Log.e(e.toString());
 		} catch (SmackException e) {
 			if (e instanceof ConnectionException) {	//连接地址不可用
 				code = Constants.MSG_REQUEST_ADDRESS_FAILED;

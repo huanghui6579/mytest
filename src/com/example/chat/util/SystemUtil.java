@@ -24,8 +24,6 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jivesoftware.smack.util.StringUtils;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -56,7 +54,6 @@ import com.example.chat.R;
 import com.example.chat.model.Emoji;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
-import com.nostra13.universalimageloader.cache.disc.impl.ext.LruDiscCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
@@ -203,10 +200,10 @@ public class SystemUtil {
 	 * @return
 	 */
 	public static String getPhoneModel() {
-		String model = android.os.Build.MODEL;
-		if(TextUtils.isEmpty(model)) {
-			model = "Android";
-		}
+//		if(TextUtils.isEmpty(model)) {
+		String model = "Spark 2.6.3";
+//			model = "Android";
+//		}
 		return model;
 	}
 	
@@ -1239,8 +1236,9 @@ public class SystemUtil {
 	public static String generateChatAttachPath(MsgThread msgThread) {
 		String root = getDefaultRootPath();
 		StringBuilder sb = new StringBuilder(root);
-		sb.append(File.pathSeparator)
+		sb.append(File.separator)
 			.append("ChatAttach")
+			.append(File.separator)
 			.append(msgThread.getId());
 		String path = sb.toString();
 		File dir = new File(path);
@@ -1263,7 +1261,7 @@ public class SystemUtil {
 		if (subfix != null) {
 			String path = generateChatAttachPath(msgThread);
 			StringBuilder sb = new StringBuilder(path);
-			sb.append(File.pathSeparator)
+			sb.append(File.separator)
 				.append(fromUser)
 				.append("_")
 				.append(System.currentTimeMillis());

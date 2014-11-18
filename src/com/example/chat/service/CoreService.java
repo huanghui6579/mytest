@@ -8,9 +8,9 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
-import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.ChatMessageListener;
 import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.filter.OrFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
@@ -22,12 +22,12 @@ import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smackx.filetransfer.FileTransfer;
+import org.jivesoftware.smackx.filetransfer.FileTransferManager;
+import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -43,15 +43,17 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.HeadIcon;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgInfo.SendState;
+import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgSenderInfo;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.NewFriendInfo;
-import com.example.chat.model.UserVcard;
-import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
+import com.example.chat.model.UserVcard;
 import com.example.chat.util.Constants;
+import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
@@ -77,10 +79,11 @@ public class CoreService extends Service {
 	
 	private HandlerThread mHandlerThread = null;
 	private static PacketListener mChatPacketListener;
+	private static RosterListener mRosterListener;
 	private static ChatManager mChatManager;
 	AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 	
-	SendChatMessageReceiver chatMessageReceiver;
+//	SendChatMessageReceiver chatMessageReceiver;
 	
 	private class MyHandler extends Handler {
 		
@@ -159,22 +162,39 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			try {
-				senderInfo.msgInfo = msgManager.addMsgInfo(senderInfo.msgInfo);
-				senderInfo.msgThread.setSnippetId(senderInfo.msgInfo.getId());
-				senderInfo.msgThread.setSnippetContent(senderInfo.msgInfo.getContent());
+				MsgInfo msgInfo =  senderInfo.msgInfo;
+				msgInfo = msgManager.addMsgInfo(msgInfo);
+				senderInfo.msgThread.setSnippetId(msgInfo.getId());
+				senderInfo.msgThread.setSnippetContent(msgInfo.getContent());
 				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
 				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
-				if (senderInfo.msgInfo != null) {
+				MsgInfo.Type msgType = msgInfo.getMsgType();
+				if (MsgInfo.Type.TEXT == msgType || MsgInfo.Type.LOCATION == msgType) {	//文本消息或者地理位置消息
 					if (senderInfo.chat != null) {
 						senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
-						senderInfo.msgInfo.setSendState(SendState.SUCCESS);
+						msgInfo.setSendState(SendState.SUCCESS);
 					} else {
-						senderInfo.msgInfo.setSendState(SendState.FAILED);
+						msgInfo.setSendState(SendState.FAILED);
 					}
-				} else {
-					return;
-				}
-			} catch (NotConnectedException | XMPPException e) {
+				} else {	//非文本消息，则以附件形式发送
+					MsgPart msgPart = msgInfo.getMsgPart();// 创建文件传输管理器  
+					FileTransferManager fileTransferManager = FileTransferManager.getInstanceFor(connection);
+//					Presence presence = connection.getRoster().getPresence(msgInfo.getToJid());
+										
+					String to = msgInfo.getToJid() + "/Android";
+					OutgoingFileTransfer fileTransfer = fileTransferManager.createOutgoingFileTransfer(to);
+					File file = new File(msgPart.getFilePath());
+					if (file.exists()) {
+						fileTransfer.sendFile(file, msgPart.getFileName());
+						while (!fileTransfer.isDone()) {	//传输完毕
+							if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
+								Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+							}
+						}
+						msgInfo.setSendState(SendState.SUCCESS);
+					}
+				}//XMPPException | SmackException | 
+			} catch (Exception e) {
 				senderInfo.msgInfo.setSendState(SendState.FAILED);
 				e.printStackTrace();
 			}
@@ -197,12 +217,18 @@ public class CoreService extends Service {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.addPacketListener(mChatPacketListener, packetFilter);
 		}
+		
+		if (mRosterListener == null) {
+			mRosterListener = new ChatRostListener();
+			connection.getRoster().addRosterListener(mRosterListener);
+		}
+		
 		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 		
 		//注册发送消息的广播
-		chatMessageReceiver = new SendChatMessageReceiver();
-		IntentFilter intentFilter = new IntentFilter(SendChatMessageReceiver.ACTION_SEND_CHAT_MSG);
-		registerReceiver(chatMessageReceiver, intentFilter);
+//		chatMessageReceiver = new SendChatMessageReceiver();
+//		IntentFilter intentFilter = new IntentFilter(SendChatMessageReceiver.ACTION_SEND_CHAT_MSG);
+//		registerReceiver(chatMessageReceiver, intentFilter);
 		
 		super.onCreate();
 	}
@@ -354,8 +380,10 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+			
 			//1、先从服务器上获取所有的好友列表
 			List<User> users = XmppUtil.getFriends(connection);
+			
 			//2、更新本地数据库
 			userManager.updateFriends(users);
 			
@@ -390,6 +418,41 @@ public class CoreService extends Service {
 	}
 	
 	/**
+	 * 状态监听器
+	 * @author huanghui1
+	 * @update 2014年11月18日 下午2:13:20
+	 */
+	public class ChatRostListener implements RosterListener {
+
+		@Override
+		public void entriesAdded(Collection<String> addresses) {
+			// TODO Auto-generated method stub
+//			Log.d("------entriesAdded-----" + addresses.toString());
+		}
+
+		@Override
+		public void entriesUpdated(Collection<String> addresses) {
+			// TODO Auto-generated method stub
+//			Log.d("------entriesUpdated-----" + addresses.toString());
+		}
+
+		@Override
+		public void entriesDeleted(Collection<String> addresses) {
+			// TODO Auto-generated method
+//			Log.d("------entriesDeleted-----" + addresses.toString());
+		}
+
+		@Override
+		public void presenceChanged(Presence presence) {
+			// TODO Auto-generated method stub
+			
+//			Log.d("------presenceChanged-----" + presence.toString() + "--from-" + presence.getFrom() + "-to--" + presence.getTo());
+			
+		}
+		
+	}
+	
+	/**
 	 * 聊天消息监听器
 	 * @author huanghui1
 	 * @update 2014年11月10日 下午6:16:07
@@ -399,7 +462,7 @@ public class CoreService extends Service {
 		@Override
 		public void chatCreated(Chat chat, boolean createdLocally) {
 			if (!createdLocally) {
-				chat.addMessageListener(new MessageListener() {
+				chat.addMessageListener(new ChatMessageListener() {
 					
 					@Override
 					public void processMessage(Chat chat, Message message) {
@@ -546,25 +609,25 @@ public class CoreService extends Service {
 		
 	}
 	
-	/**
-	 * 发送聊天消息的广播
-	 * @author huanghui1
-	 * @update 2014年11月17日 下午8:20:57
-	 */
-	public class SendChatMessageReceiver extends BroadcastReceiver {
-		public static final String ACTION_SEND_CHAT_MSG = "com.example.chat.SEND_CHAT_MSG";
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			if (ACTION_SEND_CHAT_MSG.equals(intent.getAction())) {	//发送消息的广播
-				MsgInfo msgInfo = intent.getParcelableExtra(ChatActivity1.ARG_MSG_INFO);
-				if (msgInfo != null) {
-//					sendChatMsg(senderInfo);
-				}
-			}
-		}
-		
-	}
+//	/**
+//	 * 发送聊天消息的广播
+//	 * @author huanghui1
+//	 * @update 2014年11月17日 下午8:20:57
+//	 */
+//	public class SendChatMessageReceiver extends BroadcastReceiver {
+//		public static final String ACTION_SEND_CHAT_MSG = "com.example.chat.SEND_CHAT_MSG";
+//
+//		@Override
+//		public void onReceive(Context context, Intent intent) {
+//			if (ACTION_SEND_CHAT_MSG.equals(intent.getAction())) {	//发送消息的广播
+//				MsgInfo msgInfo = intent.getParcelableExtra(ChatActivity1.ARG_MSG_INFO);
+//				if (msgInfo != null) {
+////					sendChatMsg(senderInfo);
+//				}
+//			}
+//		}
+//		
+//	}
 	
 	public class MainBinder extends Binder {
 		public CoreService getService() {

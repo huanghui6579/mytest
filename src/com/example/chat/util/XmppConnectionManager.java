@@ -10,17 +10,10 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
-import org.jivesoftware.smack.filter.OrFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
-import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smackx.debugger.android.AndroidDebugger;
 
 import com.example.chat.model.SystemConfig;
-import com.example.chat.service.CoreService.ChatPacketListener;
-
-import de.measite.smack.AndroidDebugger;
 
 /**
  * 
@@ -57,14 +50,8 @@ public class XmppConnectionManager {
 		configuration = new ConnectionConfiguration(Constants.SERVER_HOST, Constants.SERVER_PORT, Constants.SERVER_NAME);
 		configuration.setSecurityMode(SecurityMode.disabled);
 		
-		try {
-			Class.forName("org.jivesoftware.smack.ReconnectionManager");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
 		//允许自动连接
-		configuration.setReconnectionAllowed(true);
+//		configuration.setReconnectionAllowed(true);
 		//允许登录成功后更新状态
 		configuration.setSendPresence(true);
 		// 收到好友邀请后manual表示需要经过同意,accept_all表示不经同意自动为好友
