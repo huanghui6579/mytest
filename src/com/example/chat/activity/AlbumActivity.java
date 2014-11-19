@@ -17,6 +17,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore.Files;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -63,6 +64,7 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.nostra13.universalimageloader.utils.DiskCacheUtils;
 import com.nostra13.universalimageloader.utils.MemoryCacheUtils;
 
 /**
@@ -122,6 +124,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 				setResult(RESULT_OK, data);
 				break;
 			case Constants.MSG_FAILED:
+				SystemUtil.makeShortToast("文件选择错误");
 				setResult(RESULT_CANCELED);
 				break;
 			default:
@@ -245,35 +248,38 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 								}
 								String fileUri = Scheme.FILE.wrap(filePath);
 								final MsgInfo mi = (MsgInfo) msgInfo.clone();
-								List<Bitmap> bitmapList = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, mImageLoader.getMemoryCache());
-								if (!SystemUtil.isEmpty(bitmapList)) {
-									Bitmap bitmap = bitmapList.get(0);
-									if (bitmap == null) {	//重新加载图片
-										SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
-											
-											@Override
-											public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-												if (loadedImage != null) {
-													msgList.add(saveBitmap(mi, loadedImage, photoItem));
+								//现在本地发送目录里查找看有没之前发送的文件
+								MsgThread mt = new MsgThread();
+								mt.setId(msgInfo.getThreadID());
+								//现在磁盘缓存里查找文件
+								File sendFile = DiskCacheUtils.findInCache(fileUri, mImageLoader.getDiskCache());
+								if (sendFile == null || !sendFile.exists() || sendFile.length() == 0) {	//文件不存在
+									List<Bitmap> bitmapList = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, mImageLoader.getMemoryCache());
+									if (!SystemUtil.isEmpty(bitmapList)) {	//内存缓存里没有找到
+										Bitmap bitmap = bitmapList.get(0);
+										if (bitmap == null) {	//重新加载图片
+											SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
+												
+												@Override
+												public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+													if (loadedImage != null) {
+														if (saveBitmap(loadedImage, photoItem)) {
+															msgList.add(setMsgInfo(mi, photoItem));
+														}
+													}
 												}
-											}
-											
-										});
-									} else {
-										msgList.add(saveBitmap(mi, bitmap, photoItem));
-									}
-								} else {
-									SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
-										
-										@Override
-										public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-											if (loadedImage != null) {
-												msgList.add(saveBitmap(mi, loadedImage, photoItem));
+												
+											});
+										} else {
+											if (saveBitmap(bitmap, photoItem)) {
+												msgList.add(setMsgInfo(mi, photoItem));
 											}
 										}
-										
-									});
+									}
+								} else {	//本地缓存文件存在
+									msgList.add(setMsgInfo(mi, photoItem));
 								}
+								
 							} catch (CloneNotSupportedException e) {
 								e.printStackTrace();
 							}
@@ -304,36 +310,46 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	}
 	
 	/**
-	 * 保存图片
+	 * 根据原始图片生成本地图片的缓存
+	 * @update 2014年11月19日 下午6:03:58
+	 * @param bitmap
+	 * @param photoItem
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	private boolean saveBitmap(Bitmap bitmap, PhotoItem photoItem) {
+		try {
+			return mImageLoader.getDiskCache().save(Scheme.FILE.wrap(photoItem.getFilePath()), bitmap);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**
+	 * 设置消息信息
 	 * @update 2014年11月18日 上午11:32:33
 	 * @param msgInfo
 	 * @param bitmap
 	 * @return
 	 */
-	private MsgInfo saveBitmap(MsgInfo msgInfo, Bitmap bitmap, PhotoItem photoItem) {
-		MsgThread mt = new MsgThread();
-		mt.setId(msgInfo.getThreadID());
-		File saveFile = SystemUtil.generateChatAttachFile(mt, msgInfo.getFromUser(), photoItem.getFilePath());
-		try {
-			boolean flag = mImageLoader.getDiskCache().save(saveFile.getAbsolutePath(), bitmap);
-			File temp = mImageLoader.getDiskCache().get(saveFile.getAbsolutePath());
-			if (temp != null) {
-				temp.renameTo(saveFile);
-			}
-			if (flag) {
-				MsgPart part = new MsgPart();
-				part.setFileName(saveFile.getName());
-				part.setFilePath(saveFile.getAbsolutePath());
-				//TODO 文件类型匹配待做
-				part.setMimeTye("image/*");
-				part.setMsgId(msgInfo.getId());
-				part.setSize(saveFile.length());
-				msgInfo.setMsgPart(part);
-				msgInfo.setCreationDate(System.currentTimeMillis());
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	private MsgInfo setMsgInfo(MsgInfo msgInfo, PhotoItem photoItem) {
+//		MsgThread mt = new MsgThread();
+//		mt.setId(msgInfo.getThreadID());
+		
+		MsgPart part = new MsgPart();
+		part.setFileName(SystemUtil.getFilename(photoItem.getFilePath()));
+		part.setFilePath(photoItem.getFilePath());
+		//TODO 文件类型匹配待做
+		part.setMimeTye("image/*");
+		part.setMsgId(msgInfo.getId());
+		part.setSize(photoItem.getSize());
+		part.setCreationDate(System.currentTimeMillis());
+		
+//		part = msgManager.addMsgPart(part);
+		
+		msgInfo.setMsgPart(part);
+		msgInfo.setCreationDate(System.currentTimeMillis());
 		return msgInfo;
 	}
 	

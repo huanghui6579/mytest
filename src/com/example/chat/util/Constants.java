@@ -58,6 +58,16 @@ public class Constants {
 	public static final int ALBUM_SELECT_SIZE = 9;
 	
 	/**
+	 * 系统默认手动生成的缩略图缩放参造宽度100
+	 */
+	public static final int IMAGE_THUMB_WIDTH = 100;
+	
+	/**
+	 * 系统默认手动生成的缩略图缩放参造高度100
+	 */
+	public static final int IMAGE_THUMB_HEIGHT = 100;
+	
+	/**
 	 * 【1】成功的结果码
 	 */
 	public static final int MSG_SUCCESS = 0x000001;

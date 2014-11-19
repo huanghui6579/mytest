@@ -12,7 +12,6 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatMessageListener;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
 import android.content.BroadcastReceiver;
@@ -22,7 +21,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.ContentObserver;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,11 +29,8 @@ import android.os.IBinder;
 import android.support.v4.app.FragmentTabHost;
 import android.text.Editable;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.style.ImageSpan;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -76,11 +71,10 @@ import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
+import com.example.chat.view.TextViewAware;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 /**
  * 聊天界面
@@ -371,14 +365,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				chatManager = ChatManager.getInstanceFor(connection);
 			}
 			if (chat == null) {
-				chat = chatManager.createChat(otherSide.getJID(), new ChatMessageListener() {
-					
-					@Override
-					public void processMessage(Chat chat, Message message) {
-						// TODO Auto-generated method stub
-						
-					}
-				});
+				chat = chatManager.createChat(otherSide.getJID(), null);
 			}
 			return chat;
 		} else {
@@ -445,9 +432,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 		protected void onPostExecute(List<MsgInfo> result) {
 			if (!SystemUtil.isEmpty(result)) {
 				msgAdapter.notifyDataSetChanged();
-				if (needScroll) {
-					scrollMyListViewToBottom(lvMsgs);
-				}
+//				if (needScroll) {
+////					scrollMyListViewToBottom(lvMsgs);
+//				}
 			}
 		}
 	}
@@ -630,8 +617,11 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				if (data != null) {
 					final List<MsgInfo> msgList = data.getParcelableArrayListExtra(ARG_MSG_INFO_LIST);
 					if (!SystemUtil.isEmpty(msgList)) {
+						hideAttachLayout();
+						setEditMode();
 						mMsgInfos.addAll(msgList);
 						msgAdapter.notifyDataSetChanged();
+//						scrollMyListViewToBottom(lvMsgs);
 						SystemUtil.getCachedThreadPool().execute(new Runnable() {
 							
 							@Override
@@ -649,6 +639,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			default:
 				break;
 			}
+		} else if (resultCode == RESULT_CANCELED) {
+			
 		}
 		super.onActivityResult(requestCode, resultCode, data);
 	}
@@ -894,15 +886,16 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 	 * @update 2014年10月29日 下午5:57:29
 	 * @param listView
 	 */
-	private void scrollMyListViewToBottom(final ListView listView) {
-		listView.post(new Runnable() {
-	        @Override
-	        public void run() {
-	            // Select the last row so it will scroll into view...
-	        	listView.setSelection(listView.getCount() - 1);
-	        }
-	    });
-	}
+//	private void scrollMyListViewToBottom(final ListView listView) {
+//		listView.post(new Runnable() {
+//	        @Override
+//	        public void run() {
+//	            // Select the last row so it will scroll into view...
+////	        	listView.setSelection(listView.getCount() - 1);
+////	        	listView.smoothScrollToPosition(0);
+//	        }
+//	    });
+//	}
 
 	/**
 	 * 切换到表情选择模式
@@ -986,7 +979,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 			
 			msgAdapter.notifyDataSetChanged();
 			
-			scrollMyListViewToBottom(lvMsgs);
+//			scrollMyListViewToBottom(lvMsgs);
 			
 			etContent.setText("");
 			//隐藏底部面板
@@ -1224,7 +1217,7 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 					holder.tvMsgTime.setVisibility(View.GONE);
 				}
 			}
-			
+			holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 			MsgInfo.Type msgType = msgInfo.getMsgType();
 			switch (msgType) {
 			case TEXT:	//文本消息
@@ -1236,21 +1229,8 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				if (msgPart != null) {
 					String filePath = msgPart.getFilePath();
 					if (SystemUtil.isFileExists(filePath)) {
-						final TextView tvImage = holder.tvContent;
-						mImageLoader.loadImage(Scheme.FILE.wrap(filePath), new ImageSize(100, 100), options, new SimpleImageLoadingListener() {
-
-							@Override
-							public void onLoadingComplete(String imageUri, View view,
-									Bitmap loadedImage) {
-								if (loadedImage != null) {
-									ImageSpan imageSpan = new ImageSpan(context, loadedImage);
-									SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
-									spannableStringBuilder.setSpan(imageSpan, 0, 0, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-									tvImage.setText(spannableStringBuilder);
-								}
-							}
-							
-						});
+						holder.tvContent.setText("");
+						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent), options);
 					}
 				}
 				
@@ -1376,9 +1356,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 				if (msgInfo != null) {
 					mMsgInfos.add(msgInfo);
 					msgAdapter.notifyDataSetChanged();
-					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
-						scrollMyListViewToBottom(lvMsgs);
-					}
+//					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
+////						scrollMyListViewToBottom(lvMsgs);
+//					}
 				}
 			}
 		}
@@ -1405,9 +1385,9 @@ public class ChatActivity1 extends BaseActivity implements OnClickListener/*, On
 						mMsgInfos.add(msgInfo);
 					}
 					msgAdapter.notifyDataSetChanged();
-					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
-						scrollMyListViewToBottom(lvMsgs);
-					}
+//					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
+////						scrollMyListViewToBottom(lvMsgs);
+//					}
 				}
 			} else {
 				onChange(selfChange);

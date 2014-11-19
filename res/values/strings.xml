@@ -101,5 +101,12 @@
     <string name="album_preview_original_image_size">原图(%1$s)</string>
     <string name="album_tip_max_select">只能选择%1$d张图片</string>
     <string name="album_item_content">"%1$s\n\n%2$d张"</string>
+    
+    <string name="msg_thread_snippet_content_audio">[音频]</string>
+    <string name="msg_thread_snippet_content_image">[图片]</string>
+    <string name="msg_thread_snippet_content_video">[视频]</string>
+    <string name="msg_thread_snippet_content_file">[文件]</string>
+    <string name="msg_thread_snippet_content_location">[地理位置]</string>
+    <string name="msg_thread_snippet_content_vcard">[电子名片]</string>
 
 </resources>

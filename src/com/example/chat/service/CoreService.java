@@ -1,6 +1,8 @@
 package com.example.chat.service;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import org.jivesoftware.smack.ChatMessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.OrFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
@@ -57,6 +60,9 @@ import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.utils.DiskCacheUtils;
 
 /**
  * 核心的service服务，主要用来同步联系人数据
@@ -82,6 +88,8 @@ public class CoreService extends Service {
 	private static RosterListener mRosterListener;
 	private static ChatManager mChatManager;
 	AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+	
+	private ImageLoader mImageLoader = ImageLoader.getInstance();
 	
 //	SendChatMessageReceiver chatMessageReceiver;
 	
@@ -161,45 +169,86 @@ public class CoreService extends Service {
 
 		@Override
 		public void run() {
-			try {
-				MsgInfo msgInfo =  senderInfo.msgInfo;
+			MsgInfo msgInfo =  senderInfo.msgInfo;
+			MsgInfo.Type msgType = msgInfo.getMsgType();
+//			try {
 				msgInfo = msgManager.addMsgInfo(msgInfo);
 				senderInfo.msgThread.setSnippetId(msgInfo.getId());
-				senderInfo.msgThread.setSnippetContent(msgInfo.getContent());
+				String snippetContent = null;
+				switch (msgType) {
+				case TEXT:
+					snippetContent = msgInfo.getContent();
+					break;
+				case IMAGE:
+					snippetContent = getString(R.string.msg_thread_snippet_content_image);
+					break;
+				case AUDIO:
+					snippetContent = getString(R.string.msg_thread_snippet_content_audio);
+					break;
+				case FILE:
+					snippetContent = getString(R.string.msg_thread_snippet_content_file);
+					break;
+				case LOCATION:
+					snippetContent = getString(R.string.msg_thread_snippet_content_location);
+					break;
+				case VIDEO:
+					snippetContent = getString(R.string.msg_thread_snippet_content_video);
+					break;
+				case VCARD:
+					snippetContent = getString(R.string.msg_thread_snippet_content_vcard);
+					break;
+
+				default:
+					snippetContent = msgInfo.getContent();
+					break;
+				}
+				senderInfo.msgThread.setSnippetContent(snippetContent);
 				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
 				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
-				MsgInfo.Type msgType = msgInfo.getMsgType();
 				if (MsgInfo.Type.TEXT == msgType || MsgInfo.Type.LOCATION == msgType) {	//文本消息或者地理位置消息
 					if (senderInfo.chat != null) {
-						senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
-						msgInfo.setSendState(SendState.SUCCESS);
+						try {
+							senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
+							msgInfo.setSendState(SendState.SUCCESS);
+						} catch (NotConnectedException | XMPPException e) {
+							msgInfo.setSendState(SendState.FAILED);
+							e.printStackTrace();
+						}
 					} else {
 						msgInfo.setSendState(SendState.FAILED);
 					}
 				} else {	//非文本消息，则以附件形式发送
-					MsgPart msgPart = msgInfo.getMsgPart();// 创建文件传输管理器  
+					MsgPart msgPart = msgInfo.getMsgPart();// 创建文件传输管理器
 					FileTransferManager fileTransferManager = FileTransferManager.getInstanceFor(connection);
-//					Presence presence = connection.getRoster().getPresence(msgInfo.getToJid());
 										
-					String to = msgInfo.getToJid() + "/Android";
+					String to = msgInfo.getToJid() + "/Spark 2.6.3";
+//					String to = msgInfo.getToJid() + "/Android";
 					OutgoingFileTransfer fileTransfer = fileTransferManager.createOutgoingFileTransfer(to);
-					File file = new File(msgPart.getFilePath());
-					if (file.exists()) {
-						fileTransfer.sendFile(file, msgPart.getFileName());
-						while (!fileTransfer.isDone()) {	//传输完毕
-							if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
-								Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+					File sendFile = DiskCacheUtils.findInCache(Scheme.FILE.wrap(msgPart.getFilePath()), mImageLoader.getDiskCache());
+					if (sendFile.exists()) {
+						try {
+							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), msgPart.getFileName());
+//							fileTransfer.sendFile(sendFile, msgPart.getFileName());
+							while (!fileTransfer.isDone()) {	//传输完毕
+//								Log.d("-------------fileTransfer.getStatus()----------------" + fileTransfer.getStatus());
+								if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
+									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+								}
 							}
+							Log.d("-------发送完毕------");
+							msgInfo.setSendState(SendState.SUCCESS);
+						} catch (FileNotFoundException e) {
+							msgInfo.setSendState(SendState.FAILED);
+							e.printStackTrace();
 						}
-						msgInfo.setSendState(SendState.SUCCESS);
 					}
 				}//XMPPException | SmackException | 
-			} catch (Exception e) {
-				senderInfo.msgInfo.setSendState(SendState.FAILED);
-				e.printStackTrace();
-			}
-			senderInfo.msgInfo = msgManager.updateMsgInfo(senderInfo.msgInfo);
-			mHandler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
+//			} catch (Exception e) {
+//				msgInfo.setSendState(SendState.FAILED);
+//				e.printStackTrace();
+//			}
+			msgInfo = msgManager.updateMsgInfo(msgInfo);
+			senderInfo.handler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
 		}
 		
 	}

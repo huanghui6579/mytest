@@ -1228,6 +1228,20 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 根据文件的名称或者路径来获得文件的真实名称
+	 * @update 2014年11月19日 下午3:07:26
+	 * @param filePath
+	 * @return
+	 */
+	public static String getFilename(String filePath) {
+		if (filePath.indexOf("/") != -1) {
+			return filePath.substring(filePath.lastIndexOf("/") + 1);
+		} else {
+			return filePath;
+		}
+	}
+	
+	/**
 	 * 根据会话id生成文件保存文件的路径，如:/mnt/sdcard/CharApp/admin/ChatAttach/12
 	 * @update 2014年11月17日 下午9:51:15
 	 * @param msgThread 当前会话
@@ -1249,7 +1263,7 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/ChatAttach/12/lisi_2342413324324.jpg
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/ChatAttach/12/lisi_send_2342413324324.jpgx
 	 * @update 2014年11月17日 下午10:06:38
 	 * @param msgThread
 	 * @param fromUser
@@ -1257,19 +1271,25 @@ public class SystemUtil {
 	 * @return
 	 */
 	public static String generateChatAttachFilePath(MsgThread msgThread, String fromUser, String filename) {
-		String subfix = getFileSubfix(filename);
-		if (subfix != null) {
-			String path = generateChatAttachPath(msgThread);
-			StringBuilder sb = new StringBuilder(path);
-			sb.append(File.separator)
-				.append(fromUser)
-				.append("_")
-				.append(System.currentTimeMillis());
-			sb.append(subfix);
-			return sb.toString();
-		} else {
-			return null;
-		}
+		String fname = getFilename(filename);
+		String path = generateChatAttachPath(msgThread);
+		StringBuilder sb = new StringBuilder(path);
+		sb.append(File.separator)
+			.append(fromUser)
+			.append("_send_")
+			.append(fname)
+			.append("x");
+		return sb.toString();
+	}
+	
+	/**
+	 * 还原附件的文件全名称，保存时间文件名全部加了"x"
+	 * @update 2014年11月19日 下午4:53:24
+	 * @param originalPath
+	 * @return
+	 */
+	public static String resetAttachFilePath(String originalPath) {
+		return originalPath.substring(0, originalPath.length() - 1);
 	}
 	
 	/**

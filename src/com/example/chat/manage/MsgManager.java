@@ -731,7 +731,9 @@ public class MsgManager {
 			case VIDEO:	//视频
 			case VCARD:	//电子名片
 				//添加附件信息
-				MsgPart msgPart = addMsgPart(msgInfo.getMsgPart());
+				MsgPart msgPart = msgInfo.getMsgPart();
+				msgPart.setMsgId(msgInfo.getId());
+				msgPart = addMsgPart(msgPart);
 				msgInfo.setMsgPart(msgPart);
 				break;
 

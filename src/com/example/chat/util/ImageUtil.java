@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.example.chat.ChatApplication;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -468,8 +470,8 @@ public class ImageUtil {
 	 * @param bitmap
 	 * @return
 	 */
-	public static Drawable bitmapToDrawable(Context mContext, Bitmap bitmap) {
-		Drawable drawable = new BitmapDrawable(mContext.getResources(), bitmap);
+	public static Drawable bitmapToDrawable(Bitmap bitmap) {
+		Drawable drawable = new BitmapDrawable(ChatApplication.getInstance().getResources(), bitmap);
 		return drawable;
 	}
 	

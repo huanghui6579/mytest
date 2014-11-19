@@ -71,12 +71,6 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	
 	private Handler mHandler = new Handler();
 	
-	@Override
-	public void onStop() {
-		resetAdapter = true;
-		super.onStop();
-	}
-
 	/**
 	 * 初始化fragment
 	 * @update 2014年10月8日 下午10:09:08
@@ -87,6 +81,14 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 		return fragment;
 	}
 	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		//注册会话观察者
+		registerContentOberver();
+	}
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -100,8 +102,6 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		//注册会话观察者
-		registerContentOberver();
 		
 		mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -117,6 +117,18 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 		mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
 		mListView.setAdapter(mThreadAdapter);
 		getLoaderManager().initLoader(0, null, this);
+	}
+	
+	@Override
+	public void onStop() {
+		resetAdapter = true;
+		super.onStop();
+	}
+	
+	@Override
+	public void onDestroyView() {
+		getLoaderManager().destroyLoader(0);
+		super.onDestroyView();
 	}
 	
 	/**
