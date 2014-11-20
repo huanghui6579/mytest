@@ -93,6 +93,7 @@
     <string name="chat_btn_make_voice_start">按住 说话</string>
     <string name="chat_sending_file">正在发送文件&#8230;</string>
     
+    <string name="album_all_video">所有视频</string>
     <string name="album_all_photo">所有图片</string>
     <string name="album_preview_photo">预览</string>
     <string name="album_preview_photo_num">预览(%1$d)</string>
@@ -101,6 +102,7 @@
     <string name="album_preview_original_image_size">原图(%1$s)</string>
     <string name="album_tip_max_select">只能选择%1$d张图片</string>
     <string name="album_item_content">"%1$s\n\n%2$d张"</string>
+    <string name="album_photo_chose_error">文件选择错误</string>
     
     <string name="msg_thread_snippet_content_audio">[音频]</string>
     <string name="msg_thread_snippet_content_image">[图片]</string>

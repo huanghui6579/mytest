@@ -1,10 +1,15 @@
 package com.example.chat.activity;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -19,10 +24,18 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.fragment.PhotoFragment;
+import com.example.chat.manage.MsgManager;
+import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
 import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.nostra13.universalimageloader.utils.DiskCacheUtils;
+import com.nostra13.universalimageloader.utils.MemoryCacheUtils;
 
 /**
  * 相片预览容器
@@ -34,6 +47,10 @@ public class PhotoPreviewActivity extends BaseActivity {
 	public static final String ARG_PHOTO_LIST = "arg_photo_list";
 	public static final String ARG_POSITION = "arg_position";
 	public static final String ARG_SHOW_MODE = "arg_show_mode";
+	/**
+	 * 是否原图发送
+	 */
+	public static final String ARG_ORIGINAO_IMAGE = "arg_originao_image";
 	
 	/**
 	 * 浏览模式进入
@@ -49,6 +66,9 @@ public class PhotoPreviewActivity extends BaseActivity {
 	private CheckBox cbChose;
 	private TextView btnOpt;
 	
+	private ProgressDialog pDialog;
+	private MsgManager msgManager = MsgManager.getInstance();
+	
 	/**
 	 * 所选图片的数量
 	 */
@@ -59,6 +79,8 @@ public class PhotoPreviewActivity extends BaseActivity {
 	 * 所浏览的图片集合
 	 */
 	private List<PhotoItem> mPhotos;
+	private MsgInfo msgInfo;
+	
 	/**
 	 * 选择的图片集合
 	 */
@@ -73,6 +95,32 @@ public class PhotoPreviewActivity extends BaseActivity {
 	private long selectOriginalSize = 0;
 	
 	PhotoFragmentViewPager photoAdapter;
+	
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case Constants.MSG_SUCCESS:
+				Intent data = new Intent();
+				data.putExtra(ARG_ORIGINAO_IMAGE, cbOrigianlImage.isChecked());
+				data.putParcelableArrayListExtra(ChatActivity.ARG_MSG_INFO_LIST, (ArrayList<MsgInfo>)msg.obj);
+				setResult(RESULT_OK, data);
+				break;
+			case Constants.MSG_FAILED:
+				SystemUtil.makeShortToast(R.string.album_photo_chose_error);
+				setResult(RESULT_CANCELED);
+				break;
+			default:
+				break;
+			}
+			if (pDialog != null && pDialog.isShowing()) {
+				pDialog.dismiss();
+			}
+			finish();
+		}
+		
+	};
 
 	@Override
 	protected int getContentView() {
@@ -92,6 +140,7 @@ public class PhotoPreviewActivity extends BaseActivity {
 		mPhotos = intent.getParcelableArrayListExtra(ARG_PHOTO_LIST);
 		currentPostion = intent.getIntExtra(ARG_POSITION, 0);
 		showMode = intent.getIntExtra(ARG_SHOW_MODE, MODE_BROWSE);
+		msgInfo = intent.getParcelableExtra(ChatActivity.ARG_MSG_INFO);
 		photoAdapter = new PhotoFragmentViewPager(getSupportFragmentManager());
 		mViewPager.setAdapter(photoAdapter);
 		if (currentPostion != 0) {
@@ -216,8 +265,22 @@ public class PhotoPreviewActivity extends BaseActivity {
 			
 			@Override
 			public void onClick(View v) {
-				SystemUtil.makeShortToast("选中了" + mSelectList.size() + "个");
-				Log.d(mSelectList.toString());
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
+				SystemUtil.getCachedThreadPool().execute(new Runnable() {
+					
+					@Override
+					public void run() {
+						ArrayList<MsgInfo> msgList = msgManager.getMsgInfoListByPhotos(msgInfo, mSelectList, cbOrigianlImage.isChecked());
+						Message msg = mHandler.obtainMessage();
+						if (!SystemUtil.isEmpty(msgList)) {	//消息集合
+							msg.what = Constants.MSG_SUCCESS;
+							msg.obj = msgList;
+						} else {
+							msg.what = Constants.MSG_FAILED;
+						}
+						mHandler.sendMessage(msg);
+					}
+				});
 			}
 		});
 		return super.onCreateOptionsMenu(menu);

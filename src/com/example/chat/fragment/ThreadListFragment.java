@@ -26,7 +26,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.chat.R;
-import com.example.chat.activity.ChatActivity1;
+import com.example.chat.activity.ChatActivity;
 import com.example.chat.activity.CommonAdapter;
 import com.example.chat.loader.ThreadListLoader;
 import com.example.chat.manage.MsgManager;
@@ -109,8 +109,8 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				MsgThread msgThread = mMsgThreads.get(position);
-				Intent intent = new Intent(mContext, ChatActivity1.class);
-				intent.putExtra(ChatActivity1.ARG_THREAD, msgThread);
+				Intent intent = new Intent(mContext, ChatActivity.class);
+				intent.putExtra(ChatActivity.ARG_THREAD, msgThread);
 				startActivity(intent);
 			}
 		});

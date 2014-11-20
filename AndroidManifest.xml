@@ -61,7 +61,7 @@
             android:label="@string/activity_lable_chat"
             android:configChanges="orientation|screenSize"/>
         <activity
-            android:name="com.example.chat.activity.ChatActivity1"
+            android:name="com.example.chat.activity.ChatActivity"
             android:label="@string/activity_lable_chat"
             android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="stateUnchanged|adjustResize"/>

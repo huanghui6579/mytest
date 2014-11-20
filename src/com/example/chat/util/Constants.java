@@ -47,6 +47,12 @@ public class Constants {
 	 */
 	public static final String DATEFORMA_TPATTERN_ALBUM_TIP = "yyyy-MM-dd";
 	
+	public static final String MIME_IMAGE = "image";
+	public static final String MIME_VIDEO = "video";
+	public static final String MIME_AUDIO = "audio";
+	public static final String MIME_TEXT = "text";
+	
+	
 	/**
 	 * 默认的聊天消息分页加载的页面大小
 	 */

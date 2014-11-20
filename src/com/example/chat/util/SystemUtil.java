@@ -44,6 +44,7 @@ import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.MimeTypeMap;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -52,12 +53,15 @@ import android.widget.Toast;
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.model.Emoji;
+import com.example.chat.model.MsgInfo;
+import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 /**
@@ -929,15 +933,15 @@ public class SystemUtil {
 	 */
 	public static DisplayImageOptions getAlbumImageOptions() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-		.showImageOnLoading(R.drawable.ic_default_icon)
-		.showImageForEmptyUri(R.drawable.ic_default_icon)
-		.showImageOnFail(R.drawable.ic_default_icon)
-		.cacheInMemory(true)
-		.cacheOnDisk(false)
-		.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
-		.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
-		.displayer(new FadeInBitmapDisplayer(200))
-		.build();
+			.showImageOnLoading(R.drawable.ic_default_icon)
+			.showImageForEmptyUri(R.drawable.ic_default_icon)
+			.showImageOnFail(R.drawable.ic_default_icon)
+			.cacheInMemory(true)
+			.cacheOnDisk(false)
+			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+			.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+			.displayer(new FadeInBitmapDisplayer(100))
+			.build();
 		return options;
 	}
 	
@@ -948,13 +952,31 @@ public class SystemUtil {
 	 */
 	public static DisplayImageOptions getPhotoPreviewOptions() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
+			.showImageForEmptyUri(R.drawable.ic_default_icon_error)
+			.showImageOnFail(R.drawable.ic_default_icon_error)
+			.cacheInMemory(true)
+			.cacheOnDisk(false)
+			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+			.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+			.displayer(new FadeInBitmapDisplayer(100))
+			.build();
+		return options;
+	}
+	
+	/**
+	 * 获得图片加载的选项
+	 * @update 2014年11月15日 上午10:33:44
+	 * @return
+	 */
+	public static DisplayImageOptions getChatImageOptions() {
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
 		.showImageForEmptyUri(R.drawable.ic_default_icon_error)
 		.showImageOnFail(R.drawable.ic_default_icon_error)
 		.cacheInMemory(true)
 		.cacheOnDisk(false)
 		.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
 		.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
-		.displayer(new FadeInBitmapDisplayer(200))
+		.delayBeforeLoading(100)
 		.build();
 		return options;
 	}
@@ -1242,18 +1264,28 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 根据会话id生成文件保存文件的路径，如:/mnt/sdcard/CharApp/admin/ChatAttach/12
+	 * 根据会话id生成文件保存文件的路径，如:/mnt/sdcard/CharApp/admin/attachment/12
 	 * @update 2014年11月17日 下午9:51:15
 	 * @param msgThread 当前会话
 	 * @return
 	 */
 	public static String generateChatAttachPath(MsgThread msgThread) {
+		return generateChatAttachPath(msgThread.getId());
+	}
+	
+	/**
+	 * 根据会话id生成文件保存文件的路径，如:/mnt/sdcard/CharApp/admin/attachment/12
+	 * @update 2014年11月17日 下午9:51:15
+	 * @param msgThread 当前会话
+	 * @return
+	 */
+	public static String generateChatAttachPath(int threadId) {
 		String root = getDefaultRootPath();
 		StringBuilder sb = new StringBuilder(root);
 		sb.append(File.separator)
-			.append("ChatAttach")
+			.append("attachment")
 			.append(File.separator)
-			.append(msgThread.getId());
+			.append(threadId);
 		String path = sb.toString();
 		File dir = new File(path);
 		if (!dir.exists()) {
@@ -1263,22 +1295,35 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/ChatAttach/12/lisi_send_2342413324324.jpgx
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
 	 * @update 2014年11月17日 下午10:06:38
 	 * @param msgThread
 	 * @param fromUser
 	 * @param filename	文件名，可以包含完整目录，也可以不包含
 	 * @return
 	 */
-	public static String generateChatAttachFilePath(MsgThread msgThread, String fromUser, String filename) {
+	public static String generateChatAttachFilePath(MsgThread msgThread, String filename) {
 		String fname = getFilename(filename);
 		String path = generateChatAttachPath(msgThread);
 		StringBuilder sb = new StringBuilder(path);
 		sb.append(File.separator)
-			.append(fromUser)
-			.append("_send_")
-			.append(fname)
-			.append("x");
+			.append(fname);
+		return sb.toString();
+	}
+	
+	/**
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
+	 * @update 2014年11月17日 下午10:06:38
+	 * @param msgThread
+	 * @param filename	文件名，可以包含完整目录，也可以不包含
+	 * @return
+	 */
+	public static String generateChatAttachFilePath(int threadId, String filename) {
+		String fname = getFilename(filename);
+		String path = generateChatAttachPath(threadId);
+		StringBuilder sb = new StringBuilder(path);
+		sb.append(File.separator)
+		.append(fname);
 		return sb.toString();
 	}
 	
@@ -1293,27 +1338,25 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/ChatAttach/12/lisi_2342413324324.jpg
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
 	 * @update 2014年11月17日 下午10:06:38
 	 * @param msgThread
-	 * @param fromUser
 	 * @param filename	文件名，不含目录
 	 * @return
 	 */
-	public static String generateChatAttachFilePath(MsgThread msgThread, String fromUser, File file) {
-		return generateChatAttachFilePath(msgThread, fromUser, file.getName());
+	public static String generateChatAttachFilePath(MsgThread msgThread, File file) {
+		return generateChatAttachFilePath(msgThread, file.getName());
 	}
 	
 	/**
-	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/ChatAttach/12/lisi_2342413324324.jpg
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
 	 * @update 2014年11月17日 下午10:06:38
 	 * @param msgThread
-	 * @param fromUser
 	 * @param filename	文件名，不含目录
 	 * @return
 	 */
-	public static File generateChatAttachFile(MsgThread msgThread, String fromUser, String filename) {
-		String path = generateChatAttachFilePath(msgThread, fromUser, filename);
+	public static File generateChatAttachFile(MsgThread msgThread, String filename) {
+		String path = generateChatAttachFilePath(msgThread, filename);
 		if (path != null) {
 			return new File(path);
 		} else {
@@ -1322,17 +1365,112 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/ChatAttach/12/lisi_2342413324324.jpg
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
 	 * @update 2014年11月17日 下午10:06:38
-	 * @param msgThread
-	 * @param fromUser
+	 * @param threadId
 	 * @param filename	文件名，不含目录
 	 * @return
 	 */
-	public static File generateChatAttachFile(MsgThread msgThread, String fromUser, File file) {
+	public static File generateChatAttachFile(int threadId, String filename) {
+		String path = generateChatAttachFilePath(threadId, filename);
+		if (path != null) {
+			return new File(path);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
+	 * @update 2014年11月17日 下午10:06:38
+	 * @param msgThread 会话对象
+	 * @param file
+	 * @return
+	 */
+	public static File generateChatAttachFile(MsgThread msgThread, File file) {
 		if (file == null) {
 			return null;
 		}
-		return generateChatAttachFile(msgThread, fromUser, file.getName());
+		return generateChatAttachFile(msgThread, file.getName());
+	}
+	
+	/**
+	 * 根据附件的发起者账号、当前时间戳来生成对应的文件目录，如：/mnt/sdcard/CharApp/admin/attachment/12/dfdgfgg.doc
+	 * @update 2014年11月17日 下午10:06:38
+	 * @param threadId 会话id
+	 * @param file
+	 * @return
+	 */
+	public static File generateChatAttachFile(int threadId, File file) {
+		if (file == null) {
+			return null;
+		}
+		return generateChatAttachFile(threadId, file.getName());
+	}
+	
+	/**
+	 * 根据文件名或者文件路径获取对应的消息类型
+	 * @update 2014年11月20日 下午5:42:26
+	 * @param url 文件名称或者文件的路径
+	 * @return
+	 */
+	public static MsgInfo.Type getMsgInfoType(String url) {
+		//获得文件的后缀名，不包含".",如mp3
+		String subfix = MimeTypeMap.getFileExtensionFromUrl(url).toLowerCase(Locale.getDefault());
+		//获得文件的mimetype，如image/jpeg
+		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
+		return getMsgInfoType(subfix, mimeType);
+	}
+	
+	/**
+	 * 根据文件名或者文件路径获取对应的消息类型
+	 * @update 2014年11月20日 下午5:42:26
+	 * @param subfix 文件的后缀，不包含“.”，如mp3
+	 * @param mimeType 文件的MIME类型，如image/jpeg
+	 * @return 返回对应的{@linkplain MsgInfo.Type}
+	 */
+	public static MsgInfo.Type getMsgInfoType(String subfix, String mimeType) {
+		MsgInfo.Type type = Type.FILE;
+		if (!TextUtils.isEmpty(mimeType)) {
+			int prePos = mimeType.indexOf("/");
+			if (prePos != -1) {
+				String pre = mimeType.substring(0, prePos - 1);
+				switch (pre) {
+				case Constants.MIME_IMAGE:	//图片类型
+					type = Type.IMAGE;
+					break;
+				case Constants.MIME_AUDIO:	//音频类型
+					type = Type.AUDIO;
+					break;
+				case Constants.MIME_VIDEO:	//视频类型
+					type = Type.VIDEO;
+					break;
+				case Constants.MIME_TEXT:	//文本类型
+					type = Type.TEXT;
+					break;
+				default:
+					type = Type.FILE;
+					break;
+				}
+			}
+		}
+		return type;
+	}
+	
+	/**
+	 * 根据原始图片生成本地图片的缓存
+	 * @update 2014年11月19日 下午6:03:58
+	 * @param bitmap
+	 * @param photoItem
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public static boolean saveBitmap(ImageLoader imageLoader, Bitmap bitmap, PhotoItem photoItem) {
+		try {
+			return imageLoader.getDiskCache().save(Scheme.FILE.wrap(photoItem.getFilePath()), bitmap);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

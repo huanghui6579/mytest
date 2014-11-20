@@ -19,7 +19,6 @@
         android:divider="@android:color/transparent"
         android:layout_weight="1"
         android:stackFromBottom="true"
-		android:transcriptMode="normal"
         android:layout_marginLeft="@dimen/chat_msg_list_spacing_left_right"
         android:layout_marginStart="@dimen/chat_msg_list_spacing_left_right"
         android:layout_marginRight="@dimen/chat_msg_list_spacing_left_right"

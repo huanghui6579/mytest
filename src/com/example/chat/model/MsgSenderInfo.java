@@ -15,6 +15,10 @@ public class MsgSenderInfo {
 	public MsgInfo msgInfo;
 	public MsgThread msgThread;
 	public Handler handler;
+	/**
+	 * 在发送图片时，该值是判断是否发送原图
+	 */
+	public boolean originalImage;
 	
 	public MsgSenderInfo(Chat chat, MsgInfo msgInfo, MsgThread msgThread,
 			Handler handler) {

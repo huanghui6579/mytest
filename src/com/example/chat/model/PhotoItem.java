@@ -15,6 +15,10 @@ public class PhotoItem implements Parcelable {
 	 */
 	private String filePath;
 	/**
+	 * 缩略图路径
+	 */
+	private String thumbPath;
+	/**
 	 * 文件的大小
 	 */
 	private long size;
@@ -45,6 +49,14 @@ public class PhotoItem implements Parcelable {
 		this.time = time;
 	}
 
+	public String getThumbPath() {
+		return thumbPath;
+	}
+
+	public void setThumbPath(String thumbPath) {
+		this.thumbPath = thumbPath;
+	}
+
 	@Override
 	public int describeContents() {
 		return 0;
@@ -53,14 +65,15 @@ public class PhotoItem implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(filePath);
+		dest.writeString(thumbPath);
 		dest.writeLong(size);
 		dest.writeLong(time);
 	}
-	
+
 	@Override
 	public String toString() {
-		return "PhotoItem [filePath=" + filePath + ", size=" + size + ", time="
-				+ time + "]";
+		return "PhotoItem [filePath=" + filePath + ", thumbPath=" + thumbPath
+				+ ", size=" + size + ", time=" + time + "]";
 	}
 
 	public PhotoItem() {
@@ -68,6 +81,7 @@ public class PhotoItem implements Parcelable {
 	
 	public PhotoItem(Parcel in) {
 		filePath = in.readString();
+		thumbPath = in.readString();
 		size = in.readLong();
 		time = in.readLong();
 	}

@@ -6,15 +6,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.view.View;
+import android.webkit.MimeTypeMap;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.model.Album;
@@ -27,8 +31,13 @@ import com.example.chat.model.PhotoItem;
 import com.example.chat.model.User;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.Constants;
-import com.example.chat.util.Log;
+import com.example.chat.util.MimeUtils;
 import com.example.chat.util.SystemUtil;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.nostra13.universalimageloader.utils.DiskCacheUtils;
+import com.nostra13.universalimageloader.utils.MemoryCacheUtils;
 
 /**
  * 聊天相关的业务逻辑层
@@ -692,7 +701,7 @@ public class MsgManager {
 	}
 	
 	/**
-	 * 根据消息id删除消息的附件
+	 * 根据消息id删除消息的附件，无需删除本地磁盘的文件
 	 * @update 2014年11月12日 下午8:14:14
 	 * @param msgId
 	 */
@@ -700,12 +709,14 @@ public class MsgManager {
 		MsgPart msgPart = getMsgPartPathByMsgId(msgId);
 		if (msgPart != null) {	//有附件
 			//查询该消息对应的附件
-			int count = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgPartColumns.CONTENT_URI, msgId), null, null);
-			if (count > 0) {	//删除成功
-				//则删除本地附件
-				String filePath = msgPart.getFilePath();
-				SystemUtil.deleteFile(filePath);
-			}
+			mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgPartColumns.CONTENT_URI, msgId), null, null);
+			//int count =
+			//无需删除本地文件
+//			if (count > 0) {	//删除成功
+//				//则删除本地附件
+//				String filePath = msgPart.getFilePath();
+//				SystemUtil.deleteFile(filePath);
+//			}
 		}
 	}
 	
@@ -806,53 +817,201 @@ public class MsgManager {
 	/**
 	 * 在本地获取所有的图片，图片的类型为image/jpeg或者image/png
 	 * @update 2014年11月13日 下午7:18:29
+	 * @param isImage 加载的是图片还是视频
 	 * @return
 	 */
-	public Album getAlbum() {
+	public Album getAlbum(boolean isImage) {
 		Album album = null;
-		String[] projection = {
-				MediaStore.Images.Media.DATA,
-				MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
-				MediaStore.Images.Media.SIZE,
-				MediaStore.Images.Media.DATE_TAKEN,
-		};
-		String[] selectionArgs = {
-			"image/jpeg",
-			"image/png"
-		};
-		Cursor cursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, MediaStore.Images.Media.MIME_TYPE + " in (" + makePlaceholders(selectionArgs.length) + ")", selectionArgs, MediaStore.Images.Media.DATE_TAKEN + " DESC");
-		if (cursor != null) {
-			album = new Album();
-			List<PhotoItem>  list = new ArrayList<>();
-			Map<String, List<PhotoItem>>  map = new HashMap<>();
-			while (cursor.moveToNext()) {
-				PhotoItem photo = new PhotoItem();
-				photo.setFilePath(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA)));
-				String parentName = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
-				photo.setSize(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.SIZE)));
-				photo.setTime(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)));
-				if (TextUtils.isEmpty(parentName)) {
-					File file = new File(photo.getFilePath()).getParentFile();
-					if (file != null) {
-						parentName = file.getName();
+		if (isImage) {
+			String[] projection = {
+					MediaStore.Images.Media.DATA,
+					MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+					MediaStore.Images.Media.SIZE,
+					MediaStore.Images.Media.DATE_TAKEN,
+			};
+			String[] selectionArgs = {
+				"image/jpeg",
+				"image/png"
+			};
+			Cursor cursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, MediaStore.Images.Media.MIME_TYPE + " in (" + makePlaceholders(selectionArgs.length) + ")", selectionArgs, MediaStore.Images.Media.DATE_TAKEN + " DESC");
+			if (cursor != null) {
+				album = new Album();
+				List<PhotoItem>  list = new ArrayList<>();
+				Map<String, List<PhotoItem>>  map = new HashMap<>();
+				while (cursor.moveToNext()) {
+					PhotoItem photo = new PhotoItem();
+					photo.setFilePath(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA)));
+					String parentName = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
+					photo.setSize(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.SIZE)));
+					photo.setTime(cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)));
+					if (TextUtils.isEmpty(parentName)) {
+						File file = new File(photo.getFilePath()).getParentFile();
+						if (file != null) {
+							parentName = file.getName();
+						} else {
+							parentName = "/";
+						}
+					}
+					if (map.containsKey(parentName)) {
+						map.get(parentName).add(photo);
 					} else {
-						parentName = "/";
+						List<PhotoItem> temp = new ArrayList<>();
+						temp.add(photo);
+						map.put(parentName, temp);
+					}
+					list.add(photo);
+				}
+				cursor.close();
+				
+				album.setmPhotos(list);
+				album.setFolderMap(map);
+			}
+		} else {
+			String[] projection = {
+					MediaStore.Video.Media._ID,
+					MediaStore.Video.Media.DATA,
+					MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
+					MediaStore.Video.Media.SIZE,
+					MediaStore.Video.Media.DATE_TAKEN,
+			};
+			String[] thumbProjection = {
+					MediaStore.Video.Thumbnails.DATA
+			};
+			Cursor cursor = mContext.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, projection, null, null, MediaStore.Video.Media.DATE_TAKEN + " DESC");
+			if (cursor != null) {
+				album = new Album();
+				List<PhotoItem>  list = new ArrayList<>();
+				Map<String, List<PhotoItem>>  map = new HashMap<>();
+				while (cursor.moveToNext()) {
+					PhotoItem photo = new PhotoItem();
+					int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Video.Media._ID));
+					photo.setFilePath(cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA)));
+					String parentName = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.BUCKET_DISPLAY_NAME));
+					photo.setSize(cursor.getLong(cursor.getColumnIndex(MediaStore.Video.Media.SIZE)));
+					photo.setTime(cursor.getLong(cursor.getColumnIndex(MediaStore.Video.Media.DATE_TAKEN)));
+					
+					Cursor thumbCursor = mContext.getContentResolver().query(MediaStore.Video.Thumbnails.EXTERNAL_CONTENT_URI, thumbProjection, MediaStore.Video.Thumbnails.VIDEO_ID + " = ?", new String[] {String.valueOf(id)}, null);
+					if (thumbCursor != null && thumbCursor.moveToFirst()) {
+						photo.setThumbPath(thumbCursor.getString(thumbCursor.getColumnIndex(MediaStore.Video.Thumbnails.DATA)));
+					}
+					if (thumbCursor != null) {
+						thumbCursor.close();
+					}
+					if (TextUtils.isEmpty(parentName)) {
+						File file = new File(photo.getFilePath()).getParentFile();
+						if (file != null) {
+							parentName = file.getName();
+						} else {
+							parentName = "/";
+						}
+					}
+					if (map.containsKey(parentName)) {
+						map.get(parentName).add(photo);
+					} else {
+						List<PhotoItem> temp = new ArrayList<>();
+						temp.add(photo);
+						map.put(parentName, temp);
+					}
+					list.add(photo);
+				}
+				
+				cursor.close();
+				
+				album.setmPhotos(list);
+				album.setFolderMap(map);
+			}
+		}
+		
+		return album;
+	}
+	
+	/**
+	 * 设置消息信息
+	 * @update 2014年11月18日 上午11:32:33
+	 * @param msgInfo
+	 * @param photoItem
+	 * @return
+	 */
+	public MsgInfo setMsgInfo(MsgInfo msgInfo, PhotoItem photoItem) {
+//		MsgThread mt = new MsgThread();
+//		mt.setId(msgInfo.getThreadID());
+		
+		MsgPart part = new MsgPart();
+		part.setFileName(SystemUtil.getFilename(photoItem.getFilePath()));
+		part.setFilePath(photoItem.getFilePath());
+		//TODO 文件类型匹配待做
+		//获得文件的后缀名，不包含"."，如mp3
+		String subfix = MimeTypeMap.getFileExtensionFromUrl(part.getFileName()).toLowerCase(Locale.getDefault());
+		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
+		part.setMimeTye(mimeType);
+		part.setMsgId(msgInfo.getId());
+		part.setSize(photoItem.getSize());
+		part.setCreationDate(System.currentTimeMillis());
+		
+//		part = msgManager.addMsgPart(part);
+		
+		msgInfo.setMsgPart(part);
+		msgInfo.setCreationDate(System.currentTimeMillis());
+		return msgInfo;
+	}
+	
+	/**
+	 * 根据选择的图片列表创建消息列表
+	 * @update 2014年11月20日 下午7:41:36
+	 * @param msgInfo 对应的聊天消息
+	 * @param selectList 选择的图片集合
+	 * @param originalImage是否需要发送原图
+	 * @return
+	 */
+	public ArrayList<MsgInfo> getMsgInfoListByPhotos(MsgInfo msgInfo, List<PhotoItem> selectList, boolean originalImage) {
+		final ImageLoader imageLoader = ImageLoader.getInstance();
+		final ArrayList<MsgInfo> msgList = new ArrayList<>();
+		for (final PhotoItem photoItem : selectList) {
+			try {
+				String filePath = photoItem.getFilePath();
+				if (!SystemUtil.isFileExists(filePath)) {
+					continue;
+				}
+				String fileUri = Scheme.FILE.wrap(filePath);
+				final MsgInfo mi = (MsgInfo) msgInfo.clone();
+				if (originalImage) {	//原图发送
+					msgList.add(setMsgInfo(mi, photoItem));
+				} else {
+					//现在本地发送目录里查找看有没之前发送的文件
+					//现在磁盘缓存里查找文件
+					File sendFile = DiskCacheUtils.findInCache(fileUri, imageLoader.getDiskCache());
+					if (sendFile == null || !sendFile.exists() || sendFile.length() == 0) {	//文件不存在
+						List<Bitmap> bitmapList = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, imageLoader.getMemoryCache());
+						if (!SystemUtil.isEmpty(bitmapList)) {	//内存缓存里没有找到
+							Bitmap bitmap = bitmapList.get(0);
+							if (bitmap == null) {	//重新加载图片
+								SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
+									
+									@Override
+									public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+										if (loadedImage != null) {
+											if (SystemUtil.saveBitmap(imageLoader, loadedImage, photoItem)) {
+												msgList.add(setMsgInfo(mi, photoItem));
+											}
+										}
+									}
+									
+								});
+							} else {
+								if (SystemUtil.saveBitmap(imageLoader, bitmap, photoItem)) {
+									msgList.add(setMsgInfo(mi, photoItem));
+								}
+							}
+						}
+					} else {	//本地缓存文件存在
+						msgList.add(setMsgInfo(mi, photoItem));
 					}
 				}
-				if (map.containsKey(parentName)) {
-					map.get(parentName).add(photo);
-				} else {
-					List<PhotoItem> temp = new ArrayList<>();
-					temp.add(photo);
-					map.put(parentName, temp);
-				}
-				list.add(photo);
+				
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
 			}
-			cursor.close();
-			
-			album.setmPhotos(list);
-			album.setFolderMap(map);
 		}
-		return album;
+		return msgList;
 	}
 }

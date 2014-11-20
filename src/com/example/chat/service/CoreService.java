@@ -3,16 +3,20 @@ package com.example.chat.service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ChatMessageListener;
+import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.OrFilter;
@@ -26,7 +30,10 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.filetransfer.FileTransfer;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 
 import android.app.Service;
@@ -37,10 +44,11 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
-import com.example.chat.activity.ChatActivity1;
+import com.example.chat.activity.ChatActivity;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
@@ -57,6 +65,7 @@ import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
+import com.example.chat.util.MimeUtils;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
@@ -86,7 +95,12 @@ public class CoreService extends Service {
 	private HandlerThread mHandlerThread = null;
 	private static PacketListener mChatPacketListener;
 	private static RosterListener mRosterListener;
+	private static FileTransferListener mFileTransferListener;
+	private static ConnectionListener mConnectionListener;
+	private static ChatManagerListener mChatManagerListener;
+	private static ChatMessageListener mChatMessageListener;
 	private static ChatManager mChatManager;
+	private static FileTransferManager mFileTransferManager;
 	AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 	
 	private ImageLoader mImageLoader = ImageLoader.getInstance();
@@ -125,133 +139,6 @@ public class CoreService extends Service {
 		}
 	}
 	
-	/**
-	 * 初始化当前用户的个人信息
-	 */
-	public void initCurrentUser(final Personal person) {
-		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				Personal localPerson = userManager.getLocalSelftInfo(person);
-				if (localPerson == null) {	//本地没有个人信息，则从服务器上同步
-					//从网上同步个人信息
-					XmppUtil.syncPersonalInfo(connection, person);
-					userManager.saveOrUpdateCurrentUser(person);
-				} else {	//本地有个人信息，则只需改变状态就行了
-					userManager.updatePersonStatus(person);
-				}
-			}
-		}).start();
-	}
-	
-	/**
-	 * 发送消息的线程
-	 * @author Administrator
-	 * @update 2014年11月16日 下午5:35:14
-	 * @param msgInfo
-	 */
-	public void sendChatMsg(MsgSenderInfo senderInfo) {
-		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(senderInfo));
-	}
-	
-	/**
-	 * 发送消息的任务线程
-	 * @author huanghui1
-	 * @update 2014年11月17日 上午9:05:04
-	 */
-	class SendMsgTask implements Runnable {
-		private MsgSenderInfo senderInfo;
-
-		public SendMsgTask(MsgSenderInfo senderInfo) {
-			this.senderInfo = senderInfo;
-		}
-
-		@Override
-		public void run() {
-			MsgInfo msgInfo =  senderInfo.msgInfo;
-			MsgInfo.Type msgType = msgInfo.getMsgType();
-//			try {
-				msgInfo = msgManager.addMsgInfo(msgInfo);
-				senderInfo.msgThread.setSnippetId(msgInfo.getId());
-				String snippetContent = null;
-				switch (msgType) {
-				case TEXT:
-					snippetContent = msgInfo.getContent();
-					break;
-				case IMAGE:
-					snippetContent = getString(R.string.msg_thread_snippet_content_image);
-					break;
-				case AUDIO:
-					snippetContent = getString(R.string.msg_thread_snippet_content_audio);
-					break;
-				case FILE:
-					snippetContent = getString(R.string.msg_thread_snippet_content_file);
-					break;
-				case LOCATION:
-					snippetContent = getString(R.string.msg_thread_snippet_content_location);
-					break;
-				case VIDEO:
-					snippetContent = getString(R.string.msg_thread_snippet_content_video);
-					break;
-				case VCARD:
-					snippetContent = getString(R.string.msg_thread_snippet_content_vcard);
-					break;
-
-				default:
-					snippetContent = msgInfo.getContent();
-					break;
-				}
-				senderInfo.msgThread.setSnippetContent(snippetContent);
-				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
-				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
-				if (MsgInfo.Type.TEXT == msgType || MsgInfo.Type.LOCATION == msgType) {	//文本消息或者地理位置消息
-					if (senderInfo.chat != null) {
-						try {
-							senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
-							msgInfo.setSendState(SendState.SUCCESS);
-						} catch (NotConnectedException | XMPPException e) {
-							msgInfo.setSendState(SendState.FAILED);
-							e.printStackTrace();
-						}
-					} else {
-						msgInfo.setSendState(SendState.FAILED);
-					}
-				} else {	//非文本消息，则以附件形式发送
-					MsgPart msgPart = msgInfo.getMsgPart();// 创建文件传输管理器
-					FileTransferManager fileTransferManager = FileTransferManager.getInstanceFor(connection);
-										
-					String to = msgInfo.getToJid() + "/Spark 2.6.3";
-//					String to = msgInfo.getToJid() + "/Android";
-					OutgoingFileTransfer fileTransfer = fileTransferManager.createOutgoingFileTransfer(to);
-					File sendFile = DiskCacheUtils.findInCache(Scheme.FILE.wrap(msgPart.getFilePath()), mImageLoader.getDiskCache());
-					if (sendFile.exists()) {
-						try {
-							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), msgPart.getFileName());
-//							fileTransfer.sendFile(sendFile, msgPart.getFileName());
-							while (!fileTransfer.isDone()) {	//传输完毕
-//								Log.d("-------------fileTransfer.getStatus()----------------" + fileTransfer.getStatus());
-								if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
-									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
-								}
-							}
-							Log.d("-------发送完毕------");
-							msgInfo.setSendState(SendState.SUCCESS);
-						} catch (FileNotFoundException e) {
-							msgInfo.setSendState(SendState.FAILED);
-							e.printStackTrace();
-						}
-					}
-				}//XMPPException | SmackException | 
-//			} catch (Exception e) {
-//				msgInfo.setSendState(SendState.FAILED);
-//				e.printStackTrace();
-//			}
-			msgInfo = msgManager.updateMsgInfo(msgInfo);
-			senderInfo.handler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
-		}
-		
-	}
 	
 	@Override
 	public void onCreate() {
@@ -263,7 +150,6 @@ public class CoreService extends Service {
 		PacketFilter packetFilter = new OrFilter(new PacketTypeFilter(IQ.class), new PacketTypeFilter(Presence.class));
 		if (mChatPacketListener == null) {
 			mChatPacketListener = new ChatPacketListener();
-			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.addPacketListener(mChatPacketListener, packetFilter);
 		}
 		
@@ -272,7 +158,25 @@ public class CoreService extends Service {
 			connection.getRoster().addRosterListener(mRosterListener);
 		}
 		
-		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
+		if (mFileTransferListener == null) {
+			mFileTransferManager = FileTransferManager.getInstanceFor(connection);
+			mFileTransferListener = new MyFileTransferListener();
+			mFileTransferManager.addFileTransferListener(mFileTransferListener);
+		}
+		
+		if (mChatMessageListener == null) {
+			mChatMessageListener = new MyChatMessageListener();
+		}
+		
+		if (mChatManager == null) {
+			mChatManager = ChatManager.getInstanceFor(connection);
+			mChatManagerListener = new MyChatManagerListener();
+			mChatManager.addChatListener(mChatManagerListener);
+		}
+		
+		
+		
+//		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());
 		
 		//注册发送消息的广播
 //		chatMessageReceiver = new SendChatMessageReceiver();
@@ -309,9 +213,154 @@ public class CoreService extends Service {
 	
 	@Override
 	public void onDestroy() {
-		AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
-		connection.removeConnectionListener(new ChatConnectionListener());
+		if (mConnectionListener != null) {
+			connection.removeConnectionListener(mConnectionListener);
+		}
 		super.onDestroy();
+	}
+	
+	/**
+	 * 初始化当前用户的个人信息
+	 */
+	public void initCurrentUser(final Personal person) {
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				Personal localPerson = userManager.getLocalSelftInfo(person);
+				if (localPerson == null) {	//本地没有个人信息，则从服务器上同步
+					//从网上同步个人信息
+					XmppUtil.syncPersonalInfo(connection, person);
+					userManager.saveOrUpdateCurrentUser(person);
+				} else {	//本地有个人信息，则只需改变状态就行了
+					userManager.updatePersonStatus(person);
+				}
+			}
+		}).start();
+	}
+	
+	/**
+	 * 发送消息的线程
+	 * @author Administrator
+	 * @update 2014年11月16日 下午5:35:14
+	 * @param msgInfo
+	 */
+	public void sendChatMsg(MsgSenderInfo senderInfo) {
+		SystemUtil.getCachedThreadPool().execute(new SendMsgTask(senderInfo));
+	}
+	
+	/**
+	 * 根据消息类型来设置会话最后一条消息的内容
+	 * @update 2014年11月20日 下午3:07:22
+	 * @param msgType 消息类型
+	 * @param msgInfo 消息实体
+	 * @return
+	 */
+	private String getSnippetContentByMsgType(MsgInfo.Type msgType, MsgInfo msgInfo) {
+		String snippetContent = null;
+		switch (msgType) {
+		case TEXT:
+			snippetContent = msgInfo.getContent();
+			break;
+		case IMAGE:
+			snippetContent = getString(R.string.msg_thread_snippet_content_image);
+			break;
+		case AUDIO:
+			snippetContent = getString(R.string.msg_thread_snippet_content_audio);
+			break;
+		case FILE:
+			snippetContent = getString(R.string.msg_thread_snippet_content_file);
+			break;
+		case LOCATION:
+			snippetContent = getString(R.string.msg_thread_snippet_content_location);
+			break;
+		case VIDEO:
+			snippetContent = getString(R.string.msg_thread_snippet_content_video);
+			break;
+		case VCARD:
+			snippetContent = getString(R.string.msg_thread_snippet_content_vcard);
+			break;
+
+		default:
+			snippetContent = msgInfo.getContent();
+			break;
+		}
+		return snippetContent;
+	}
+	
+	/**
+	 * 发送消息的任务线程
+	 * @author huanghui1
+	 * @update 2014年11月17日 上午9:05:04
+	 */
+	class SendMsgTask implements Runnable {
+		private MsgSenderInfo senderInfo;
+
+		public SendMsgTask(MsgSenderInfo senderInfo) {
+			this.senderInfo = senderInfo;
+		}
+
+		@Override
+		public void run() {
+			MsgInfo msgInfo =  senderInfo.msgInfo;
+			MsgInfo.Type msgType = msgInfo.getMsgType();
+//			try {
+				msgInfo = msgManager.addMsgInfo(msgInfo);
+				senderInfo.msgThread.setSnippetId(msgInfo.getId());
+				String snippetContent = getSnippetContentByMsgType(msgType, msgInfo);
+				senderInfo.msgThread.setSnippetContent(snippetContent);
+				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
+				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
+				if (MsgInfo.Type.TEXT == msgType || MsgInfo.Type.LOCATION == msgType) {	//文本消息或者地理位置消息
+					if (senderInfo.chat != null) {
+						try {
+							senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
+							msgInfo.setSendState(SendState.SUCCESS);
+						} catch (NotConnectedException | XMPPException e) {
+							msgInfo.setSendState(SendState.FAILED);
+							e.printStackTrace();
+						}
+					} else {
+						msgInfo.setSendState(SendState.FAILED);
+					}
+				} else {	//非文本消息，则以附件形式发送
+					MsgPart msgPart = msgInfo.getMsgPart();// 创建文件传输管理器
+					
+					String to = msgInfo.getToJid() + "/Spark 2.6.3";
+//					String to = msgInfo.getToJid() + "/Android";
+					OutgoingFileTransfer fileTransfer = mFileTransferManager.createOutgoingFileTransfer(to);
+					File sendFile = null;
+					if (senderInfo.originalImage) {	//原图发送
+						sendFile = new File(msgPart.getFilePath());
+					} else {
+						sendFile = DiskCacheUtils.findInCache(Scheme.FILE.wrap(msgPart.getFilePath()), mImageLoader.getDiskCache());
+					}
+					if (sendFile.exists()) {
+						try {
+							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), msgPart.getFileName());
+//							fileTransfer.sendFile(sendFile, msgPart.getFileName());
+							while (!fileTransfer.isDone()) {	//传输完毕
+//								Log.d("-------------fileTransfer.getStatus()----------------" + fileTransfer.getStatus());
+								if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
+									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+								}
+							}
+							Log.d("-------发送完毕------");
+							msgInfo.setSendState(SendState.SUCCESS);
+						} catch (FileNotFoundException e) {
+							msgInfo.setSendState(SendState.FAILED);
+							e.printStackTrace();
+						}
+					}
+				}//XMPPException | SmackException | 
+//			} catch (Exception e) {
+//				msgInfo.setSendState(SendState.FAILED);
+//				e.printStackTrace();
+//			}
+			msgInfo = msgManager.updateMsgInfo(msgInfo);
+			senderInfo.handler.sendEmptyMessage(Constants.MSG_MODIFY_CHAT_MSG_SEND_STATE);
+		}
+		
 	}
 	
 	/**
@@ -323,7 +372,6 @@ public class CoreService extends Service {
 
 		@Override
 		public void run() {
-			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.addConnectionListener(new ChatConnectionListener());
 //			packetCollector.nextResult();
 			if (connection.isAuthenticated()) {	//是否登录
@@ -376,8 +424,8 @@ public class CoreService extends Service {
 					msgThread.setSnippetId(msgInfo.getId());
 					msgThread.setSnippetContent(msgInfo.getContent());
 					msgManager.updateMsgThread(msgThread);
-					Intent intent = new Intent(ChatActivity1.MsgProcessReceiver.ACTION_PROCESS_MSG);
-					intent.putExtra(ChatActivity1.ARG_MSG_INFO, msgInfo);
+					Intent intent = new Intent(ChatActivity.MsgProcessReceiver.ACTION_PROCESS_MSG);
+					intent.putExtra(ChatActivity.ARG_MSG_INFO, msgInfo);
 					sendBroadcast(intent);
 				}
 				if (msgInfo != null) {
@@ -457,7 +505,7 @@ public class CoreService extends Service {
 
 		@Override
 		public void processPacket(Packet packet) throws NotConnectedException {
-			//TODO 
+			//TODO 其他各种消息处理
 			if (packet instanceof Presence) {
 				Presence presence = (Presence) packet;
 				SystemUtil.getCachedThreadPool().execute(new HandlePresenceTask(presence));
@@ -502,7 +550,7 @@ public class CoreService extends Service {
 	}
 	
 	/**
-	 * 聊天消息监听器
+	 * 聊天消息管理器
 	 * @author huanghui1
 	 * @update 2014年11月10日 下午6:16:07
 	 */
@@ -511,14 +559,21 @@ public class CoreService extends Service {
 		@Override
 		public void chatCreated(Chat chat, boolean createdLocally) {
 			if (!createdLocally) {
-				chat.addMessageListener(new ChatMessageListener() {
-					
-					@Override
-					public void processMessage(Chat chat, Message message) {
-						SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
-					}
-				});
+				chat.addMessageListener(mChatMessageListener);
 			}
+		}
+	}
+	
+	/**
+	 * 消息监听器
+	 * @author huanghui1
+	 * @update 2014年11月20日 下午8:41:17
+	 */
+	public class MyChatMessageListener implements ChatMessageListener {
+
+		@Override
+		public void processMessage(Chat chat, Message message) {
+			SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
 		}
 		
 	}
@@ -654,6 +709,119 @@ public class CoreService extends Service {
 			default:
 				break;
 			}
+		}
+		
+	}
+	
+	/**
+	 * 文件接收的监听器
+	 * @author huanghui1
+	 * @update 2014年11月20日 下午2:32:01
+	 */
+	class MyFileTransferListener implements FileTransferListener {
+
+		@Override
+		public void fileTransferRequest(FileTransferRequest request) {
+			MsgInfo msgInfo = processFileMessage(request);
+			msgInfo = msgManager.addMsgInfo(msgInfo);
+			int threadId = msgInfo.getThreadID();
+			MsgThread msgThread = msgManager.getThreadById(threadId);
+			if (msgThread != null) {
+				msgThread.setModifyDate(System.currentTimeMillis());
+				msgThread.setSnippetId(msgInfo.getId());
+				MsgInfo.Type msgType = msgInfo.getMsgType();
+				String snippetContent = getSnippetContentByMsgType(msgType, msgInfo);
+				msgThread.setSnippetContent(snippetContent);
+				msgManager.updateMsgThread(msgThread);
+				
+				Intent intent = new Intent(ChatActivity.MsgProcessReceiver.ACTION_PROCESS_MSG);
+				intent.putExtra(ChatActivity.ARG_MSG_INFO, msgInfo);
+				sendBroadcast(intent);
+				
+				SystemUtil.getCachedThreadPool().execute(new ReceiveFileTask(request, msgInfo));
+			}
+		}
+		
+	}
+	
+	/**
+	 * 处理文件类型的消息
+	 * @update 2014年11月20日 下午2:57:06
+	 * @param request
+	 * @return
+	 */
+	private MsgInfo processFileMessage(FileTransferRequest request) {
+		//获得发送人的账号，不包含完整的jid
+		String fromUser = SystemUtil.unwrapJid(request.getRequestor());
+		MsgInfo msgInfo = new MsgInfo();
+		msgInfo.setComming(true);
+		msgInfo.setContent(request.getDescription());
+		msgInfo.setCreationDate(System.currentTimeMillis());
+		msgInfo.setFromUser(fromUser);
+		
+		//TODO 类型匹配
+		//获得文件的后缀名，不包含".",如mp3
+		String subfix = MimeTypeMap.getFileExtensionFromUrl(request.getFileName()).toLowerCase(Locale.getDefault());
+		//获得文件的mimetype，如image/jpeg
+		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
+		mimeType = (mimeType == null) ? request.getMimeType() : mimeType;
+		
+		MsgInfo.Type msgType = SystemUtil.getMsgInfoType(subfix, mimeType);
+		
+		msgInfo.setMsgType(msgType);
+		msgInfo.setRead(false);
+		msgInfo.setSubject(null);
+		msgInfo.setSendState(SendState.SUCCESS);
+		msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
+		
+		int threadId = msgManager.getThreadIdByMembers(fromUser);	//查找本地会话，如果没有就创建
+		if (threadId > 0) {
+			msgInfo.setThreadID(threadId);
+		}
+		
+		//设置附件
+		MsgPart msgPart = new MsgPart();
+		msgPart.setCreationDate(System.currentTimeMillis());
+		msgPart.setFileName(request.getFileName());
+		msgPart.setSize(request.getFileSize());
+		msgPart.setMimeTye(mimeType);
+		String savePath = SystemUtil.generateChatAttachFilePath(threadId, msgPart.getFileName());
+		msgPart.setFilePath(savePath);
+		
+		msgInfo.setMsgPart(msgPart);
+		
+		return msgInfo;
+	}
+	
+	/**
+	 * 接收文件的线程
+	 * @author huanghui1
+	 * @update 2014年11月20日 下午2:47:03
+	 */
+	class ReceiveFileTask implements Runnable {
+		private FileTransferRequest request;
+		private MsgInfo msgInfo;
+
+		public ReceiveFileTask(FileTransferRequest request, MsgInfo msgInfo) {
+			super();
+			this.request = request;
+			this.msgInfo = msgInfo;
+		}
+
+		@Override
+		public void run() {
+			IncomingFileTransfer fileTransfer = request.accept();
+			File saveFile = new File(msgInfo.getMsgPart().getFilePath());
+			if (!saveFile.getParentFile().exists()) {
+				saveFile.getParentFile().mkdirs();
+			}
+			try {
+				fileTransfer.recieveFile(saveFile);
+			} catch (SmackException | IOException e) {
+				e.printStackTrace();
+			}
+			Intent intent = new Intent(ChatActivity.MsgProcessReceiver.ACTION_REFRESH_MSG);
+			sendBroadcast(intent);
 		}
 		
 	}

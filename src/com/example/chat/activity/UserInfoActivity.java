@@ -262,7 +262,7 @@ public class UserInfoActivity extends BaseActivity {
 					});
 					break;
 				case TYPE_FRIEND:	//是本地好友，则发送消息
-					Intent intent = new Intent(mContext, ChatActivity1.class);
+					Intent intent = new Intent(mContext, ChatActivity.class);
 					User arg = new User();
 					arg.setId(user.getId());
 					arg.setUsername(user.getUsername());
