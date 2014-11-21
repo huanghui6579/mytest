@@ -220,4 +220,11 @@
         <item name="android:textColor">@color/album_text_selector</item>
         <item name="android:padding">@dimen/album_list_bottom_padding</item>
     </style>
+    
+    <!-- 公共的复选框样式 -->
+    <style name="CommonCheckboxStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:button">@drawable/album_checkbox_selector</item>
+    </style>
 </resources>

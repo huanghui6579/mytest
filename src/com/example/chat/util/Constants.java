@@ -47,10 +47,17 @@ public class Constants {
 	 */
 	public static final String DATEFORMA_TPATTERN_ALBUM_TIP = "yyyy-MM-dd";
 	
+	/**
+	 * 默认的标准换格式时间
+	 */
+	public static final String DATEFORMA_TPATTERN_DEFAULT = "yyyy-MM-dd HH:mm:ss";
+	
 	public static final String MIME_IMAGE = "image";
 	public static final String MIME_VIDEO = "video";
 	public static final String MIME_AUDIO = "audio";
 	public static final String MIME_TEXT = "text";
+	public static final String MIME_APK = "apk";
+	public static final String MIME_FILE = "file";
 	
 	
 	/**

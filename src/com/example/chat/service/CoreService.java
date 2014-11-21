@@ -44,7 +44,6 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.webkit.MimeTypeMap;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
@@ -761,7 +760,7 @@ public class CoreService extends Service {
 		
 		//TODO 类型匹配
 		//获得文件的后缀名，不包含".",如mp3
-		String subfix = MimeTypeMap.getFileExtensionFromUrl(request.getFileName()).toLowerCase(Locale.getDefault());
+		String subfix = SystemUtil.getFileSubfix(request.getFileName()).toLowerCase(Locale.getDefault());;
 		//获得文件的mimetype，如image/jpeg
 		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
 		mimeType = (mimeType == null) ? request.getMimeType() : mimeType;

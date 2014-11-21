@@ -59,10 +59,6 @@
         <activity
             android:name="com.example.chat.activity.ChatActivity"
             android:label="@string/activity_lable_chat"
-            android:configChanges="orientation|screenSize"/>
-        <activity
-            android:name="com.example.chat.activity.ChatActivity"
-            android:label="@string/activity_lable_chat"
             android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="stateUnchanged|adjustResize"/>
         <activity
@@ -79,6 +75,12 @@
             
         <activity
             android:name="com.example.chat.activity.PhotoPreviewActivity"
+            android:label="@string/activity_lable_album"
+            android:configChanges="orientation|screenSize"
+            android:windowSoftInputMode="stateUnchanged|adjustResize"/>
+            
+        <activity
+            android:name="com.example.chat.activity.FileExplorerActivity"
             android:label="@string/activity_lable_album"
             android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="stateUnchanged|adjustResize"/>

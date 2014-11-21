@@ -1,11 +1,8 @@
 package com.example.chat.activity;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,7 +15,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore.Files;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -34,7 +30,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.AnimationUtils;
-import android.webkit.MimeTypeMap;
 import android.widget.AbsListView;
 import android.widget.AbsListView.LayoutParams;
 import android.widget.AdapterView;
@@ -55,21 +50,13 @@ import com.example.chat.R;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.Album;
 import com.example.chat.model.MsgInfo;
-import com.example.chat.model.MsgPart;
-import com.example.chat.model.MsgSenderInfo;
-import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
-import com.example.chat.service.CoreService;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
-import com.example.chat.util.MimeUtils;
 import com.example.chat.util.SystemUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
-import com.nostra13.universalimageloader.utils.DiskCacheUtils;
-import com.nostra13.universalimageloader.utils.MemoryCacheUtils;
 
 /**
  * 图片选择界面

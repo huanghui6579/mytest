@@ -25,12 +25,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Environment;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -44,7 +49,6 @@ import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.MimeTypeMap;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -590,6 +594,44 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 获得SDcard的根目录
+	 * @update 2014年11月21日 下午6:18:07
+	 * @return
+	 */
+	public static String getSDCardRootPath() {
+		return Environment.getExternalStorageDirectory().getAbsolutePath();
+	}
+	
+	/**
+	 * 获得SDcard的根目录
+	 * @update 2014年11月21日 下午6:18:07
+	 * @return
+	 */
+	public static File getSDCardRoot() {
+		return Environment.getExternalStorageDirectory();
+	}
+	
+	/**
+	 * 该目录是否是根目录
+	 * @update 2014年11月21日 下午7:40:34
+	 * @param path
+	 * @return
+	 */
+	public static boolean isRoot(String path) {
+		return "/".equals(path);
+	}
+	
+	/**
+	 * 该目录是否是根目录
+	 * @update 2014年11月21日 下午7:40:34
+	 * @param path
+	 * @return
+	 */
+	public static boolean isRoot(File path) {
+		return isRoot(path.getAbsolutePath());
+	}
+	
+	/**
 	 * 获取头像默认的存放路径，格式为/mnt/sdcard/ChatApp/currentuser/head_icon/
 	 * @update 2014年10月23日 下午6:09:27
 	 * @param username
@@ -970,14 +1012,14 @@ public class SystemUtil {
 	 */
 	public static DisplayImageOptions getChatImageOptions() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-		.showImageForEmptyUri(R.drawable.ic_default_icon_error)
-		.showImageOnFail(R.drawable.ic_default_icon_error)
-		.cacheInMemory(true)
-		.cacheOnDisk(false)
-		.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
-		.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
-		.delayBeforeLoading(100)
-		.build();
+			.showImageForEmptyUri(R.drawable.ic_default_icon_error)
+			.showImageOnFail(R.drawable.ic_default_icon_error)
+			.cacheInMemory(true)
+			.cacheOnDisk(false)
+			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+			.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+			.delayBeforeLoading(100)
+			.build();
 		return options;
 	}
 	
@@ -1224,13 +1266,13 @@ public class SystemUtil {
 	 * @param filename
 	 * @return
 	 */
-	public static String getFileSubfix(String filename) {
-		if (TextUtils.isEmpty(filename)) {
+	public static String getFileSubfix(String url) {
+		if (TextUtils.isEmpty(url)) {
 			return null;
 		}
-		int index = filename.lastIndexOf(".");
+		int index = url.lastIndexOf(".");
 		if (index != -1) {	//文件名包含有.
-			return filename.substring(index);
+			return url.substring(index + 1);
 		} else {	//返回空串，直接作为文件名
 			return "";
 		}
@@ -1416,7 +1458,7 @@ public class SystemUtil {
 	 */
 	public static MsgInfo.Type getMsgInfoType(String url) {
 		//获得文件的后缀名，不包含".",如mp3
-		String subfix = MimeTypeMap.getFileExtensionFromUrl(url).toLowerCase(Locale.getDefault());
+		String subfix = SystemUtil.getFileSubfix(url);
 		//获得文件的mimetype，如image/jpeg
 		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
 		return getMsgInfoType(subfix, mimeType);
@@ -1434,7 +1476,7 @@ public class SystemUtil {
 		if (!TextUtils.isEmpty(mimeType)) {
 			int prePos = mimeType.indexOf("/");
 			if (prePos != -1) {
-				String pre = mimeType.substring(0, prePos - 1);
+				String pre = mimeType.substring(0, prePos);
 				switch (pre) {
 				case Constants.MIME_IMAGE:	//图片类型
 					type = Type.IMAGE;
@@ -1458,6 +1500,40 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 根据完整的MIME类型获得简单的MIME类型
+	 * @update 2014年11月21日 下午4:21:47
+	 * @param mimeType 完整的MIME类型如：image/jpeg
+	 * @return 简单的MIME类型，如image
+	 */
+	public static String getSimpleMimeType(String mimeType) {
+		String simpleMimeType = Constants.MIME_FILE;
+		if (!TextUtils.isEmpty(mimeType)) {
+			int prePos = mimeType.indexOf("/");
+			if (prePos != -1) {
+				String pre = mimeType.substring(0, prePos);
+				switch (pre) {
+				case Constants.MIME_IMAGE:	//图片类型
+					simpleMimeType = Constants.MIME_IMAGE;
+					break;
+				case Constants.MIME_AUDIO:	//音频类型
+					simpleMimeType = Constants.MIME_AUDIO;
+					break;
+				case Constants.MIME_VIDEO:	//视频类型
+					simpleMimeType = Constants.MIME_VIDEO;
+					break;
+				case Constants.MIME_TEXT:	//文本类型
+					simpleMimeType = Constants.MIME_TEXT;
+					break;
+				default:
+					simpleMimeType = Constants.MIME_FILE;
+					break;
+				}
+			}
+		}
+		return simpleMimeType;
+	}
+	
+	/**
 	 * 根据原始图片生成本地图片的缓存
 	 * @update 2014年11月19日 下午6:03:58
 	 * @param bitmap
@@ -1472,5 +1548,27 @@ public class SystemUtil {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	/** 采用了新的办法获取APK图标，之前的失败是因为android中存在的一个BUG,通过
+	* appInfo.publicSourceDir = apkPath;来修正这个问题，详情参见:
+	* http://code.google.com/p/android/issues/detail?id=9151
+	*/
+	public static Drawable getApkIcon(String apkPath) {
+		PackageManager pm = ChatApplication.getInstance().getPackageManager();
+		PackageInfo info = pm.getPackageArchiveInfo(apkPath, PackageManager.GET_ACTIVITIES);
+		if (info != null) {
+			ApplicationInfo appInfo = info.applicationInfo;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                appInfo.sourceDir = apkPath;
+                appInfo.publicSourceDir = apkPath;
+            }
+			try {
+				return appInfo.loadIcon(pm);
+			} catch (OutOfMemoryError e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 }

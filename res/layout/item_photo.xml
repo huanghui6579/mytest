@@ -20,15 +20,13 @@
         android:id="@+id/view_alpha"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#AA999999"
+        android:background="@color/album_item_selected_alpha"
         android:visibility="gone"/>
     
     <CheckBox 
         android:id="@+id/cb_chose"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:layout_gravity="top|end"
-        android:button="@drawable/album_checkbox_selector"/>
+        style="@style/CommonCheckboxStyle"
+        android:layout_margin="@dimen/album_item_check_spacing"
+        android:layout_gravity="top|end"/>
 
 </FrameLayout>

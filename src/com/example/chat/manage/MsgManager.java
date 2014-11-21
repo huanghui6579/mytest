@@ -3,6 +3,7 @@ package com.example.chat.manage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,13 +19,14 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.model.Album;
+import com.example.chat.model.FileItem.FileType;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
+import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
@@ -815,6 +817,55 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 根据图片获取其缩略图
+	 * @update 2014年11月21日 下午7:56:39
+	 * @param imagePath
+	 * @return
+	 */
+	public String getImageThumbPath(String imagePath) {
+		String path = null;
+		Cursor cursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[] {MediaStore.Images.Media._ID,}, MediaStore.Images.Media.DATA + " = ?", new String[] {imagePath}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media._ID));
+			Cursor thumbCursor = mContext.getContentResolver().query(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, new String[] {MediaStore.Images.Thumbnails.DATA}, MediaStore.Images.Thumbnails.IMAGE_ID + " = ?", new String[] {String.valueOf(id)}, null);
+			if (thumbCursor != null && thumbCursor.moveToFirst()) {
+				path = thumbCursor.getString(thumbCursor.getColumnIndex(MediaStore.Images.Thumbnails.DATA));
+			}
+			if (thumbCursor != null) {
+				thumbCursor.close();
+			}
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return path;
+	}
+	
+	/**
+	 * 获得视频文件的缩略图路径
+	 * @update 2014年11月21日 下午5:44:14
+	 * @return
+	 */
+	public String getAudioThumbPath(String audioPath) {
+		String path = null;
+		Cursor cursor = mContext.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, new String[] {MediaStore.Video.Media._ID,}, MediaStore.Video.Media.DATA + " = ?", new String[] {audioPath}, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Video.Media._ID));
+			Cursor thumbCursor = mContext.getContentResolver().query(MediaStore.Video.Thumbnails.EXTERNAL_CONTENT_URI, new String[] {MediaStore.Video.Thumbnails.DATA}, MediaStore.Video.Thumbnails.VIDEO_ID + " = ?", new String[] {String.valueOf(id)}, null);
+			if (thumbCursor != null && thumbCursor.moveToFirst()) {
+				path = thumbCursor.getString(thumbCursor.getColumnIndex(MediaStore.Video.Thumbnails.DATA));
+			}
+			if (thumbCursor != null) {
+				thumbCursor.close();
+			}
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return path;
+	}
+	
+	/**
 	 * 在本地获取所有的图片，图片的类型为image/jpeg或者image/png
 	 * @update 2014年11月13日 下午7:18:29
 	 * @param isImage 加载的是图片还是视频
@@ -941,11 +992,41 @@ public class MsgManager {
 		part.setFilePath(photoItem.getFilePath());
 		//TODO 文件类型匹配待做
 		//获得文件的后缀名，不包含"."，如mp3
-		String subfix = MimeTypeMap.getFileExtensionFromUrl(part.getFileName()).toLowerCase(Locale.getDefault());
+		String subfix = SystemUtil.getFileSubfix(part.getFileName());
 		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
 		part.setMimeTye(mimeType);
 		part.setMsgId(msgInfo.getId());
 		part.setSize(photoItem.getSize());
+		part.setCreationDate(System.currentTimeMillis());
+		
+//		part = msgManager.addMsgPart(part);
+		
+		msgInfo.setMsgPart(part);
+		msgInfo.setCreationDate(System.currentTimeMillis());
+		return msgInfo;
+	}
+	
+	/**
+	 * 设置消息信息
+	 * @update 2014年11月18日 上午11:32:33
+	 * @param msgInfo
+	 * @param file
+	 * @return
+	 */
+	public MsgInfo setMsgInfo(MsgInfo msgInfo, File file) {
+//		MsgThread mt = new MsgThread();
+//		mt.setId(msgInfo.getThreadID());
+		
+		MsgPart part = new MsgPart();
+		part.setFileName(file.getName());
+		part.setFilePath(file.getAbsolutePath());
+		//TODO 文件类型匹配待做
+		//获得文件的后缀名，不包含"."，如mp3
+		String subfix = SystemUtil.getFileSubfix(part.getFileName());
+		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
+		part.setMimeTye(mimeType);
+		part.setMsgId(msgInfo.getId());
+		part.setSize(file.length());
 		part.setCreationDate(System.currentTimeMillis());
 		
 //		part = msgManager.addMsgPart(part);
@@ -1013,5 +1094,64 @@ public class MsgManager {
 			}
 		}
 		return msgList;
+	}
+	
+	/**
+	 * 根据选择的文件来创建对应的消息信息列表
+	 * @update 2014年11月21日 下午10:39:19
+	 * @param msgInfo
+	 * @param selectList
+	 * @return
+	 */
+	public ArrayList<MsgInfo> getMsgInfoListByFileItems(MsgInfo msgInfo, List<FileItem> selectList) {
+		ArrayList<MsgInfo> msgList = new ArrayList<>();
+		for (FileItem fileItem : selectList) {
+			File file = fileItem.getFile();
+			if (file == null || !file.exists()) {
+				continue;
+			}
+			try {
+				final MsgInfo mi = (MsgInfo) msgInfo.clone();
+				msgList.add(setMsgInfo(mi, file));
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
+		}
+		return msgList;
+	}
+	
+	/**
+	 * 根据目录列出文件集合
+	 * @update 2014年11月21日 下午3:20:59
+	 * @param dir
+	 * @return
+	 */
+	public List<FileItem> listFileItems(File dir) {
+		List<FileItem> list = null;
+		if (dir.isDirectory()) {
+			File[] files = dir.listFiles();
+			if (!SystemUtil.isEmpty(files)) {
+				list = new ArrayList<>();
+				for (File file : files) {
+					FileItem fileItem = new FileItem();
+					fileItem.setFile(file);
+					String ext = SystemUtil.getFileSubfix(file.getName()).toLowerCase(Locale.getDefault());
+					if (!TextUtils.isEmpty(ext)) {
+						if (Constants.MIME_APK.equals(ext)) {	//apk文件
+							fileItem.setFileType(FileType.APK);
+						} else {
+							String mimeType = MimeUtils.guessMimeTypeFromExtension(ext);
+							String simpleMimeType = SystemUtil.getSimpleMimeType(mimeType);
+							fileItem.setFileType(FileType.valueOf(simpleMimeType.toUpperCase(Locale.getDefault())));
+						}
+					} else {
+						fileItem.setFileType(FileType.FILE);
+					}
+					list.add(fileItem);
+				}
+				Collections.sort(list, new FileItem());
+			}
+		}
+		return list;
 	}
 }

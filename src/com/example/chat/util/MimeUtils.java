@@ -8,11 +8,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.example.chat.R;
+
 public final class MimeUtils {
 	private static final Map<String, String> mimeTypeToExtensionMap = new HashMap<>();
 
 	private static final Map<String, String> extensionToMimeTypeMap = new HashMap<>();
-
+	
+	private static final Map<String, Integer> extensionResMap = new HashMap<>();
+	
 	static {
 		add("application/andrew-inset", "ez");
 		add("application/dsptype", "tsp");
@@ -337,7 +341,44 @@ public final class MimeUtils {
 		add("video/x-webex", "wrf");
 		add("x-conference/x-cooltalk", "ice");
 		add("x-epoc/x-sisx-app", "sisx");
+		
+		initresMap();
+		
 		applyOverrides();
+	}
+	
+	private static void initresMap() {
+		extensionResMap.put("apk", R.drawable.ic_apk);
+		
+		extensionResMap.put("zip", R.drawable.ic_zip);
+		extensionResMap.put("tar", R.drawable.ic_zip);
+		extensionResMap.put("rar", R.drawable.ic_zip);
+		extensionResMap.put("7z", R.drawable.ic_zip);
+		
+		extensionResMap.put("doc", R.drawable.ic_doc);
+		extensionResMap.put("docx", R.drawable.ic_doc);
+		extensionResMap.put("wps", R.drawable.ic_doc);
+		
+		extensionResMap.put("ppt", R.drawable.ic_ppt);
+		extensionResMap.put("pptx", R.drawable.ic_ppt);
+		extensionResMap.put("dps", R.drawable.ic_ppt);
+		
+		extensionResMap.put("xls", R.drawable.ic_xls);
+		extensionResMap.put("xlsx", R.drawable.ic_xls);
+		extensionResMap.put("et", R.drawable.ic_xls);
+		
+		extensionResMap.put("pdf", R.drawable.ic_pdf);
+		
+		extensionResMap.put("image", R.drawable.ic_image);
+		
+		extensionResMap.put("audio", R.drawable.ic_audio);
+		
+		extensionResMap.put("video", R.drawable.ic_video);
+		
+		extensionResMap.put("text", R.drawable.ic_text);
+		
+		extensionResMap.put("file", R.drawable.ic_file);
+		
 	}
 
 	private static void add(String mimeType, String extension) {
@@ -419,6 +460,10 @@ public final class MimeUtils {
 			return null;
 		}
 		return (String) mimeTypeToExtensionMap.get(mimeType);
+	}
+	
+	public static Integer guessResIdFromExtension(String extension) {
+		return extensionResMap.get(extension);
 	}
 
 	private MimeUtils() {

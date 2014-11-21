@@ -90,6 +90,14 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * 调用相册的请请求码
 	 */
 	public static final int REQ_ALBUM = 100;
+	/**
+	 * 调用视频的请请求码
+	 */
+	public static final int REQ_VIDEO = 101;
+	/**
+	 * 调用文件的请请求码
+	 */
+	public static final int REQ_FILE = 102;
 	
 	/**
 	 * 默认的编辑模式，文本框内没有任何内容
@@ -540,7 +548,13 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					msgInfo.setMsgType(MsgInfo.Type.VIDEO);
 					intent.putExtra(ARG_MSG_INFO, msgInfo);
 					intent.putExtra(AlbumActivity.ARG_IS_IMAGE, false);
-					startActivityForResult(intent, REQ_ALBUM);
+					startActivityForResult(intent, REQ_VIDEO);
+					break;
+				case AttachItem.ACTION_FILE:	//选择文件
+					intent = new Intent(mContext, FileExplorerActivity.class);
+					msgInfo.setMsgType(MsgInfo.Type.FILE);
+					intent.putExtra(ARG_MSG_INFO, msgInfo);
+					startActivityForResult(intent, REQ_FILE);
 					break;
 				default:
 					break;
@@ -623,6 +637,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		if (resultCode == RESULT_OK) {
 			switch (requestCode) {
 			case REQ_ALBUM:	//相册
+			case REQ_VIDEO:	//视频
+			case REQ_FILE:	//文件
 				if (data != null) {
 					final List<MsgInfo> msgList = data.getParcelableArrayListExtra(ARG_MSG_INFO_LIST);
 					final boolean originalImage = data.getBooleanExtra(PhotoPreviewActivity.ARG_ORIGINAO_IMAGE, false);

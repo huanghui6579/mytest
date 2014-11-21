@@ -233,7 +233,7 @@ public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 			case 6:
 				return FILE;
 			default:
-				return TEXT;
+				return FILE;
 			}
 		}
 	}
