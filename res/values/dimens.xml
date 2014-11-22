@@ -44,6 +44,7 @@
     <dimen name="chat_msg_list_spacing_left_right">4dp</dimen>
     <dimen name="chat_msg_item_head_icon_width">40dp</dimen>
     <dimen name="chat_msg_item_head_icon_height">40dp</dimen>
+    <dimen name="chat_msg_item_drawable_spacing">4dp</dimen>
     
     <dimen name="album_list_bottom_padding">12dp</dimen>
     <dimen name="album_action_bar_padding">10dp</dimen>

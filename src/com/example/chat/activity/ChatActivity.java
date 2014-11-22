@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.ContentObserver;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,9 +27,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.FragmentTabHost;
 import android.text.Editable;
+import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.TextAppearanceSpan;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -53,6 +58,7 @@ import com.example.chat.fragment.EmojiFragment;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AttachItem;
 import com.example.chat.model.EmojiType;
+import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
@@ -98,6 +104,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * 调用文件的请请求码
 	 */
 	public static final int REQ_FILE = 102;
+	/**
+	 * 调用音频的请请求码
+	 */
+	public static final int REQ_AUDIO = 103;
 	
 	/**
 	 * 默认的编辑模式，文本框内没有任何内容
@@ -556,6 +566,12 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					intent.putExtra(ARG_MSG_INFO, msgInfo);
 					startActivityForResult(intent, REQ_FILE);
 					break;
+				case AttachItem.ACTION_AUDIO:	//选择音频
+					intent = new Intent(mContext, FileExplorerActivity.class);
+					msgInfo.setMsgType(MsgInfo.Type.AUDIO);
+					intent.putExtra(ARG_MSG_INFO, msgInfo);
+					startActivityForResult(intent, REQ_AUDIO);
+					break;
 				default:
 					break;
 				}
@@ -662,7 +678,26 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					}
 				}
 				break;
-
+			case REQ_AUDIO:	//音频
+				if (data != null) {
+					final MsgInfo mi = data.getParcelableExtra(ARG_MSG_INFO);
+					if (mi != null) {
+						hideAttachLayout();
+						setEditMode();
+						mMsgInfos.add(mi);
+						msgAdapter.notifyDataSetChanged();
+						scrollMyListViewToBottom(lvMsgs);
+						SystemUtil.getCachedThreadPool().execute(new Runnable() {
+							
+							@Override
+							public void run() {
+								MsgSenderInfo senderInfo = new MsgSenderInfo(chat, mi, msgThread, mHandler);
+								coreService.sendChatMsg(senderInfo);
+							}
+						});
+					}
+				}
+				break;
 			default:
 				break;
 			}
@@ -1246,6 +1281,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			}
 			holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 			MsgInfo.Type msgType = msgInfo.getMsgType();
+			MsgPart msgPart = msgInfo.getMsgPart();
+			holder.tvContent.setGravity(Gravity.LEFT | Gravity.TOP);
+			holder.tvContent.setCompoundDrawablePadding(0);
 			switch (msgType) {
 			case TEXT:	//文本消息
 				SpannableString spannableString = SystemUtil.getExpressionString(mContext, msgInfo.getContent());
@@ -1253,7 +1291,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				break;
 			case IMAGE:	//图片消息
 				holder.tvContent.setText("");
-				MsgPart msgPart = msgInfo.getMsgPart();
 				if (msgPart != null) {
 					String filePath = msgPart.getFilePath();
 					if (SystemUtil.isFileExists(filePath)) {
@@ -1263,6 +1300,43 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					}
 				}
 				
+				break;
+			case FILE:	//普通文件类型
+				holder.tvContent.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+				holder.tvContent.setCompoundDrawablePadding((int) getResources().getDimension(R.dimen.chat_msg_item_drawable_spacing));
+				if (msgPart != null) {
+					String partPath = msgPart.getFilePath();
+					String fileName = msgPart.getFileName();
+					String sizeStr = SystemUtil.sizeToString(msgPart.getSize());
+					
+					FileItem fileItem = SystemUtil.getFileItem(partPath, fileName, msgPart.getMimeTye());
+					
+					int fileNameLength = fileName.length();
+					
+					String str = getString(R.string.chat_attach_file_desc, fileName, sizeStr);
+					SpannableStringBuilder spannableDesc = new SpannableStringBuilder(str);
+					spannableDesc.setSpan(new TextAppearanceSpan(context, R.style.ChatItemContentTitleStyle), 0, fileNameLength, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+					spannableDesc.setSpan(new TextAppearanceSpan(context, R.style.ChatItemContentSubTitleStyle), fileNameLength, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+					holder.tvContent.setText(spannableDesc, TextView.BufferType.SPANNABLE);
+					
+					Integer resId = SystemUtil.getResIdByFile(fileItem, R.drawable.ic_attach_file);
+					holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(resId, 0, 0, 0);
+					
+					switch (fileItem.getFileType()) {
+					case IMAGE:	//图片,则直接加载图片缩略图
+						holder.tvContent.setCompoundDrawablePadding(0);
+						holder.tvContent.setText("");
+						if (SystemUtil.isFileExists(partPath)) {
+							mImageLoader.displayImage(Scheme.FILE.wrap(partPath), new TextViewAware(holder.tvContent), options);
+						}
+						break;
+					case APK:	//安装文件
+						new LoadApkIconTask(holder).execute(partPath);
+						break;
+					default:
+						break;
+					}
+				}
 				break;
 			default:
 				break;
@@ -1360,6 +1434,31 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			return TYPE_COUNT;
 		}
 		
+	}
+	
+	/**
+	 * 异步加载apk图标的线程
+	 * @author huanghui1
+	 * @update 2014年11月21日 下午6:03:44
+	 */
+	class LoadApkIconTask extends AsyncTask<String, Drawable, Drawable> {
+		MsgViewHolder holder;
+		public LoadApkIconTask(MsgViewHolder holder) {
+			super();
+			this.holder = holder;
+		}
+		@Override
+		protected Drawable doInBackground(String... params) {
+			Drawable drawable = SystemUtil.getApkIcon(params[0]);
+			return drawable;
+		}
+		@Override
+		protected void onPostExecute(Drawable result) {
+			if(result != null) {
+				holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(result, null, null, null);
+			}
+			super.onPostExecute(result);
+		}
 	}
 	
 	final static class MsgViewHolder {

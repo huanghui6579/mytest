@@ -3,7 +3,6 @@ package com.example.chat.activity;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -38,8 +37,6 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.util.Constants;
-import com.example.chat.util.Log;
-import com.example.chat.util.MimeUtils;
 import com.example.chat.util.SystemUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -165,7 +162,7 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 			public void onClick(View v) {
 				final List<FileItem> selects = mFileItemAdapter.getSelectList();
 				pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
-				//发送图片
+				//发送文件
 				SystemUtil.getCachedThreadPool().execute(new Runnable() {
 					
 					@Override
@@ -343,15 +340,7 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 				}
 				holder.tvDesc.setText(desc);
 				
-				String extension = SystemUtil.getFileSubfix(file.getName()).toLowerCase(Locale.getDefault());;
-				Integer resId = MimeUtils.guessResIdFromExtension(extension);
-				if (resId == null || resId == 0) {	//没有找到资源图片，则根据文件的mime类型来查找
-					String extStr = fileItem.getFileType().name().toLowerCase(Locale.getDefault());
-					resId = MimeUtils.guessResIdFromExtension(extStr);
-					if (resId == null || resId == 0) {
-						resId = R.drawable.ic_file;
-					}
-				}
+				Integer resId = SystemUtil.getResIdByFile(fileItem, R.drawable.ic_file);
 				holder.ivIcon.setImageResource(resId);
 				switch (fileItem.getFileType()) {
 				case IMAGE:	//图片,则直接加载图片缩略图

@@ -195,6 +195,18 @@
     	<item name="android:textSize">@dimen/contact_chat_msg</item>
     </style>
     
+    <!-- 聊天的文字样式 -->
+    <style name="ChatItemContentTitleStyle">
+    	<item name="android:textColor">@android:color/black</item>
+    	<item name="android:textSize">@dimen/contact_chat_msg</item>
+    </style>
+    
+    <!-- 聊天的文字副标题样式 -->
+    <style name="ChatItemContentSubTitleStyle">
+        <item name="android:textColor">@color/session_list_item_content</item>
+    	<item name="android:textSize">@dimen/session_list_item_content</item>
+    </style>
+    
     <!-- 聊天消息发送状态样式 -->
     <style name="ChatItemSendStateStyle">
         <item name="android:layout_width">wrap_content</item>

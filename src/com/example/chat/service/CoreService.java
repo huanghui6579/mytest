@@ -328,11 +328,16 @@ public class CoreService extends Service {
 					String to = msgInfo.getToJid() + "/Spark 2.6.3";
 //					String to = msgInfo.getToJid() + "/Android";
 					OutgoingFileTransfer fileTransfer = mFileTransferManager.createOutgoingFileTransfer(to);
+					
 					File sendFile = null;
-					if (senderInfo.originalImage) {	//原图发送
-						sendFile = new File(msgPart.getFilePath());
+					if (msgInfo.getMsgType() == MsgInfo.Type.IMAGE) {	//图片类型
+						if (senderInfo.originalImage) {	//原图发送
+							sendFile = new File(msgPart.getFilePath());
+						} else {
+							sendFile = DiskCacheUtils.findInCache(Scheme.FILE.wrap(msgPart.getFilePath()), mImageLoader.getDiskCache());
+						}
 					} else {
-						sendFile = DiskCacheUtils.findInCache(Scheme.FILE.wrap(msgPart.getFilePath()), mImageLoader.getDiskCache());
+						sendFile = new File(msgPart.getFilePath());
 					}
 					if (sendFile.exists()) {
 						try {

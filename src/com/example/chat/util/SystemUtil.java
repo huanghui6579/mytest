@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,7 +58,9 @@ import android.widget.Toast;
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.model.Emoji;
+import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgInfo;
+import com.example.chat.model.FileItem.FileType;
 import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
@@ -1570,5 +1573,119 @@ public class SystemUtil {
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * 根据文件获得fileitem
+	 * @update 2014年11月22日 上午10:33:47
+	 * @param file
+	 * @return
+	 */
+	public static FileItem getFileItem(File file) {
+		FileItem fileItem = new FileItem();
+		fileItem.setFile(file);
+		String ext = SystemUtil.getFileSubfix(file.getName()).toLowerCase(Locale.getDefault());
+		if (!TextUtils.isEmpty(ext)) {
+			if (Constants.MIME_APK.equals(ext)) {	//apk文件
+				fileItem.setFileType(FileType.APK);
+			} else {
+				String mimeType = MimeUtils.guessMimeTypeFromExtension(ext);
+				String simpleMimeType = SystemUtil.getSimpleMimeType(mimeType);
+				fileItem.setFileType(FileType.valueOf(simpleMimeType.toUpperCase(Locale.getDefault())));
+			}
+		} else {
+			fileItem.setFileType(FileType.FILE);
+		}
+		return fileItem;
+	}
+	
+	/**
+	 * 根据文件全路径获得fileitem
+	 * @update 2014年11月22日 上午10:35:50
+	 * @param filePath
+	 * @return
+	 */
+	public static FileItem getFileItem(String filePath) {
+		if (TextUtils.isEmpty(filePath)) {
+			return null;
+		}
+		File file = new File(filePath);
+		return getFileItem(file);
+	}
+	
+	/**
+	 * 根据文件的信息获得fileitem
+	 * @update 2014年11月22日 上午10:40:15
+	 * @param filePath
+	 * @param fileName
+	 * @param mimeType
+	 * @return
+	 */
+	public static FileItem getFileItem(String filePath, String fileName, String mimeType) {
+		if (TextUtils.isEmpty(filePath)) {
+			return null;
+		}
+		File file = new File(filePath);
+		FileItem fileItem = new FileItem();
+		fileItem.setFile(file);
+		String ext = SystemUtil.getFileSubfix(fileName).toLowerCase(Locale.getDefault());
+		if (!TextUtils.isEmpty(ext)) {
+			if (Constants.MIME_APK.equals(ext)) {	//apk文件
+				fileItem.setFileType(FileType.APK);
+			} else {
+				String simpleMimeType = SystemUtil.getSimpleMimeType(mimeType);
+				fileItem.setFileType(FileType.valueOf(simpleMimeType.toUpperCase(Locale.getDefault())));
+			}
+		} else {
+			fileItem.setFileType(FileType.FILE);
+		}
+		return fileItem;
+	}
+	
+	/**
+	 * 根据文件来获取对应的资源
+	 * @update 2014年11月22日 上午10:27:05
+	 * @param fileItem  
+	 * @param defaultResId 当没有匹配的资源时，显示默认的资源
+	 * @return
+	 */
+	public static int getResIdByFile(FileItem fileItem, int defaultResId) {
+		String extension = SystemUtil.getFileSubfix(fileItem.getFile().getName()).toLowerCase(Locale.getDefault());;
+		Integer resId = MimeUtils.guessResIdFromExtension(extension);
+		if (resId == null || resId == 0) {	//没有找到资源图片，则根据文件的mime类型来查找
+			String extStr = fileItem.getFileType().name().toLowerCase(Locale.getDefault());
+			resId = MimeUtils.guessResIdFromExtension(extStr);
+			if (resId == null || resId == 0) {
+				resId = defaultResId;
+			}
+		}
+		return resId;
+	}
+	
+	/**
+	 * 将时长转换为字符串
+	 * @update 2014年11月22日 下午3:49:23
+	 * @param duration 时长,单位为毫秒
+	 * @return 转换后的字符串,格式为:"mm:ss"，如："12:23"
+	 */
+	public static String timeToString(int duration) {
+		//将毫秒转换为秒
+		int second = duration / 1000;
+		int unit = 60;	//时间的单位为60
+		int hunit = 3600;	//小时的单位
+		DecimalFormat decimalFormat = new DecimalFormat("00");
+		if (second < unit) {	//少于一分钟
+			return "00:" + decimalFormat.format(second);
+		} else if (second < hunit) {	//多余一分钟，但少于一个小时
+			int minu = second / unit;
+			int sec = second % unit;
+			return decimalFormat.format(minu) + ":" + decimalFormat.format(sec);
+		} else {	//大于一个小时
+			int hor = second / hunit;
+			int msec = second % hunit;
+			int minu = msec / unit;
+			int sec = msec % unit;
+			return decimalFormat.format(hor) + ":" + decimalFormat.format(minu) + ":" + decimalFormat.format(sec);
+		}
 	}
 }

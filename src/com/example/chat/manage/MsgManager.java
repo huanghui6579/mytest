@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import android.content.ContentUris;
@@ -22,13 +21,13 @@ import android.view.View;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.model.Album;
-import com.example.chat.model.FileItem.FileType;
+import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
-import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgThread;
+import com.example.chat.model.AudioItem;
 import com.example.chat.model.PhotoItem;
 import com.example.chat.model.User;
 import com.example.chat.provider.Provider;
@@ -977,6 +976,48 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 获得音乐的列表
+	 * @update 2014年11月22日 下午2:58:01
+	 * @return
+	 */
+	public List<AudioItem> getAudioList() {
+		List<AudioItem> list = null;
+		String[] projection = {
+				MediaStore.Audio.Media.TITLE,
+				MediaStore.Audio.Media.DISPLAY_NAME,
+				MediaStore.Audio.Media.DATA,
+				MediaStore.Audio.Media.ARTIST,
+				MediaStore.Audio.Media.SIZE,
+				MediaStore.Audio.Media.DURATION
+		};
+		
+		Cursor cursor = mContext.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, null, null, MediaStore.Audio.Media.TITLE + " ASC");
+		if (cursor != null) {
+			list = new ArrayList<>();
+			while (cursor.moveToNext()) {
+				String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+				String fileName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+				String filePath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+				String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+				long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.SIZE));
+				int duration = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+				
+				AudioItem item = new AudioItem();
+				item.setTitle(title);
+				item.setArtist(artist);
+				item.setFileName(fileName);
+				item.setFilePath(filePath);
+				item.setDuration(duration);
+				item.setSize(size);
+				
+				list.add(item);
+			}
+			cursor.close();
+		}
+		return list;
+	}
+	
+	/**
 	 * 设置消息信息
 	 * @update 2014年11月18日 上午11:32:33
 	 * @param msgInfo
@@ -1121,6 +1162,23 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 根据所选择的音频文件来设置msginfo
+	 * @update 2014年11月22日 下午5:46:54
+	 * @param msgInfo
+	 * @param audioItem
+	 * @return
+	 */
+	public MsgInfo getMsgInfoByAudio(MsgInfo msgInfo, AudioItem audioItem) {
+		String filePath = audioItem.getFilePath();
+		if (SystemUtil.isFileExists(filePath)) {
+			File file = new File(filePath);
+			return setMsgInfo(msgInfo, file);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
 	 * 根据目录列出文件集合
 	 * @update 2014年11月21日 下午3:20:59
 	 * @param dir
@@ -1133,20 +1191,7 @@ public class MsgManager {
 			if (!SystemUtil.isEmpty(files)) {
 				list = new ArrayList<>();
 				for (File file : files) {
-					FileItem fileItem = new FileItem();
-					fileItem.setFile(file);
-					String ext = SystemUtil.getFileSubfix(file.getName()).toLowerCase(Locale.getDefault());
-					if (!TextUtils.isEmpty(ext)) {
-						if (Constants.MIME_APK.equals(ext)) {	//apk文件
-							fileItem.setFileType(FileType.APK);
-						} else {
-							String mimeType = MimeUtils.guessMimeTypeFromExtension(ext);
-							String simpleMimeType = SystemUtil.getSimpleMimeType(mimeType);
-							fileItem.setFileType(FileType.valueOf(simpleMimeType.toUpperCase(Locale.getDefault())));
-						}
-					} else {
-						fileItem.setFileType(FileType.FILE);
-					}
+					FileItem fileItem = SystemUtil.getFileItem(file);
 					list.add(fileItem);
 				}
 				Collections.sort(list, new FileItem());

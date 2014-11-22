@@ -92,6 +92,7 @@
     <string name="chat_msg_edit_hint">请输入内容</string>
     <string name="chat_btn_make_voice_start">按住 说话</string>
     <string name="chat_sending_file">正在发送文件&#8230;</string>
+    <string name="chat_attach_file_desc">"%1$s\n%2$s"</string>
     
     <string name="album_all_video">所有视频</string>
     <string name="album_all_photo">所有图片</string>
@@ -115,4 +116,8 @@
     <string name="file_explorer_folder_unreadable">不可读</string>
     <string name="file_tip_max_select">只能选择%1$d个文件</string>
 
+    <!-- \u0020 表示空格 -->
+    <string name="audio_item_content">%1$s\u0020|\u0020%2$s</string>
+    <string name="audio_list_search_hint">请输入歌曲名</string>
+    
 </resources>

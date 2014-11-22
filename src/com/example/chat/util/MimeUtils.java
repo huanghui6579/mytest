@@ -377,7 +377,7 @@ public final class MimeUtils {
 		
 		extensionResMap.put("text", R.drawable.ic_text);
 		
-		extensionResMap.put("file", R.drawable.ic_file);
+		extensionResMap.put("file", R.drawable.ic_attach_file);
 		
 	}
 
