@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -1370,6 +1371,55 @@ public class SystemUtil {
 		sb.append(File.separator)
 		.append(fname);
 		return sb.toString();
+	}
+	
+	/**
+	 * 生成录音文件名，文件已时间戳为为名方式，如:2014_11_24_21_41_56_5435646.amr
+	 * @update 2014年11月24日 下午9:40:15
+	 * @return
+	 */
+	public static String generateRecordFilename() {
+		return formatTime(System.currentTimeMillis(), "yyyy_MM_dd_HH_mm_ss") + new Random().nextInt(999999) + "amr";
+	}
+	
+	/**
+	 * 根据会话id生成录音文件的全路径,如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.amr
+	 * @update 2014年11月24日 下午9:43:21
+	 * @param threadId
+	 * @return
+	 */
+	public static String generateRecordFilePath(int threadId) {
+		return generateChatAttachFilePath(threadId, generateRecordFilename());
+	}
+	
+	/**
+	 * 根据会话id生成录音文件的全路径,如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.amr
+	 * @update 2014年11月24日 下午9:43:21
+	 * @param msgThread
+	 * @return
+	 */
+	public static String generateRecordFilePath(MsgThread msgThread) {
+		return generateChatAttachFilePath(msgThread.getId(), generateRecordFilename());
+	}
+	
+	/**
+	 * 根据会话id生成录音文件的全路径,如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.amr
+	 * @update 2014年11月24日 下午9:43:21
+	 * @param threadId
+	 * @return
+	 */
+	public static File generateRecordFile(int threadId) {
+		return generateChatAttachFile(threadId, generateRecordFilename());
+	}
+	
+	/**
+	 * 根据会话id生成录音文件的全路径,如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.amr
+	 * @update 2014年11月24日 下午9:43:21
+	 * @param threadId
+	 * @return
+	 */
+	public static File generateRecordFile(MsgThread msgThread) {
+		return generateChatAttachFile(msgThread.getId(), generateRecordFilename());
 	}
 	
 	/**

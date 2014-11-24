@@ -1,5 +1,6 @@
 package com.example.chat.activity;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,6 +74,7 @@ import com.example.chat.service.CoreService;
 import com.example.chat.service.CoreService.MainBinder;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
+import com.example.chat.util.SoundMeter;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.view.TextViewAware;
@@ -199,6 +201,26 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 */
 	private GridView gvAttach;
 	
+	private LinearLayout layoutVoiceRecording;
+	private LinearLayout layoutRecord;
+	/**
+	 * 声音大小
+	 */
+	private ImageView ivVolume;
+	/**
+	 * 取消录音的提示图片
+	 */
+	private ImageView ivCancelTip;
+	private ImageView ivDelTip;
+	/**
+	 * 删除录音
+	 */
+	private LinearLayout layoutDelRecord;
+	private LinearLayout layoutVoiceRecordLoading;
+	private LinearLayout layoutVoiceRecordTooshort;
+	
+	private SoundMeter mSensor;
+	
 	private AttachPannelAdapter attachPannelAdapter;
 	
 	/**
@@ -214,6 +236,27 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * 消息处理的广播
 	 */
 	MsgProcessReceiver msgProcessReceiver;
+	
+	/**
+	 * 录音开始时间
+	 */
+	private long recordStartTime = 0L;
+	/**
+	 * 录音结束时间
+	 */
+	private long recordEndTime = 0L;
+	
+	/**
+	 * 录音文件的全路径名，含文件名
+	 */
+	private String volumeFilenme;
+	
+	/**
+	 * 录音时间是否太短
+	 */
+	private boolean isShort;
+	
+	private static final int POLL_INTERVAL = 300;
 	
 	private Handler mHandler = new Handler() {
 
@@ -293,6 +336,14 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		
 //		mTabHost.getTabWidget().setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
 //		mTabHost.getTabWidget().setDividerDrawable(R.drawable.list_divider_drawable);
+		
+		layoutVoiceRecording = (LinearLayout) findViewById(R.id.layout_voice_recording);
+		layoutDelRecord = (LinearLayout) findViewById(R.id.layout_del_record);
+		layoutVoiceRecordLoading = (LinearLayout) findViewById(R.id.layout_voice_record_loading);
+		layoutVoiceRecordTooshort = (LinearLayout) findViewById(R.id.layout_voice_record_tooshort);
+		ivVolume = (ImageView) findViewById(R.id.iv_volume);
+		ivCancelTip = (ImageView) findViewById(R.id.iv_cancel_tip);
+		ivDelTip = (ImageView) findViewById(R.id.iv_del_tip);
 	}
 	
 	/**
@@ -308,6 +359,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		
 		Intent service = new Intent(mContext, CoreService.class);
 		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
+		
+		mSensor = new SoundMeter();
 		
 		//注册处理聊天消息的广播
 		msgProcessReceiver = new MsgProcessReceiver();
@@ -523,12 +576,190 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		ivIcon.setImageResource(emojiType.getResId());
 		return view;
 	}
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		if (editMode == MODE_VOICE) {	//语音模式
+			//获取语音按钮的坐标
+			int[] recordPoint = new int[2];
+			btnMakeVoice.getLocationInWindow(recordPoint);
+			int recordX = recordPoint[0];
+			int recordY = recordPoint[1];
+			//获取删除按钮的位置
+			int[] delPoint = new int[2];
+			layoutDelRecord.getLocationInWindow(delPoint);
+			int delX = delPoint[0];
+			int delY = delPoint[1];
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {	//按下开始录音
+				//判断手指按下的坐标是否在按钮内部
+				if (event.getY() > recordY && event.getX() > recordX) {
+					layoutVoiceRecordLoading.setVisibility(View.VISIBLE);
+					layoutRecord.setVisibility(View.VISIBLE);
+					layoutVoiceRecording.setVisibility(View.GONE);
+					ivCancelTip.setVisibility(View.VISIBLE);
+					
+					layoutVoiceRecordTooshort.setVisibility(View.GONE);
+					layoutDelRecord.setVisibility(View.GONE);
+					
+					//让加载按钮显示300毫秒
+					mHandler.postDelayed(new Runnable() {
+						public void run() {
+							if (!isShort) {
+								layoutVoiceRecordLoading.setVisibility(View.GONE);
+								layoutVoiceRecording.setVisibility(View.VISIBLE);
+							}
+						}
+					}, 300);
+					
+					recordStartTime = System.currentTimeMillis();
+					//开始录音
+					startRecord();
+				}
+			} else if (event.getAction() == MotionEvent.ACTION_UP) {	//松手
+				float eX = event.getX();
+				float eY = event.getY();
+				//判断松手时的坐标是否在删除区域内
+				if (eY >= delY && eY <= layoutDelRecord.getHeight() && eX >= delX && eX <= delX + layoutDelRecord.getWidth()) {	//在删除区域内
+					layoutVoiceRecordLoading.setVisibility(View.GONE);
+					layoutVoiceRecordTooshort.setVisibility(View.GONE);
+					layoutDelRecord.setVisibility(View.GONE);
+					
+					File file = new File(volumeFilenme);
+					if (file.exists()) {
+						file.delete();
+					}
+				} else {	//结束录音
+					layoutVoiceRecordLoading.setVisibility(View.GONE);
+					stopRecord();
+					recordEndTime = System.currentTimeMillis();
+					//计算时间差
+					int time = (int) ((recordEndTime - recordStartTime) / 1000);
+					if (time < 2) {	//少于2秒，则不发送，需重录
+						isShort = true;
+						layoutVoiceRecordLoading.setVisibility(View.GONE);
+						layoutDelRecord.setVisibility(View.GONE);
+						layoutVoiceRecordTooshort.setVisibility(View.VISIBLE);
+						//太短的提示信息显示500毫秒消失
+						mHandler.postDelayed(new Runnable() {
+							public void run() {
+								layoutVoiceRecordTooshort.setVisibility(View.GONE);
+								isShort = false;
+							}
+						}, 500);
+						return false;
+					}
+					//TODO 发送语音消息
+					
+				}
+			}
+			
+			if (event.getY() < recordY) {	//手按下的位置不在语音按钮的区域内
+				float eX = event.getX();
+				float eY = event.getY();
+				Animation inAnim = AnimationUtils.loadAnimation(mContext, R.anim.chat_record_voice_in);
+				Animation outAnim = AnimationUtils.loadAnimation(mContext, R.anim.chat_record_voice_out);
+				layoutDelRecord.setVisibility(View.VISIBLE);
+				ivCancelTip.setVisibility(View.GONE);
+				if (eY >= delY && eY <= layoutDelRecord.getHeight() && eX >= delX && eX <= delX + layoutDelRecord.getWidth()) {	//在删除区域内
+					ivDelTip.startAnimation(inAnim);
+					ivDelTip.startAnimation(outAnim);
+				}
+			} else {
+				ivCancelTip.setVisibility(View.VISIBLE);
+				layoutDelRecord.setVisibility(View.VISIBLE);
+			}
+		}
+		return super.onTouchEvent(event);
+	}
+	
+	private Runnable mPollTask = new Runnable() {
+		
+		@Override
+		public void run() {
+			double amp = mSensor.getAmplitude();
+			updateDisplay(amp);
+			mHandler.postDelayed(mPollTask, POLL_INTERVAL);
+		}
+	};
+	
+	private Runnable mSleepTask = new Runnable() {
+		public void run() {
+			stopRecord();
+		}
+	};
+	
+	/**
+	 * 开始录音
+	 * @update 2014年11月24日 下午9:50:49
+	 */
+	private void startRecord() {
+		volumeFilenme = SystemUtil.generateRecordFilePath(msgThread);
+		mSensor.start(volumeFilenme);
+		mHandler.postDelayed(mPollTask, POLL_INTERVAL);
+	}
+	
+	/**
+	 * 停止录音
+	 * @update 2014年11月24日 下午10:16:11
+	 */
+	private void stopRecord() {
+		mHandler.removeCallbacks(mSleepTask);
+		mHandler.removeCallbacks(mPollTask);
+		mSensor.stop();
+		ivVolume.setImageResource(R.drawable.amp1);
+	}
+	
+	/**
+	 * 根据声音的大小来动态显示对应的图片
+	 * @update 2014年11月24日 下午9:55:32
+	 * @param signalEMA
+	 */
+	private void updateDisplay(double signalEMA) {
+		
+		switch ((int) signalEMA) {
+		case 0:
+		case 1:
+			ivVolume.setImageResource(R.drawable.amp1);
+			break;
+		case 2:
+		case 3:
+			ivVolume.setImageResource(R.drawable.amp2);
+			
+			break;
+		case 4:
+		case 5:
+			ivVolume.setImageResource(R.drawable.amp3);
+			break;
+		case 6:
+		case 7:
+			ivVolume.setImageResource(R.drawable.amp4);
+			break;
+		case 8:
+		case 9:
+			ivVolume.setImageResource(R.drawable.amp5);
+			break;
+		case 10:
+		case 11:
+			ivVolume.setImageResource(R.drawable.amp6);
+			break;
+		default:
+			ivVolume.setImageResource(R.drawable.amp7);
+			break;
+		}
+	}
 
 	@Override
 	protected void addListener() {
 		btnEmoji.setOnClickListener(this);
 		btnVoice.setOnClickListener(this);
 		btnSend.setOnClickListener(this);
+		btnMakeVoice.setOnTouchListener(new View.OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				return false;
+			}
+		});
 //		etContent.setOnClickListener(this);
 		gvAttach.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -567,7 +798,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					startActivityForResult(intent, REQ_FILE);
 					break;
 				case AttachItem.ACTION_AUDIO:	//选择音频
-					intent = new Intent(mContext, FileExplorerActivity.class);
+					intent = new Intent(mContext, AudioListActivity.class);
 					msgInfo.setMsgType(MsgInfo.Type.AUDIO);
 					intent.putExtra(ARG_MSG_INFO, msgInfo);
 					startActivityForResult(intent, REQ_AUDIO);
@@ -1301,6 +1532,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				}
 				
 				break;
+			case AUDIO:
+			case VIDEO:
 			case FILE:	//普通文件类型
 				holder.tvContent.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
 				holder.tvContent.setCompoundDrawablePadding((int) getResources().getDimension(R.dimen.chat_msg_item_drawable_spacing));

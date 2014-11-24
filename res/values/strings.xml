@@ -28,6 +28,7 @@
     <string name="activity_lable_chat">聊天</string>
     <string name="activity_lable_new_friend_info">新的朋友</string>
     <string name="activity_lable_album">图片</string>
+    <string name="activity_lable_audio">音频</string>
     
     <string name="email">邮箱：%1$s</string>
     <string name="username">用户名：%1$s</string>
