@@ -81,6 +81,11 @@ public class Constants {
 	public static final int IMAGE_THUMB_HEIGHT = 100;
 	
 	/**
+	 * 录音最小的长度为1秒
+	 */
+	public static final int COICE_RECORD_MIN_LENGTH = 1;
+	
+	/**
 	 * 【1】成功的结果码
 	 */
 	public static final int MSG_SUCCESS = 0x000001;

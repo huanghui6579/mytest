@@ -1,5 +1,8 @@
 package com.example.chat.util;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import android.media.MediaRecorder;
@@ -11,7 +14,7 @@ public  class SoundMeter {
 	private MediaRecorder mRecorder = null;
 	private double mEMA = 0.0;
 
-	public void start(String filepath) {
+	public void start(String filePath) {
 		if (!Environment.getExternalStorageState().equals(
 				android.os.Environment.MEDIA_MOUNTED)) {
 			return;
@@ -21,7 +24,7 @@ public  class SoundMeter {
 			mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 			mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
 			mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-			mRecorder.setOutputFile(filepath);
+			mRecorder.setOutputFile(filePath);
 			try {
 				mRecorder.prepare();
 				mRecorder.start();
@@ -34,6 +37,11 @@ public  class SoundMeter {
 			}
 
 		}
+	}
+	
+	public void start(File file) {
+		String filePath = file.getAbsolutePath();
+		start(filePath);
 	}
 
 	public void stop() {

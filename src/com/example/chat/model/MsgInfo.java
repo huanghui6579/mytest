@@ -194,6 +194,7 @@ public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 	 * 	<li>Type.LOCATION -- 地理位置</li>
 	 * 	<li>Type.VCARD -- 名片</li>
 	 * 	<li>Type.FILE -- 文件</li>
+	 * 	<li>Type.VOICE -- 语音</li>
 	 * </ul>
 	 * @author huanghui1
 	 * @update 2014年10月28日 下午9:57:28
@@ -208,7 +209,8 @@ public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 		VIDEO,
 		LOCATION,
 		VCARD,
-		FILE;
+		FILE,
+		VOICE;
 		
 		/**
 		 * 将数字转换成Type
@@ -232,6 +234,8 @@ public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 				return VCARD;
 			case 6:
 				return FILE;
+			case 7:
+				return VOICE;
 			default:
 				return FILE;
 			}

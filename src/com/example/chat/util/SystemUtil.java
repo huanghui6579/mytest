@@ -1379,7 +1379,7 @@ public class SystemUtil {
 	 * @return
 	 */
 	public static String generateRecordFilename() {
-		return formatTime(System.currentTimeMillis(), "yyyy_MM_dd_HH_mm_ss") + new Random().nextInt(999999) + "amr";
+		return formatTime(System.currentTimeMillis(), "yyyy_MM_dd_HH_mm_ss") + new Random().nextInt(999999) + ".amr";
 	}
 	
 	/**
@@ -1736,6 +1736,32 @@ public class SystemUtil {
 			int minu = msec / unit;
 			int sec = msec % unit;
 			return decimalFormat.format(hor) + ":" + decimalFormat.format(minu) + ":" + decimalFormat.format(sec);
+		}
+	}
+	
+	/**
+	 * 将时间转换成字符串，如：12'23"
+	 * @update 2014年11月25日 下午5:11:03
+	 * @param secondTime 秒数
+	 * @return
+	 */
+	public static String shortTimeToString(int secondTime) {
+		String minuChar = "'";
+		String secChar = "\"";
+		int unit = 60;	//时间的单位为60
+		int hunit = 3600;	//小时的单位
+		if (secondTime < unit) {	//少于一分钟
+			return secondTime + secChar;
+		} else if (secondTime < hunit) {	//多余一分钟，但少于一个小时
+			int minu = secondTime / unit;
+			int sec = secondTime % unit;
+			return minu + minuChar + sec + secChar;
+		} else {	//大于一个小时
+			int hor = secondTime / hunit;
+			int msec = secondTime % hunit;
+			int minu = msec / unit;
+			int sec = msec % unit;
+			return hor + ":" + minu + minuChar + sec + secChar;
 		}
 	}
 }

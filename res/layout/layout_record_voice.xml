@@ -75,7 +75,6 @@
                 android:layout_height="75.0dip"
                 android:layout_marginTop="12.0dip"
                 android:contentDescription="@null"
-                android:background="@drawable/chat_record_voice_del_bg_selector"
                 android:src="@drawable/rcd_cancel_icon" />      
         </LinearLayout>
     </LinearLayout>

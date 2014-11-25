@@ -113,7 +113,6 @@
 	                android:background="@drawable/chat_btn_make_voice_selector"
 	                android:paddingTop="@dimen/chat_voice_btn_padding"
 	                android:paddingBottom="@dimen/chat_voice_btn_padding"
-	                android:clickable="true"
 	                android:gravity="center"
 	                android:visibility="gone"/>
 	        </FrameLayout>
