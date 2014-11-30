@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
@@ -21,7 +20,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.ContentObserver;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -258,6 +259,28 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 */
 	private boolean isShort;
 	
+	/**
+	 * 语音是否正在播放
+	 */
+	private boolean isPlaying = false;
+	/**
+	 * 当前播放语音的位置
+	 */
+	private int playingPosition = -1;
+	/**
+	 * 语音播放器
+	 */
+	private MediaPlayer mPlayer = null;
+	/**
+	 * 当前播放语音的view
+	 */
+	private TextView playingView;
+	private int playingType;
+	/**
+	 * 播放语音的动画
+	 */
+	private AnimationDrawable playingAnimation;
+	
 	private static final int POLL_INTERVAL = 300;
 	
 	private Handler mHandler = new Handler() {
@@ -360,8 +383,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	@Override
 	protected void initData() {
 		
-//		Intent service = new Intent(mContext, CoreService.class);
-//		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
+		Intent service = new Intent(mContext, CoreService.class);
+		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
 		
 		mSensor = new SoundMeter();
 		
@@ -425,7 +448,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	@Override
 	protected void onDestroy() {
 		//TODO 添加接触服务绑定
-//		unbindService(serviceConnection);
+		unbindService(serviceConnection);
 		unregisterReceiver(msgProcessReceiver);
 		super.onDestroy();
 	}
@@ -1508,7 +1531,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * @update 2014年10月29日 下午4:36:14
 	 */
 	class MsgAdapter extends CommonAdapter<MsgInfo> {
-		DisplayImageOptions options = SystemUtil.getChatImageOptions();
+		DisplayImageOptions headIconOptions = SystemUtil.getGeneralImageOptions();
+		DisplayImageOptions chatImageOptions = SystemUtil.getChatImageOptions();
 		
 		private static final int TYPE_OUT = 0;
 		private static final int TYPE_IN = 1;
@@ -1598,9 +1622,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				if (msgPart != null) {
 					String filePath = msgPart.getFilePath();
 					if (SystemUtil.isFileExists(filePath)) {
-						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent), options);
+						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent), chatImageOptions);
 					} else {
-						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent), options);
+						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent), chatImageOptions);
 					}
 				}
 				
@@ -1637,7 +1661,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 						holder.tvContent.setCompoundDrawablePadding(0);
 						holder.tvContent.setText("");
 						if (SystemUtil.isFileExists(partPath)) {
-							mImageLoader.displayImage(Scheme.FILE.wrap(partPath), new TextViewAware(holder.tvContent), options);
+							mImageLoader.displayImage(Scheme.FILE.wrap(partPath), new TextViewAware(holder.tvContent), chatImageOptions);
 						}
 						break;
 					case APK:	//安装文件
@@ -1659,9 +1683,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				//显示自己的头像
 				String iconPath = mine.getIconPath();
 				if (SystemUtil.isFileExists(iconPath)) {
-					mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, options);
+					mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, headIconOptions);
 				} else {
-					mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+					mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
 				}
 				
 				switch (msgInfo.getSendState()) {
@@ -1689,12 +1713,12 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				if (otherVcard != null) {
 					String iconPath = otherVcard.getIconPath();
 					if (SystemUtil.isFileExists(iconPath)) {
-						mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, options);
+						mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, headIconOptions);
 					} else {
-						mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+						mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
 					}
 	 			} else {
-	 				mImageLoader.displayImage(null, holder.ivHeadIcon, options);
+	 				mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
 	 			}
 				
 				holder.ivMsgState.setVisibility(View.GONE);

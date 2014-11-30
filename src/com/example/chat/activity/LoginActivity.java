@@ -3,11 +3,13 @@ package com.example.chat.activity;
 import java.io.IOException;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.AlreadyLoggedInException;
 import org.jivesoftware.smack.SmackException.ConnectionException;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
 
 import com.example.chat.R;
 import com.example.chat.model.SystemConfig;
@@ -264,6 +266,11 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.connect();
 			connection.login(account, password, Constants.CLIENT_RESOURCE);
+			Presence presence = new Presence(Presence.Type.available);
+			presence.setStatus("聊天中");
+			presence.setPriority(1);
+			presence.setMode(Presence.Mode.chat);
+			connection.sendPacket(presence);
 			code = Constants.MSG_SUCCESS;
 		} catch (SmackException e) {
 			if (e instanceof ConnectionException) {	//连接地址不可用
