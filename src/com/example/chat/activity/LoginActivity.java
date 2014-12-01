@@ -3,20 +3,12 @@ package com.example.chat.activity;
 import java.io.IOException;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.AlreadyLoggedInException;
 import org.jivesoftware.smack.SmackException.ConnectionException;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
-
-import com.example.chat.R;
-import com.example.chat.model.SystemConfig;
-import com.example.chat.util.Constants;
-import com.example.chat.util.Log;
-import com.example.chat.util.SystemUtil;
-import com.example.chat.util.XmppConnectionManager;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -32,6 +24,13 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.chat.R;
+import com.example.chat.model.SystemConfig;
+import com.example.chat.util.Constants;
+import com.example.chat.util.Log;
+import com.example.chat.util.SystemUtil;
+import com.example.chat.util.XmppConnectionManager;
 
 /**
  * 登录主界面

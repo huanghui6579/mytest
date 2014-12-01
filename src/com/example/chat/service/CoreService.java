@@ -48,6 +48,7 @@ import android.text.TextUtils;
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.activity.ChatActivity;
+import com.example.chat.activity.UserInfoActivity;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
@@ -612,104 +613,139 @@ public class CoreService extends Service {
 
 			 */
 			switch (type) {
-			case subscribe:	//添加好友的申请
-				NewFriendInfo newInfo = new NewFriendInfo();
+			case subscribe:	//添加好友的申请(对方发出添加我为好友的消息)
 				String from = SystemUtil.unwrapJid(presence.getFrom());
 				String to = SystemUtil.unwrapJid(presence.getTo());
-				newInfo.setFriendStatus(FriendStatus.ACCEPT);
-				newInfo.setFrom(from);
-				newInfo.setTo(to);
-				newInfo.setTitle(from);
-				newInfo.setContent(getString(R.string.contact_friend_add_request));
-				newInfo.setCreationDate(System.currentTimeMillis());
-				if (!isEmpty) {
-					String hash = null;
-					for (PacketExtension packetExtension : extensions) {
-						if (packetExtension instanceof DefaultPacketExtension) {
-							DefaultPacketExtension defaultPacketExtension = (DefaultPacketExtension) packetExtension;
-							Collection<String> names = defaultPacketExtension.getNames();
-							if (names.contains("hash")) {
-								hash = defaultPacketExtension.getValue("hash");
-							}
-							
+				
+				//查找数据库是否有我主动请求添加对方为好友的信息
+				NewFriendInfo newInfo = userManager.getNewFriendInfoByAccounts(to, from);
+				//自己主动添加对方为好友，此时，对方同意了，并且添加我为好友，则自己直接同意并添加对方为好友
+				if (newInfo != null && newInfo.getFriendStatus() == FriendStatus.VERIFYING) {
+					
+					try {
+						
+						XmppUtil.acceptFriend(connection, presence.getFrom());
+						
+						//修改状态为“已添加”
+						newInfo.setFriendStatus(FriendStatus.ADDED);
+						//将该好友添加至本地数据库
+						User user = newInfo.getUser();
+						if (user == null) {
+							user = new User();
+							user.setUsername(from);
+							newInfo.setUser(user);
 						}
+						user.setFullPinyin(user.initFullPinyin());
+						user.setShortPinyin(user.initShortPinyin());
+						user.setSortLetter(user.initSortLetter(user.getShortPinyin()));
+						userManager.saveOrUpdateNewFriendInfo(newInfo);
+						userManager.saveOrUpdateFriend(user);
+						
+						//通知好友列表更新好友
+						Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_ADD);
+						intent.putExtra(UserInfoActivity.ARG_USER, user);
+						sendBroadcast(intent);
+					} catch (NotConnectedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					if (!TextUtils.isEmpty(hash)) {	//有图像
-						//根据对方用户账号查询本地的图片
-						File icon = SystemUtil.generateIconFile(from);
-						String savePath = icon.getAbsolutePath();
-						boolean needSave = false;	//是否需要保存图像
-						if (icon.exists()) {	//文件已经存在，则判断hash，看是否需要更新图像
-							String oldHash = SystemUtil.getFileHash(icon);
-							if (!oldHash.equals(hash)) {	//需要更新图像
+					
+				} else {	//只是别人主动添加请求添加我为好友
+					newInfo = new NewFriendInfo();
+					newInfo.setFriendStatus(FriendStatus.ACCEPT);
+					newInfo.setFrom(from);
+					newInfo.setTo(to);
+					newInfo.setTitle(to);
+					newInfo.setContent(getString(R.string.contact_friend_add_request));
+					newInfo.setCreationDate(System.currentTimeMillis());
+					if (!isEmpty) {
+						String hash = null;
+						for (PacketExtension packetExtension : extensions) {
+							if (packetExtension instanceof DefaultPacketExtension) {
+								DefaultPacketExtension defaultPacketExtension = (DefaultPacketExtension) packetExtension;
+								Collection<String> names = defaultPacketExtension.getNames();
+								if (names.contains("hash")) {
+									hash = defaultPacketExtension.getValue("hash");
+								}
+								
+							}
+						}
+						if (!TextUtils.isEmpty(hash)) {	//有图像
+							//根据对方用户账号查询本地的图片
+							File icon = SystemUtil.generateIconFile(from);
+							String savePath = icon.getAbsolutePath();
+							boolean needSave = false;	//是否需要保存图像
+							if (icon.exists()) {	//文件已经存在，则判断hash，看是否需要更新图像
+								String oldHash = SystemUtil.getFileHash(icon);
+								if (!oldHash.equals(hash)) {	//需要更新图像
+									needSave = true;
+								}
+							} else {	//图像不存在，则存储到储存卡里
 								needSave = true;
-							}
-						} else {	//图像不存在，则存储到储存卡里
-							needSave = true;
-							savePath = null;
-						}
-						if (needSave) {
-							HeadIcon headIcon = XmppUtil.downloadUserIcon(connection, from);
-							if (headIcon != null) {	//图像获取成功
-								savePath = headIcon.getFilePath();
-								hash = headIcon.getHash();
-							} else {
 								savePath = null;
-								hash = null;
 							}
+							if (needSave) {
+								HeadIcon headIcon = XmppUtil.downloadUserIcon(connection, from);
+								if (headIcon != null) {	//图像获取成功
+									savePath = headIcon.getFilePath();
+									hash = headIcon.getHash();
+								} else {
+									savePath = null;
+									hash = null;
+								}
+							}
+							newInfo.setIconHash(hash);
+							newInfo.setIconPath(savePath);
 						}
-						newInfo.setIconHash(hash);
-						newInfo.setIconPath(savePath);
 					}
-				}
-				//查看本地是否有该好友，对方此时没有好友我
-				User user = userManager.getUserByUsername(from);
-				if (user != null) {	//如果存在本地好友
-					UserVcard uCrad = user.getUserVcard();
-					String fIconHash = newInfo.getIconHash();
-					String fIconPath = newInfo.getIconPath();
-					String uIconHash = null;
-					boolean neddUpdate = false;
-					if (uCrad != null) {	//本地好友有名片信息
-						uIconHash = uCrad.getIconHash();
-						if (!TextUtils.isEmpty(fIconPath)) {	//对方有头像信息
-							if (TextUtils.isEmpty(uIconHash) || !fIconPath.equals(uIconHash)) {	//此时本地好友没有头像信息，或者头像没有更细下来
-								//本地好友有头像信息，但需要对比一下头像是否已经改变，如果改变，则需要更新
-								uIconHash = fIconHash;
-								uCrad.setIconHash(uIconHash);
-								uCrad.setIconHash(fIconPath);
+					//查看本地是否有该好友，对方此时没有好友我
+					User user = userManager.getUserByUsername(from);
+					if (user != null) {	//如果存在本地好友
+						UserVcard uCrad = user.getUserVcard();
+						String fIconHash = newInfo.getIconHash();
+						String fIconPath = newInfo.getIconPath();
+						String uIconHash = null;
+						boolean neddUpdate = false;
+						if (uCrad != null) {	//本地好友有名片信息
+							uIconHash = uCrad.getIconHash();
+							if (!TextUtils.isEmpty(fIconPath)) {	//对方有头像信息
+								if (TextUtils.isEmpty(uIconHash) || !fIconPath.equals(uIconHash)) {	//此时本地好友没有头像信息，或者头像没有更细下来
+									//本地好友有头像信息，但需要对比一下头像是否已经改变，如果改变，则需要更新
+									uIconHash = fIconHash;
+									uCrad.setIconHash(uIconHash);
+									uCrad.setIconHash(fIconPath);
+									neddUpdate = true;
+								}
+							} else {	//对方没有头像
+								if (!TextUtils.isEmpty(uIconHash)) {	//但本地有头像，更新本地头像
+									String uIconPath = uCrad.getIconPath();
+									uIconHash = null;
+									uCrad.setIconHash(null);
+									uCrad.setIconPath(null);
+									//删除本地图像
+									SystemUtil.deleteFile(uIconPath);
+									neddUpdate = true;
+								}
+							}
+						} else {	//本地好友没有名片，则新建名片
+							if (!TextUtils.isEmpty(fIconHash)) {	//对方有图像
+								uCrad = new UserVcard();
+								uCrad.setIconHash(fIconHash);
+								uCrad.setIconPath(fIconPath);
+								user.setUserVcard(uCrad);
 								neddUpdate = true;
 							}
-						} else {	//对方没有头像
-							if (!TextUtils.isEmpty(uIconHash)) {	//但本地有头像，更新本地头像
-								String uIconPath = uCrad.getIconPath();
-								uIconHash = null;
-								uCrad.setIconHash(null);
-								uCrad.setIconPath(null);
-								//删除本地图像
-								SystemUtil.deleteFile(uIconPath);
-								neddUpdate = true;
-							}
 						}
-					} else {	//本地好友没有名片，则新建名片
-						if (!TextUtils.isEmpty(fIconHash)) {	//对方有图像
-							uCrad = new UserVcard();
-							uCrad.setIconHash(fIconHash);
-							uCrad.setIconPath(fIconPath);
-							user.setUserVcard(uCrad);
-							neddUpdate = true;
+						if (neddUpdate) {
+							user = userManager.updateSimpleUser(user);
 						}
+						newInfo.setUser(user);
+						newInfo.setContent(user.getName());
 					}
-					if (neddUpdate) {
-						user = userManager.updateSimpleUser(user);
-					}
-					newInfo.setUser(user);
-					newInfo.setContent(user.getName());
+					//如果本地有该好友，则看要不要更新头像
+					newInfo = userManager.saveOrUpdateNewFriendInfo(newInfo);
 				}
-				//如果本地有该好友，则看要不要更新头像
-				newInfo = userManager.saveOrUpdateNewFriendInfo(newInfo);
 				break;
-
 			default:
 				break;
 			}

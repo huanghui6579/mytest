@@ -89,6 +89,7 @@
     <string name="contact_list_content_delete_prompt">确定删除“%1$s”吗？</string>
     
     <string name="contact_friend_add_request">对方请求添加你为朋友</string>
+    <string name="contact_friend_add_target_request">请求添加对方为好友</string>
     
     <string name="chat_msg_edit_hint">请输入内容</string>
     <string name="chat_btn_make_voice_start">按住 说话</string>

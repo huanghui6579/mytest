@@ -10,8 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.example.chat.ChatApplication;
-
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -33,6 +31,8 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+
+import com.example.chat.ChatApplication;
 
 public class ImageUtil {
 	/**

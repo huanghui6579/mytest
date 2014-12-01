@@ -3,9 +3,6 @@ package com.example.chat.provider;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.example.chat.db.DatabaseHelper;
-import com.example.chat.util.Log;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -15,6 +12,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+
+import com.example.chat.db.DatabaseHelper;
+import com.example.chat.util.Log;
 
 /**
  * 消息的内容提供者

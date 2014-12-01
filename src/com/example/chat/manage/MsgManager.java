@@ -21,13 +21,13 @@ import android.view.View;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.model.Album;
+import com.example.chat.model.AudioItem;
 import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgThread;
-import com.example.chat.model.AudioItem;
 import com.example.chat.model.PhotoItem;
 import com.example.chat.model.User;
 import com.example.chat.provider.Provider;

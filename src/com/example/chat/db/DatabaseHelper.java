@@ -1,10 +1,10 @@
 package com.example.chat.db;
 
-import com.example.chat.provider.Provider;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.example.chat.provider.Provider;
 
 /**
  * 数据库创建

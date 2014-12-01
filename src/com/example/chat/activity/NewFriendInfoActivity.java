@@ -1,7 +1,6 @@
 package com.example.chat.activity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,12 +20,12 @@ import android.os.Message;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
@@ -41,7 +40,6 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.NewFriendInfo;
 import com.example.chat.model.NewFriendInfo.FriendStatus;
-import com.example.chat.model.MsgThread;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
@@ -261,7 +259,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 					
 					@Override
 					public void onClick(View v) {
-						//接受对方添加自己为好友
+						//接受对方添加自己为好友,并且也将对方添加为自己的好友
 						pDialog = ProgressDialog.show(context, null, getString(R.string.loading), false, true);
 						SystemUtil.getCachedThreadPool().execute(new Runnable() {
 							
@@ -270,7 +268,9 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 								Message msg = mHandler.obtainMessage();
 								AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 								try {
-									XmppUtil.acceptFriend(connection, SystemUtil.wrapJid(newInfo.getFrom()));
+									String otherJid = SystemUtil.wrapJid(newInfo.getFrom());
+									XmppUtil.acceptFriend(connection, otherJid);
+									XmppUtil.addFriend(connection, otherJid);
 									//添加该好友
 									User user = XmppUtil.getUserEntry(connection, newInfo.getFrom());
 									if (user != null) {

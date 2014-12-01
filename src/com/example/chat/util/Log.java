@@ -15,12 +15,12 @@
  */
 package com.example.chat.util;
 
-import android.text.TextUtils;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
+
+import android.text.TextUtils;
 
 /**
  * Wrapper API for sending log output <BR />

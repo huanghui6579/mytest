@@ -2,12 +2,12 @@ package com.example.chat.loader;
 
 import java.util.List;
 
+import android.content.Context;
+import android.support.v4.content.AsyncTaskLoader;
+
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AudioItem;
 import com.example.chat.util.SystemUtil;
-
-import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
 
 /**
  * 加载音乐文件列表

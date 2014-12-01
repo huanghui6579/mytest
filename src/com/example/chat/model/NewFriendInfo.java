@@ -92,7 +92,7 @@ public class NewFriendInfo implements Comparator<NewFriendInfo> {
 		VERIFYING {
 			@Override
 			public String getTitle() {
-				return ChatApplication.getInstance().getString(R.string.contact_new_friend_status_title_added);
+				return ChatApplication.getInstance().getString(R.string.contact_new_friend_status_title_verifying);
 			}
 		},
 		/**

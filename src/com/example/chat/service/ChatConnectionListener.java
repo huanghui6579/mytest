@@ -14,7 +14,6 @@ import org.jivesoftware.smack.XMPPException;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.model.SystemConfig;
-import com.example.chat.util.Constants;
 import com.example.chat.util.XmppConnectionManager;
 
 /**

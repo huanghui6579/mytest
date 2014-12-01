@@ -3,13 +3,13 @@ package com.example.chat.model;
 import java.util.Comparator;
 import java.util.Locale;
 
-import com.example.chat.util.Constants;
-
 import opensource.jpinyin.PinyinFormat;
 import opensource.jpinyin.PinyinHelper;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+
+import com.example.chat.util.Constants;
 
 /**
  * 用户实体
@@ -298,6 +298,7 @@ public class User implements Parcelable, Comparator<User> {
 		dest.writeString(mode);
 		dest.writeString(fullPinyin);
 		dest.writeString(shortPinyin);
+		dest.writeString(sortLetter);
 		dest.writeParcelable(userVcard, flags);
 	}
 	
@@ -313,6 +314,7 @@ public class User implements Parcelable, Comparator<User> {
 		mode = in.readString();
 		fullPinyin = in.readString();
 		shortPinyin = in.readString();
+		sortLetter = in.readString();
 		userVcard = in.readParcelable(UserVcard.class.getClassLoader());
 	}
 	

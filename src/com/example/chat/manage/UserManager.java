@@ -225,9 +225,9 @@ public class UserManager {
 					if (msgThread != null) {	//有会话
 						msgManager.deleteMsgThreadById(msgThread.getId());
 					}
-					flag = true;
 				}
 			}
+			flag = true;
 		}
 		return flag;
 	}
@@ -694,7 +694,7 @@ public class UserManager {
 	}
 	
 	/**
-	 * 根据新的新的朋友信息id获得其详细信息
+	 * 根据新的朋友信息id获得其详细信息
 	 * @update 2014年11月10日 下午10:04:20
 	 * @param from
 	 * @param to

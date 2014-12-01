@@ -15,11 +15,16 @@
  */
 package com.example.chat.util;
 
-import android.text.TextUtils;
-import android.util.Log;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import android.text.TextUtils;
+import android.util.Log;
 
 /**
  * Write the Log to the file

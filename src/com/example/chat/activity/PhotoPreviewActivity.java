@@ -1,12 +1,10 @@
 package com.example.chat.activity;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -26,16 +24,9 @@ import com.example.chat.R;
 import com.example.chat.fragment.PhotoFragment;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.MsgInfo;
-import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
 import com.example.chat.util.Constants;
-import com.example.chat.util.Log;
 import com.example.chat.util.SystemUtil;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
-import com.nostra13.universalimageloader.utils.DiskCacheUtils;
-import com.nostra13.universalimageloader.utils.MemoryCacheUtils;
 
 /**
  * 相片预览容器

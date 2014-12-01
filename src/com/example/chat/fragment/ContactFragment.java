@@ -60,7 +60,6 @@ import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
  * @update 2014年10月8日 下午7:44:40
  */
 public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
-	
 	private ListView lvContact;
 	private TextView tvIndexDialog;
 	private SideBar sideBar;
@@ -321,6 +320,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_LIST);
 		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
+		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_ADD);
 		mContext.registerReceiver(loadDataReceiver, filter);
 		
 		//初始化数据
@@ -555,6 +555,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	public class LoadDataBroadcastReceiver extends BroadcastReceiver {
 		public static final String ACTION_USER_LIST = "com.example.chat.USER_LIST_RECEIVER";
 		public static final String ACTION_USER_INFOS = "com.example.chat.USER_INFOS_RECEIVER";
+		public static final String ACTION_USER_ADD = "com.example.chat.USER_ADD_RECEIVER";
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -568,7 +569,18 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 						new LoadDataTask().execute();
 					}
 					break;
-				
+				case ACTION_USER_ADD:	//列表中添加一个好友信息
+					User user = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
+					if (user != null) {
+						mUsers.add(user);
+						if (mAdapter == null) {
+							mAdapter= new ContactAdapter(mUsers, mContext);
+							lvContact.setAdapter(mAdapter);
+						} else {
+							mAdapter.notifyDataSetChanged();
+						}
+					}
+					break;
 				default:
 					break;
 				}

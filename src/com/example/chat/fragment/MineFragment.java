@@ -1,11 +1,11 @@
 package com.example.chat.fragment;
 
-import com.example.chat.R;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.example.chat.R;
 
 /**
  * "我"的fragment界面，包含有个人信息，设置等

@@ -8,7 +8,6 @@ import java.util.List;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
@@ -293,6 +292,19 @@ public class XmppUtil {
 	}
 	
 	/**
+	 * 将对方从好友列表中删除
+	 * @update 2014年12月1日 上午9:53:41
+	 * @param connection
+	 * @param toUser
+	 * @throws NotConnectedException
+	 */
+	public static void removeFriend(AbstractXMPPConnection connection, String toUser) throws NotConnectedException {
+		Presence presence = new Presence(Presence.Type.unavailable);
+		presence.setTo(toUser);
+		connection.sendPacket(presence);
+	}
+	
+	/**
 	 * 根据用户账号获得用户基本信息
 	 * @update 2014年11月12日 下午3:39:01
 	 * @param connection
@@ -330,6 +342,9 @@ public class XmppUtil {
 	 */
 	public static boolean deleteUser(AbstractXMPPConnection connection, String username) {
 		Roster roster = connection.getRoster();
+		if (roster == null) {	//已经没有改好友了
+			return true;
+		}
 		RosterEntry rosterEntry = roster.getEntry(SystemUtil.wrapJid(username));
 		boolean flag = false;
 		try {

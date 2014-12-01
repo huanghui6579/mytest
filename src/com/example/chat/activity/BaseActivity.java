@@ -1,8 +1,5 @@
 package com.example.chat.activity;
 
-import com.example.chat.ChatApplication;
-import com.example.chat.util.Constants;
-
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -10,6 +7,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
+
+import com.example.chat.ChatApplication;
+import com.example.chat.util.Constants;
 
 /**
  * 所有Activity的父类

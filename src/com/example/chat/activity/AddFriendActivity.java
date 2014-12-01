@@ -5,13 +5,11 @@ import java.util.List;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
@@ -28,7 +26,6 @@ import android.widget.TextView;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
-import com.example.chat.activity.UserInfoActivity.LoadVcardTask;
 import com.example.chat.manage.UserManager;
 import com.example.chat.model.User;
 import com.example.chat.util.Constants;

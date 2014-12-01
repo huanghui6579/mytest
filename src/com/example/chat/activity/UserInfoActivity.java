@@ -22,6 +22,8 @@ import android.widget.TextView;
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.manage.UserManager;
+import com.example.chat.model.NewFriendInfo;
+import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
@@ -252,6 +254,27 @@ public class UserInfoActivity extends BaseActivity {
 							Message msg = mHandler.obtainMessage();
 							try {
 								XmppUtil.addFriend(XmppConnectionManager.getInstance().getConnection(), user.getJID());
+								
+								//添加新的好友信息到本地数据库
+								NewFriendInfo newInfo = new NewFriendInfo();
+								String from = ChatApplication.getInstance().getCurrentAccount();
+								String to = SystemUtil.unwrapJid(user.getJID());
+								newInfo.setFriendStatus(FriendStatus.VERIFYING);
+								newInfo.setFrom(from);
+								newInfo.setTo(to);
+								newInfo.setTitle(from);
+								newInfo.setContent(getString(R.string.contact_friend_add_target_request));
+								newInfo.setCreationDate(System.currentTimeMillis());
+								newInfo.setUser(user);
+								UserVcard uCard = user.getUserVcard();
+								if (uCard != null) {
+									String iconPath = uCard.getIconPath();
+									if (!TextUtils.isEmpty(iconPath)) {
+										newInfo.setIconPath(iconPath);
+										newInfo.setIconHash(uCard.getIconHash());
+									}
+								}
+								userManager.addNewFriendInfo(newInfo);
 								msg.what = Constants.MSG_SEND_ADD_FRIEND_REQUEST;
 							} catch (NotConnectedException e) {
 								e.printStackTrace();
