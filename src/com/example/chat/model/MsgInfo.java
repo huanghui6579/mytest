@@ -23,11 +23,11 @@ public class MsgInfo implements Comparator<MsgInfo>, Parcelable, Cloneable {
 	 */
 	private int threadID;
 	/**
-	 * 发送人用户名
+	 * 发送人的fullJID，格式为：xxx@domain.com/resource
 	 */
 	private String fromUser;
 	/**
-	 * 收件人用户名
+	 * 收件人的fullJID，格式为：xxx@domain.com/resource
 	 */
 	private String toUser;
 	/**

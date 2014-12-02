@@ -5,11 +5,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.jivesoftware.smack.packet.Presence;
+import org.jxmpp.util.XmppStringUtils;
+
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.model.MsgThread;
@@ -112,6 +116,59 @@ public class UserManager {
 	public boolean clearFriends() {
 		int count = mContext.getContentResolver().delete(Provider.UserColumns.CONTENT_URI, null, null);
 		return count > 0;
+	}
+	
+	/**
+	 * 更新用户的状态
+	 * @update 2014年12月2日 上午11:22:58
+	 * @param presence
+	 * @return
+	 */
+	public User updateUserPresence(Presence presence) {
+		String from = presence.getFrom();
+		//用户名，不含有"@及其之后的字符串"
+		String username = XmppStringUtils.parseLocalpart(from);
+		//用户使用的资源名（用什么设备登录的）
+		String resource = XmppStringUtils.parseResource(from);
+		String status = presence.getStatus();
+		//用户在线的状态，如“chat、away等”
+		Presence.Mode mode = presence.getMode();
+		User user = new User();
+		user.setUsername(username);
+		user.setResource(resource);
+		user.setStatus(status);
+		if (mode == null) {//默认是在线
+			mode = Presence.Mode.available;
+		}
+		user.setMode(mode.name());;
+		user = updateFriendStatus(user);
+		return user;
+	}
+	
+	/**
+	 * 根据用户名来更新用户的在线状态信息
+	 * @update 2014年12月2日 上午11:10:50
+	 * @param username
+	 * @return
+	 */
+	public User updateFriendStatus(User user) {
+		if (user == null) {
+			return null;
+		}
+		String username = user.getUsername();
+		if (TextUtils.isEmpty(username)) {
+			return null;
+		}
+		User u = getUserByUsername(username);
+		if (u == null) {
+			return null;
+		}
+		u.setMode(user.getMode());
+		u.setResource(user.getResource());
+		u.setStatus(user.getStatus());
+		ContentValues userVaules = initUserPresenceContentVaules(u);
+		mContext.getContentResolver().update(Uri.withAppendedPath(Provider.UserColumns.CONTENT_URI, String.valueOf(u.getId())), userVaules, null, null);
+		return u;
 	}
 	
 	/**
@@ -289,12 +346,35 @@ public class UserManager {
 		userVaules.put(Provider.UserColumns.NICKNAME, user.getNickname());
 		userVaules.put(Provider.UserColumns.EMAIL, user.getEmail());
 		userVaules.put(Provider.UserColumns.PHONE, user.getPhone());
-		userVaules.put(Provider.UserColumns.RESOURCE, user.getResource());
-		userVaules.put(Provider.UserColumns.STATUS, user.getStatus());
-		userVaules.put(Provider.UserColumns.MODE, user.getMode());
+		String resource = user.getResource();
+		if (!TextUtils.isEmpty(resource)) {
+			userVaules.put(Provider.UserColumns.RESOURCE, resource);
+		}
+		String status = user.getStatus();
+		if (!TextUtils.isEmpty(status)) {
+			userVaules.put(Provider.UserColumns.STATUS, status);
+		}
+		String mode = user.getMode();
+		if (!TextUtils.isEmpty(mode)) {
+			userVaules.put(Provider.UserColumns.MODE, mode);
+		}
 		userVaules.put(Provider.UserColumns.FULLPINYIN, user.getFullPinyin());
 		userVaules.put(Provider.UserColumns.SHORTPINYIN, user.getShortPinyin());
 		userVaules.put(Provider.UserColumns.SORTLETTER, user.getSortLetter());
+		return userVaules;
+	}
+	
+	/**
+	 * 初始化用户在线状态的信息
+	 * @update 2014年12月2日 上午11:18:36
+	 * @param user
+	 * @return
+	 */
+	private ContentValues initUserPresenceContentVaules(User user) {
+		ContentValues userVaules = new ContentValues();
+		userVaules.put(Provider.UserColumns.RESOURCE, user.getResource());
+		userVaules.put(Provider.UserColumns.STATUS, user.getStatus());
+		userVaules.put(Provider.UserColumns.MODE, user.getMode());
 		return userVaules;
 	}
 	
@@ -331,6 +411,7 @@ public class UserManager {
 		String[] projection = {
 				Provider.UserColumns.USERNAME,
 				Provider.UserColumns.NICKNAME,
+				Provider.UserColumns.RESOURCE
 		};
 		Cursor cursor = mContext.getContentResolver().query(Provider.UserColumns.CONTENT_URI, projection, Provider.UserColumns._ID + " = ?", new String[] {String.valueOf(userId)}, null);
 		if (cursor != null && cursor.moveToFirst()) {
@@ -338,6 +419,7 @@ public class UserManager {
 			user.setId(userId);
 			user.setUsername(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.USERNAME)));
 			user.setNickname(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.NICKNAME)));
+			user.setResource(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.RESOURCE)));
 			
 			UserVcard uCard = getSimpleUserVcardByUserId(userId);
 			
@@ -360,6 +442,7 @@ public class UserManager {
 		String[] projection = {
 				Provider.UserColumns._ID,
 				Provider.UserColumns.NICKNAME,
+				Provider.UserColumns.RESOURCE
 		};
 		Cursor cursor = mContext.getContentResolver().query(Provider.UserColumns.CONTENT_URI, projection, Provider.UserColumns.USERNAME + " = ?", new String[] {username}, null);
 		if (cursor != null && cursor.moveToFirst()) {
@@ -367,6 +450,7 @@ public class UserManager {
 			user.setId(cursor.getInt(cursor.getColumnIndex(Provider.UserColumns._ID)));
 			user.setUsername(username);
 			user.setNickname(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.NICKNAME)));
+			user.setResource(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.RESOURCE)));
 			
 			UserVcard uCard = getSimpleUserVcardByUserId(user.getId());
 			
@@ -479,7 +563,8 @@ public class UserManager {
 				Provider.UserColumns._ID,
 				Provider.UserColumns.NICKNAME,
 				Provider.UserColumns.EMAIL,
-				Provider.UserColumns.PHONE
+				Provider.UserColumns.PHONE,
+				Provider.UserColumns.RESOURCE,
 		};
 		Cursor cursor = mContext.getContentResolver().query(Provider.UserColumns.CONTENT_URI, projection, Provider.UserColumns.USERNAME + " = ?", new String[] {username}, null);
 		if (cursor != null && cursor.moveToFirst()) {	//能够给加载到本地好友的数据
@@ -489,6 +574,7 @@ public class UserManager {
 			user.setNickname(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.NICKNAME)));
 			user.setPhone(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.PHONE)));
 			user.setEmail(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.EMAIL)));
+			user.setResource(cursor.getString(cursor.getColumnIndex(Provider.UserColumns.RESOURCE)));
 			user.setJID(user.initJID(user.getUsername()));
 			
 			//加载好友的本地电子名片
@@ -530,7 +616,7 @@ public class UserManager {
 	 * @param temp
 	 * @return
 	 */
-	public Personal getLocalSelftInfo(Personal person) {
+	public Personal getLocalSelfInfo(Personal person) {
 		Personal temp = null;
 		Cursor cursor = mContext.getContentResolver().query(Provider.PersonalColums.CONTENT_URI, null, Provider.PersonalColums.USERNAME + " = ?", new String[] {person.getUsername()}, null);
 		if (cursor != null && cursor.moveToFirst()) {

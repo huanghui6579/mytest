@@ -94,8 +94,6 @@ public class XmppUtil {
 			for (RosterEntry entry : entries) {
 				User user = new User();
 				String jid = entry.getUser();
-				ItemStatus status = entry.getStatus();
-				String mode = status == null ? "" : status.name();
 				String name = entry.getName();
 				if (jid.contains("/")) {
 					String[] arr = jid.split("/");
@@ -108,7 +106,6 @@ public class XmppUtil {
 				String username = SystemUtil.unwrapJid(jid);
 				user.setNickname(name);
 				user.setUsername(username);
-				user.setMode(mode);
 				user.setFullPinyin(user.initFullPinyin());
 				user.setShortPinyin(user.initShortPinyin());
 				user.setSortLetter(user.initSortLetter(user.getShortPinyin()));

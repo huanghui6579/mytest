@@ -290,6 +290,7 @@ public class UserInfoActivity extends BaseActivity {
 					arg.setId(user.getId());
 					arg.setUsername(user.getUsername());
 					arg.setNickname(user.getNickname());
+					arg.setResource(user.getResource());
 					arg.setUserVcard(user.getUserVcard());
 					intent.putExtra(ARG_USER, arg);
 					startActivity(intent);

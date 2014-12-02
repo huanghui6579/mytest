@@ -12,6 +12,7 @@ import java.util.Locale;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jxmpp.util.XmppStringUtils;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -708,8 +709,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				AttachItem attachItem = mAttachItems.get(position);
 				MsgInfo msgInfo = new MsgInfo();
 				msgInfo.setComming(false);
-				msgInfo.setFromUser(mine.getUsername());
-				msgInfo.setToUser(otherSide.getUsername());
+				msgInfo.setFromUser(mine.getFullJID());
+				msgInfo.setToUser(otherSide.getFullJid());
 				msgInfo.setRead(true);
 				msgInfo.setSendState(MsgInfo.SendState.SENDING);
 				msgInfo.setThreadID(msgThread.getId());
@@ -891,8 +892,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 						
 						MsgInfo msgInfo = new MsgInfo();
 						msgInfo.setComming(false);
-						msgInfo.setFromUser(mine.getUsername());
-						msgInfo.setToUser(otherSide.getUsername());
+						msgInfo.setFromUser(mine.getFullJID());
+						msgInfo.setToUser(otherSide.getFullJid());
 						msgInfo.setContent(SystemUtil.shortTimeToString(time));
 						msgInfo.setRead(true);
 						msgInfo.setSendState(MsgInfo.SendState.SENDING);
@@ -1334,8 +1335,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		msg.setCreationDate(System.currentTimeMillis());
 		msg.setContent(content);
 		msg.setSendState(SendState.SENDING);
-		msg.setFromUser(otherSide.getUsername());
-		msg.setToUser(mine.getUsername());
+		msg.setFromUser(otherSide.getFullJid());
+		msg.setToUser(mine.getFullJID());
 		msg.setMsgType(Type.TEXT);
 		msg.setRead(true);
 		msg.setMsgPart(null);

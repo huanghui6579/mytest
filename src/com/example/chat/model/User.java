@@ -3,6 +3,8 @@ package com.example.chat.model;
 import java.util.Comparator;
 import java.util.Locale;
 
+import org.jxmpp.util.XmppStringUtils;
+
 import opensource.jpinyin.PinyinFormat;
 import opensource.jpinyin.PinyinHelper;
 import android.os.Parcel;
@@ -278,6 +280,15 @@ public class User implements Parcelable, Comparator<User> {
 	 */
 	public String initJID(String username) {
 		return username + "@" + Constants.SERVER_NAME;
+	}
+	
+	/**
+	 * 获取该好友的全jid,格式为:xxx@domain.com/resource
+	 * @update 2014年12月2日 下午3:11:31
+	 * @return
+	 */
+	public String getFullJid() {
+		return XmppStringUtils.completeJidFrom(username, Constants.SERVER_NAME, resource);
 	}
 	
 	@Override

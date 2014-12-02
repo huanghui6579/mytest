@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.model.SystemConfig;
 import com.example.chat.util.Constants;
@@ -265,6 +266,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 			connection.connect();
 			connection.login(account, password, Constants.CLIENT_RESOURCE);
+			ChatApplication.getInstance().setCurrentAccount(account);
 			Presence presence = new Presence(Presence.Type.available);
 			presence.setStatus("聊天中");
 			presence.setPriority(1);

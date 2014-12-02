@@ -1,6 +1,6 @@
 package com.example.chat.model;
 
-import android.text.TextUtils;
+import org.jxmpp.util.XmppStringUtils;
 
 import com.example.chat.util.Constants;
 
@@ -224,10 +224,11 @@ public class Personal {
 	}
 
 	public String getFullJID() {
-		if (TextUtils.isEmpty(resource)) {
+		/*if (TextUtils.isEmpty(resource)) {
 			return getJID();
 		} else {
 			return getJID() + "/" + resource;
-		}
+		}*/
+		return XmppStringUtils.completeJidFrom(username, Constants.SERVER_NAME, resource);
 	}
 }

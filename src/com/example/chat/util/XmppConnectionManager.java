@@ -10,9 +10,19 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.filter.AndFilter;
+import org.jivesoftware.smack.filter.FromMatchesFilter;
+import org.jivesoftware.smack.filter.NotFilter;
+import org.jivesoftware.smack.filter.OrFilter;
+import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.filter.PacketTypeFilter;
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smackx.debugger.android.AndroidDebugger;
 
+import com.example.chat.listener.ChatConnectionListener;
+import com.example.chat.listener.ChatPacketListener;
 import com.example.chat.model.SystemConfig;
 
 /**
@@ -58,6 +68,12 @@ public class XmppConnectionManager {
 		Roster.setDefaultSubscriptionMode(SubscriptionMode.manual);
 		connection = new XMPPTCPConnection(configuration);
 		connection.setPacketReplyTimeout(10000);
+		
+		//添加监听器
+		connection.addConnectionListener(new ChatConnectionListener());
+		PacketFilter packetFilter = new OrFilter(new PacketTypeFilter(IQ.class), new PacketTypeFilter(Presence.class));
+		connection.addPacketListener(new ChatPacketListener(), packetFilter);
+		
 		AndroidDebugger androidDebugger = new AndroidDebugger(connection, new PrintWriter(System.out), new InputStreamReader(System.in));
 		System.setProperty("smack.debuggerClass", androidDebugger.getClass().getCanonicalName());
 		return connection;

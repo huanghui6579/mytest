@@ -1,4 +1,4 @@
-package com.example.chat.service;
+package com.example.chat.listener;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -35,7 +35,6 @@ public class ChatConnectionListener implements ConnectionListener {
 	@Override
 	public void authenticated(XMPPConnection connection) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

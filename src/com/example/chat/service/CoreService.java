@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -13,28 +12,19 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ChatMessageListener;
-import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.OrFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
-import org.jivesoftware.smack.packet.DefaultPacketExtension;
-import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
-import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.PacketExtension;
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.filetransfer.FileTransfer;
 import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
 import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
+import org.jxmpp.util.XmppStringUtils;
 
 import android.app.Service;
 import android.content.Intent;
@@ -43,26 +33,21 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
-import android.text.TextUtils;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.activity.ChatActivity;
-import com.example.chat.activity.UserInfoActivity;
 import com.example.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
+import com.example.chat.listener.ChatRostListener;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.manage.UserManager;
-import com.example.chat.model.HeadIcon;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.SendState;
 import com.example.chat.model.MsgPart;
 import com.example.chat.model.MsgSenderInfo;
 import com.example.chat.model.MsgThread;
-import com.example.chat.model.NewFriendInfo;
-import com.example.chat.model.NewFriendInfo.FriendStatus;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
-import com.example.chat.model.UserVcard;
 import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
 import com.example.chat.util.MimeUtils;
@@ -85,7 +70,7 @@ public class CoreService extends Service {
 	 */
 	public static final int FLAG_SYNC_FRENDS = 1;
 	
-	private MainBinder mBinder = new MainBinder();
+	private IBinder mBinder = new MainBinder();
 	
 	private UserManager userManager = UserManager.getInstance();
 	private MsgManager msgManager = MsgManager.getInstance();
@@ -93,10 +78,8 @@ public class CoreService extends Service {
 	private MyHandler mHandler = null;
 	
 	private HandlerThread mHandlerThread = null;
-	private static PacketListener mChatPacketListener;
 	private static RosterListener mRosterListener;
 	private static FileTransferListener mFileTransferListener;
-	private static ConnectionListener mConnectionListener;
 	private static ChatManagerListener mChatManagerListener;
 	private static ChatMessageListener mChatMessageListener;
 	private static ChatManager mChatManager;
@@ -147,15 +130,12 @@ public class CoreService extends Service {
 			mHandlerThread.start();
 			mHandler = new MyHandler(mHandlerThread.getLooper());
 		}
-		PacketFilter packetFilter = new OrFilter(new PacketTypeFilter(IQ.class), new PacketTypeFilter(Presence.class));
-		if (mChatPacketListener == null) {
-			mChatPacketListener = new ChatPacketListener();
-			connection.addPacketListener(mChatPacketListener, packetFilter);
-		}
 		
 		if (mRosterListener == null) {
 			mRosterListener = new ChatRostListener();
+			Log.d("------------connection-----------" + connection.toString());
 			connection.getRoster().addRosterListener(mRosterListener);
+			ChatRostListener.hasRosterListener = true;
 		}
 		
 		if (mFileTransferListener == null) {
@@ -213,9 +193,9 @@ public class CoreService extends Service {
 	
 	@Override
 	public void onDestroy() {
-		if (mConnectionListener != null) {
-			connection.removeConnectionListener(mConnectionListener);
-		}
+//		if (mConnectionListener != null) {
+//			connection.removeConnectionListener(mConnectionListener);
+//		}
 		super.onDestroy();
 	}
 	
@@ -227,7 +207,7 @@ public class CoreService extends Service {
 			
 			@Override
 			public void run() {
-				Personal localPerson = userManager.getLocalSelftInfo(person);
+				Personal localPerson = userManager.getLocalSelfInfo(person);
 				if (localPerson == null) {	//本地没有个人信息，则从服务器上同步
 					//从网上同步个人信息
 					XmppUtil.syncPersonalInfo(connection, person);
@@ -303,6 +283,11 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			MsgInfo msgInfo =  senderInfo.msgInfo;
+			String fromJid = msgInfo.getFromUser();
+			String toJid = msgInfo.getToUser();
+			//将请完整的还原为账号
+			msgInfo.setFromUser(XmppStringUtils.parseLocalpart(fromJid));
+			msgInfo.setToUser(XmppStringUtils.parseLocalpart(toJid));
 			MsgInfo.Type msgType = msgInfo.getMsgType();
 //			try {
 				msgInfo = msgManager.addMsgInfo(msgInfo);
@@ -326,9 +311,9 @@ public class CoreService extends Service {
 				} else {	//非文本消息，则以附件形式发送
 					MsgPart msgPart = msgInfo.getMsgPart();// 创建文件传输管理器
 					
-					String to = msgInfo.getToJid() + "/Spark 2.6.3";
+//					String to = msgInfo.getToJid() + "/Spark 2.6.3";
 //					String to = msgInfo.getToJid() + "/Android";
-					OutgoingFileTransfer fileTransfer = mFileTransferManager.createOutgoingFileTransfer(to);
+					OutgoingFileTransfer fileTransfer = mFileTransferManager.createOutgoingFileTransfer(toJid);
 					
 					File sendFile = null;
 					if (msgInfo.getMsgType() == MsgInfo.Type.IMAGE) {	//图片类型
@@ -377,7 +362,6 @@ public class CoreService extends Service {
 
 		@Override
 		public void run() {
-			connection.addConnectionListener(new ChatConnectionListener());
 //			packetCollector.nextResult();
 			if (connection.isAuthenticated()) {	//是否登录
 				initChatManager(connection);
@@ -502,59 +486,6 @@ public class CoreService extends Service {
 	}
 	
 	/**
-	 * 接收消息的监听器
-	 * @author huanghui1
-	 * @update 2014年11月10日 下午6:10:15
-	 */
-	public class ChatPacketListener implements PacketListener {
-
-		@Override
-		public void processPacket(Packet packet) throws NotConnectedException {
-			//TODO 其他各种消息处理
-			if (packet instanceof Presence) {
-				Presence presence = (Presence) packet;
-				SystemUtil.getCachedThreadPool().execute(new HandlePresenceTask(presence));
-			}
-		}
-		
-	}
-	
-	/**
-	 * 状态监听器
-	 * @author huanghui1
-	 * @update 2014年11月18日 下午2:13:20
-	 */
-	public class ChatRostListener implements RosterListener {
-
-		@Override
-		public void entriesAdded(Collection<String> addresses) {
-			// TODO Auto-generated method stub
-//			Log.d("------entriesAdded-----" + addresses.toString());
-		}
-
-		@Override
-		public void entriesUpdated(Collection<String> addresses) {
-			// TODO Auto-generated method stub
-//			Log.d("------entriesUpdated-----" + addresses.toString());
-		}
-
-		@Override
-		public void entriesDeleted(Collection<String> addresses) {
-			// TODO Auto-generated method
-//			Log.d("------entriesDeleted-----" + addresses.toString());
-		}
-
-		@Override
-		public void presenceChanged(Presence presence) {
-			// TODO Auto-generated method stub
-			
-//			Log.d("------presenceChanged-----" + presence.toString() + "--from-" + presence.getFrom() + "-to--" + presence.getTo());
-			
-		}
-		
-	}
-	
-	/**
 	 * 聊天消息管理器
 	 * @author huanghui1
 	 * @update 2014年11月10日 下午6:16:07
@@ -579,176 +510,6 @@ public class CoreService extends Service {
 		@Override
 		public void processMessage(Chat chat, Message message) {
 			SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
-		}
-		
-	}
-	
-	/**
-	 * 处理添加好友请求等任务
-	 * @author huanghui1
-	 * @update 2014年11月10日 下午8:57:51
-	 */
-	class HandlePresenceTask implements Runnable {
-		private Presence presence;
-		
-		private AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
-
-		public HandlePresenceTask(Presence presence) {
-			super();
-			this.presence = presence;
-		}
-
-		@Override
-		public void run() {
-			Collection<PacketExtension> extensions = presence.getExtensions();
-			boolean isEmpty = SystemUtil.isEmpty(extensions);
-			Presence.Type type = presence.getType();
-			/*
-			 *  •	available: 表示处于在线状态
-				•	unavailable: 表示处于离线状态
-				•	subscribe: 表示发出添加好友的申请
-				•	unsubscribe: 表示发出删除好友的申请
-				•	unsubscribed: 表示拒绝添加对方为好友
-				•	error: 表示presence信息报中包含了一个错误消息。
-
-			 */
-			switch (type) {
-			case subscribe:	//添加好友的申请(对方发出添加我为好友的消息)
-				String from = SystemUtil.unwrapJid(presence.getFrom());
-				String to = SystemUtil.unwrapJid(presence.getTo());
-				
-				//查找数据库是否有我主动请求添加对方为好友的信息
-				NewFriendInfo newInfo = userManager.getNewFriendInfoByAccounts(to, from);
-				//自己主动添加对方为好友，此时，对方同意了，并且添加我为好友，则自己直接同意并添加对方为好友
-				if (newInfo != null && newInfo.getFriendStatus() == FriendStatus.VERIFYING) {
-					
-					try {
-						
-						XmppUtil.acceptFriend(connection, presence.getFrom());
-						
-						//修改状态为“已添加”
-						newInfo.setFriendStatus(FriendStatus.ADDED);
-						//将该好友添加至本地数据库
-						User user = newInfo.getUser();
-						if (user == null) {
-							user = new User();
-							user.setUsername(from);
-							newInfo.setUser(user);
-						}
-						user.setFullPinyin(user.initFullPinyin());
-						user.setShortPinyin(user.initShortPinyin());
-						user.setSortLetter(user.initSortLetter(user.getShortPinyin()));
-						userManager.saveOrUpdateNewFriendInfo(newInfo);
-						userManager.saveOrUpdateFriend(user);
-						
-						//通知好友列表更新好友
-						Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_ADD);
-						intent.putExtra(UserInfoActivity.ARG_USER, user);
-						sendBroadcast(intent);
-					} catch (NotConnectedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-				} else {	//只是别人主动添加请求添加我为好友
-					newInfo = new NewFriendInfo();
-					newInfo.setFriendStatus(FriendStatus.ACCEPT);
-					newInfo.setFrom(from);
-					newInfo.setTo(to);
-					newInfo.setTitle(to);
-					newInfo.setContent(getString(R.string.contact_friend_add_request));
-					newInfo.setCreationDate(System.currentTimeMillis());
-					if (!isEmpty) {
-						String hash = null;
-						for (PacketExtension packetExtension : extensions) {
-							if (packetExtension instanceof DefaultPacketExtension) {
-								DefaultPacketExtension defaultPacketExtension = (DefaultPacketExtension) packetExtension;
-								Collection<String> names = defaultPacketExtension.getNames();
-								if (names.contains("hash")) {
-									hash = defaultPacketExtension.getValue("hash");
-								}
-								
-							}
-						}
-						if (!TextUtils.isEmpty(hash)) {	//有图像
-							//根据对方用户账号查询本地的图片
-							File icon = SystemUtil.generateIconFile(from);
-							String savePath = icon.getAbsolutePath();
-							boolean needSave = false;	//是否需要保存图像
-							if (icon.exists()) {	//文件已经存在，则判断hash，看是否需要更新图像
-								String oldHash = SystemUtil.getFileHash(icon);
-								if (!oldHash.equals(hash)) {	//需要更新图像
-									needSave = true;
-								}
-							} else {	//图像不存在，则存储到储存卡里
-								needSave = true;
-								savePath = null;
-							}
-							if (needSave) {
-								HeadIcon headIcon = XmppUtil.downloadUserIcon(connection, from);
-								if (headIcon != null) {	//图像获取成功
-									savePath = headIcon.getFilePath();
-									hash = headIcon.getHash();
-								} else {
-									savePath = null;
-									hash = null;
-								}
-							}
-							newInfo.setIconHash(hash);
-							newInfo.setIconPath(savePath);
-						}
-					}
-					//查看本地是否有该好友，对方此时没有好友我
-					User user = userManager.getUserByUsername(from);
-					if (user != null) {	//如果存在本地好友
-						UserVcard uCrad = user.getUserVcard();
-						String fIconHash = newInfo.getIconHash();
-						String fIconPath = newInfo.getIconPath();
-						String uIconHash = null;
-						boolean neddUpdate = false;
-						if (uCrad != null) {	//本地好友有名片信息
-							uIconHash = uCrad.getIconHash();
-							if (!TextUtils.isEmpty(fIconPath)) {	//对方有头像信息
-								if (TextUtils.isEmpty(uIconHash) || !fIconPath.equals(uIconHash)) {	//此时本地好友没有头像信息，或者头像没有更细下来
-									//本地好友有头像信息，但需要对比一下头像是否已经改变，如果改变，则需要更新
-									uIconHash = fIconHash;
-									uCrad.setIconHash(uIconHash);
-									uCrad.setIconHash(fIconPath);
-									neddUpdate = true;
-								}
-							} else {	//对方没有头像
-								if (!TextUtils.isEmpty(uIconHash)) {	//但本地有头像，更新本地头像
-									String uIconPath = uCrad.getIconPath();
-									uIconHash = null;
-									uCrad.setIconHash(null);
-									uCrad.setIconPath(null);
-									//删除本地图像
-									SystemUtil.deleteFile(uIconPath);
-									neddUpdate = true;
-								}
-							}
-						} else {	//本地好友没有名片，则新建名片
-							if (!TextUtils.isEmpty(fIconHash)) {	//对方有图像
-								uCrad = new UserVcard();
-								uCrad.setIconHash(fIconHash);
-								uCrad.setIconPath(fIconPath);
-								user.setUserVcard(uCrad);
-								neddUpdate = true;
-							}
-						}
-						if (neddUpdate) {
-							user = userManager.updateSimpleUser(user);
-						}
-						newInfo.setUser(user);
-						newInfo.setContent(user.getName());
-					}
-					//如果本地有该好友，则看要不要更新头像
-					newInfo = userManager.saveOrUpdateNewFriendInfo(newInfo);
-				}
-				break;
-			default:
-				break;
-			}
 		}
 		
 	}
