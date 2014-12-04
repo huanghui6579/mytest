@@ -14,7 +14,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 
-import com.baidu.mapapi.SDKInitializer;
 import com.example.chat.model.Emoji;
 import com.example.chat.model.EmojiType;
 import com.example.chat.model.Personal;
@@ -78,9 +77,6 @@ public class ChatApplication extends Application {
 		preferences = getSharedPreferences(Constants.SETTTING_LOGIN, Context.MODE_PRIVATE);
 		systemConfig = new SystemConfig();
 		currentUser = new Personal();
-		
-		//初始化百度地图
-		SDKInitializer.initialize(getApplicationContext());
 		
 		initSystemConfig();
 		

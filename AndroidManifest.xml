@@ -46,9 +46,9 @@
         android:name="com.example.chat.ChatApplication" >
         
         <!-- 百度地图key -->
-        <meta-data 
+        <!-- <meta-data 
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="53xCgO1vglPfHZOggwlqBtep" />
+            android:value="53xCgO1vglPfHZOggwlqBtep" /> -->
         
         <!-- <activity
             android:name="com.example.chat.activity.FileExplorerActivity"
