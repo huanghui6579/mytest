@@ -15,6 +15,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -195,7 +197,8 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 						intent.putExtra(PhotoPreviewActivity.ARG_SHOW_MODE, PhotoPreviewActivity.MODE_BROWSE);
 						intent.putParcelableArrayListExtra(PhotoPreviewActivity.ARG_PHOTO_LIST, mPhotos);
 						intent.putExtra(ChatActivity.ARG_MSG_INFO, msgInfo);
-						startActivityForResult(intent, REQ_PREVIEW_IMAGE);
+						ActivityOptionsCompat options = ActivityOptionsCompat.makeScaleUpAnimation(view, 0, 0, view.getWidth(), view.getHeight());
+						ActivityCompat.startActivityForResult(AlbumActivity.this, intent, REQ_PREVIEW_IMAGE, options.toBundle());
 					} else {	//直接选择视频
 						SystemUtil.makeShortToast("选择" + position + "位置的视频");
 					}
