@@ -88,6 +88,10 @@ public abstract class BaseActivity extends FragmentActivity {
 	 */
 	protected abstract void initView();
 	
+	/**
+	 * 初始化数据
+	 * @update 2015年1月5日 下午9:34:01
+	 */
 	protected abstract void initData();
 	
 	/**

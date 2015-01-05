@@ -24,11 +24,13 @@
         android:layout_height="match_parent"
         android:layout_gravity="end|center" />
     
-    <ProgressBar 
-        android:id="@+id/pb_loading"
+    <include 
+        layout="@layout/layout_loading"/>
+    <!-- <ProgressBar 
+        android:id="@id/pb_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:attr/progressBarStyleLargeInverse"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"/> -->
 
 </FrameLayout>

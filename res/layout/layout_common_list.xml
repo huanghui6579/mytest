@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/white">
 	<ListView
-	    android:id="@+id/lv_data"
+	    android:id="@id/lv_data"
 	    style="@style/CommonListViewStyle" />
 	
 	<include 

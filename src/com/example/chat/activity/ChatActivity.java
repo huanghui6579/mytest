@@ -741,6 +741,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					intent.putExtra(ARG_MSG_INFO, msgInfo);
 					startActivityForResult(intent, REQ_AUDIO);
 					break;
+				case AttachItem.ACTION_LOCATION:	//地理位置
+					break;
 				default:
 					break;
 				}

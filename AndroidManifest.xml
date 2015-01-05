@@ -23,20 +23,16 @@
     <!-- 添加录音权限 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />  
-	<uses-permission android:name="android.permission.USE_CREDENTIALS" />  
-	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
-	<uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" /> 
-	<uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
-	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />  
-	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-	<uses-permission android:name="android.permission.BROADCAST_STICKY" />  
-	<uses-permission android:name="android.permission.WRITE_SETTINGS" />
 	<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
 	<!-- 这个权限用于进行网络定位-->
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 	<!-- 这个权限用于访问GPS定位-->
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+	
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+ 
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
     <application
         android:allowBackup="true"
@@ -45,10 +41,10 @@
         android:theme="@style/AppTheme"
         android:name="com.example.chat.ChatApplication" >
         
-        <!-- 百度地图key -->
-        <!-- <meta-data 
-            android:name="com.baidu.lbsapi.API_KEY"
-            android:value="53xCgO1vglPfHZOggwlqBtep" /> -->
+        <!-- 高德地图key -->
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="2273245829380d27d37304e62c3d188f" />
         
         <activity
             android:name="com.example.chat.activity.AlbumActivity"
