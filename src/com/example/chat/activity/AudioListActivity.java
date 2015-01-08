@@ -162,7 +162,6 @@ public class AudioListActivity extends BaseActivity implements LoaderCallbacks<L
 			AudioViewHolder holder = null;
 			if (convertView == null) {
 				holder = new AudioViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_audio, parent, false);
 				
 				holder.tvTitle = (TextView) convertView.findViewById(R.id.tv_title);

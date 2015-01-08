@@ -155,7 +155,6 @@ public class EmojiFragment extends BaseFragment implements OnItemClickListener{
 			if (convertView == null) {
 				holder = new EmojiViewHolder();
 				
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_emoji, parent, false);
 				
 				holder.ivEmoji = (ImageView) convertView.findViewById(R.id.iv_emoji);

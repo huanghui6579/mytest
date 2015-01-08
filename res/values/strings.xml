@@ -20,6 +20,7 @@
     <string name="prompt">提示</string>
     <string name="connection_unavailable">与服务器的连接已经断开，请重新登录</string>
     <string name="loading">正在处理，请稍后&#8230;</string>
+    <string name="location_prefix">[位置]</string>
     
     <string name="activity_lable_login">用户登录</string>
     <string name="activity_lable_regist">用户注册</string>
@@ -27,8 +28,11 @@
     <string name="activity_lable_friend_info">好友详情</string>
     <string name="activity_lable_chat">聊天</string>
     <string name="activity_lable_new_friend_info">新的朋友</string>
+    <string name="activity_lable_file_explorer">文件</string>
     <string name="activity_lable_album">图片</string>
     <string name="activity_lable_audio">音频</string>
+    <string name="activity_lable_video">视频</string>
+    <string name="activity_lable_location_share">位置</string>
     
     <string name="email">邮箱：%1$s</string>
     <string name="username">用户名：%1$s</string>

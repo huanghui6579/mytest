@@ -170,6 +170,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 		if (!isImage) {	//不是图片，则不显示预览选项
 			tvPreview.setVisibility(View.GONE);
 			tvAllPhoto.setText(R.string.album_all_video);
+			setTitle(R.string.activity_lable_video);
 		}
 		
 		new LoadPhotoTask().execute();
@@ -246,7 +247,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		if (isImage) {	//是图片才加载该菜单
 			MenuInflater menuInflater = getMenuInflater();
-			menuInflater.inflate(R.menu.alibum_select, menu);
+			menuInflater.inflate(R.menu.common_opt, menu);
 			MenuItem menuDone = menu.findItem(R.id.action_select_complete);
 			btnOpt = (TextView) menuDone.getActionView();
 			btnOpt.setOnClickListener(new View.OnClickListener() {
@@ -574,7 +575,6 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 			AlbumViewHolder holder = null;
 			if (convertView == null) {
 				holder = new AlbumViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_album, parent, false);
 				
 				holder.ivCon = (ImageView) convertView.findViewById(R.id.iv_icon);
@@ -694,7 +694,6 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 				}
 				gvPhoto.setColumnWidth(columnWith);
 				holder = new PhotoViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_photo, parent, false);
 				
 				holder.ivPhoto = (ImageView) convertView.findViewById(R.id.iv_photo);

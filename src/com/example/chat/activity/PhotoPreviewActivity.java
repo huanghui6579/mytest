@@ -245,7 +245,7 @@ public class PhotoPreviewActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater menuInflater = getMenuInflater();
-		menuInflater.inflate(R.menu.alibum_select, menu);
+		menuInflater.inflate(R.menu.common_opt, menu);
 		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
 		btnOpt = (TextView) menuDone.getActionView();
 		if (showMode == MODE_CHOSE) {	//选择模式，则默认选中的就是所有列表

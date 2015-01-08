@@ -17,16 +17,8 @@
 	    android:contentDescription="@null"/>
 	<!-- ?android:attr/listChoiceIndicatorSingle -->
 	<CheckedTextView 
-	    android:id="@+id/tv_content"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_gravity="center_vertical"
-	    android:layout_marginLeft="@dimen/list_item_padding"
-	    android:layout_marginStart="@dimen/list_item_padding"
-	    android:layout_marginRight="@dimen/list_item_padding"
-	    android:layout_marginEnd="@dimen/list_item_padding"
-	    android:gravity="center_vertical"
-	    android:focusable="false"
-	    android:checkMark="@drawable/album_choice_selector"/>
+	    android:id="@id/tv_content"
+	    style="@style/CommonCheckedTextViewStyle"
+	    android:focusable="false"/>
 	
 </LinearLayout>

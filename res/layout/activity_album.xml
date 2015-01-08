@@ -38,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@color/album_bottom_layout_bg">
+        android:background="@color/action_bar_color">
         <TextView 
             android:id="@+id/tv_all_photo"
             style="@style/AlbumBottomTitleStyle"

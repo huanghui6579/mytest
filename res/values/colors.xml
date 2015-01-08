@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="action_bar_color">#EF2D3537</color>
     <!-- 淡灰色 -->
     <color name="login_main_bg">#FDFDFD</color>
     <color name="login_text_regist">#1212EF</color>
@@ -10,7 +11,6 @@
     <color name="album_text_normal">#ffffff</color>
     <color name="album_text_selected">#aaaaaa</color>
     <color name="album_top_layout_bg">#AA000000</color>
-    <color name="album_bottom_layout_bg">#EF2D3537</color>
     <color name="album_item_selected_alpha">#AA999999</color>
     
     <color name="session_list_item_content">#999999</color>

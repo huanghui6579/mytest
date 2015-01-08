@@ -7,16 +7,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.CheckedTextView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationListener;
@@ -34,15 +41,16 @@ import com.amap.api.maps.MapFragment;
 import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.CameraPosition;
+import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MyLocationStyle;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.geocoder.GeocodeResult;
 import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.GeocodeSearch.OnGeocodeSearchListener;
 import com.amap.api.services.geocoder.RegeocodeAddress;
 import com.amap.api.services.geocoder.RegeocodeQuery;
-import com.amap.api.services.geocoder.GeocodeSearch.OnGeocodeSearchListener;
 import com.amap.api.services.geocoder.RegeocodeResult;
 import com.example.chat.R;
 import com.example.chat.model.LocationInfo;
@@ -100,6 +108,10 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
     
     private Handler mHandler = new Handler();
 
+	private LocationAdapter mAdapter;
+
+	private TextView btnOpt;
+
 	@Override
 	protected int getContentView() {
 		return R.layout.activity_location_share;
@@ -138,6 +150,41 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 		deactivate();
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater menuInflater = getMenuInflater();
+		menuInflater.inflate(R.menu.common_opt, menu);
+		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
+		btnOpt = (TextView) menuDone.getActionView();
+		btnOpt.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				mAMap.getMapScreenShot(LocationShareActivity.this);
+//				final List<PhotoItem> selects = mPhotoAdapter.getSelectList();
+//				pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
+//				//发送图片
+//				SystemUtil.getCachedThreadPool().execute(new Runnable() {
+//					
+//					@Override
+//					public void run() {
+//						final ArrayList<MsgInfo> msgList = msgManager.getMsgInfoListByPhotos(msgInfo, selects, false);
+//						Message msg = mHandler.obtainMessage();
+//						if (!SystemUtil.isEmpty(msgList)) {	//消息集合
+//							msg.what = Constants.MSG_SUCCESS;
+//							msg.obj = msgList;
+//						} else {
+//							msg.what = Constants.MSG_FAILED;
+//						}
+//						mHandler.sendMessage(msg);
+//					}
+//				});
+				
+			}
+		});
+		return super.onCreateOptionsMenu(menu);
+	}
+	
 	/**
 	 * 设置map对象的相关参数
 	 * @update 2015年1月5日 下午9:59:30
@@ -174,7 +221,17 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				// TODO Auto-generated method stub
-				
+				if (position != mCurrentPosition) {
+					mCurrentPosition = position;
+					LocationInfo locationInfo = mLocationInfos.get(position);
+					if (mMarker != null) {
+						mMarker.setSnippet(locationInfo.getAddress());
+					}
+					mAMap.animateCamera(CameraUpdateFactory.changeLatLng(new LatLng(locationInfo.getLatitude(), locationInfo.getLongitude())));
+					if (mMarker != null) {
+						mMarker.setPosition(new LatLng(locationInfo.getLatitude(), locationInfo.getLongitude()));
+					}
+				}
 			}
 		});
 	}
@@ -277,7 +334,10 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 				RegeocodeQuery regeocodeQuery = regeocodeResult.getRegeocodeQuery();
 				if (regeocodeAddress != null) {
 					locationSuccessed = true;
-					StringBuilder sb = new StringBuilder();
+					if (btnOpt != null) {
+						btnOpt.setEnabled(true);
+					}
+//					StringBuilder sb = new StringBuilder();
 					List<Marker> markers = mAMap.getMapScreenMarkers();
 					if (markers != null && markers.size() > 0) {
 						mMarker = markers.get(0);
@@ -285,7 +345,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 					}
 					mLocationInfos.clear();
 					LatLonPoint latLonPoint = regeocodeQuery.getPoint();
-					LocationInfo info = new LocationInfo(latLonPoint.getLatitude(), latLonPoint.getLongitude(), regeocodeQuery.getRadius(), regeocodeAddress.getFormatAddress());
+					LocationInfo info = new LocationInfo(latLonPoint.getLatitude(), latLonPoint.getLongitude(), regeocodeQuery.getRadius(), getString(R.string.location_prefix) + regeocodeAddress.getFormatAddress());
 					mLocationInfos.add(info);
 					List<PoiItem> poiItems = regeocodeAddress.getPois();
 					if (poiItems != null) {
@@ -293,35 +353,35 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 							latLonPoint = poiItem.getLatLonPoint();
 							info = new LocationInfo(latLonPoint.getLatitude(), latLonPoint.getLongitude(), locationRadius, poiItem.getTitle());
 //							locationArray.add(poiItem.getTitle());
-							sb.append("=============================\r\n");
-							sb.append("poiItem.getLatLonPoint:").append(poiItem.getLatLonPoint()).append("\r\n")
-								.append("poiItem.getAdCode:").append(poiItem.getAdCode()).append("\r\n")
-								.append("poiItem.getAdName:").append(poiItem.getAdName()).append("\r\n")
-								.append("poiItem.getCityCode:").append(poiItem.getCityCode()).append("\r\n")
-								.append("poiItem.getCityName:").append(poiItem.getCityName()).append("\r\n")
-								.append("poiItem.getDirection:").append(poiItem.getDirection()).append("\r\n")
-								.append("poiItem.getDistance:").append(poiItem.getDistance()).append("\r\n")
-								.append("poiItem.getEmail:").append(poiItem.getEmail()).append("\r\n")
-								.append("poiItem.getPoiId:").append(poiItem.getPoiId()).append("\r\n")
-								.append("poiItem.getProvinceCode:").append(poiItem.getProvinceCode()).append("\r\n")
-								.append("poiItem.getProvinceName:").append(poiItem.getProvinceName()).append("\r\n")
-								.append("poiItem.getSnippet:").append(poiItem.getSnippet()).append("\r\n")
-								.append("poiItem.getTel:").append(poiItem.getTel()).append("\r\n")
-								.append("poiItem.getTitle:").append(poiItem.getTitle()).append("\r\n")
-								.append("poiItem.getTypeDes:").append(poiItem.getTypeDes()).append("\r\n")
-								.append("poiItem.getWebsite:").append(poiItem.getWebsite()).append("\r\n");
+//							sb.append("=============================\r\n");
+//							sb.append("poiItem.getLatLonPoint:").append(poiItem.getLatLonPoint()).append("\r\n")
+//								.append("poiItem.getAdCode:").append(poiItem.getAdCode()).append("\r\n")
+//								.append("poiItem.getAdName:").append(poiItem.getAdName()).append("\r\n")
+//								.append("poiItem.getCityCode:").append(poiItem.getCityCode()).append("\r\n")
+//								.append("poiItem.getCityName:").append(poiItem.getCityName()).append("\r\n")
+//								.append("poiItem.getDirection:").append(poiItem.getDirection()).append("\r\n")
+//								.append("poiItem.getDistance:").append(poiItem.getDistance()).append("\r\n")
+//								.append("poiItem.getEmail:").append(poiItem.getEmail()).append("\r\n")
+//								.append("poiItem.getPoiId:").append(poiItem.getPoiId()).append("\r\n")
+//								.append("poiItem.getProvinceCode:").append(poiItem.getProvinceCode()).append("\r\n")
+//								.append("poiItem.getProvinceName:").append(poiItem.getProvinceName()).append("\r\n")
+//								.append("poiItem.getSnippet:").append(poiItem.getSnippet()).append("\r\n")
+//								.append("poiItem.getTel:").append(poiItem.getTel()).append("\r\n")
+//								.append("poiItem.getTitle:").append(poiItem.getTitle()).append("\r\n")
+//								.append("poiItem.getTypeDes:").append(poiItem.getTypeDes()).append("\r\n")
+//								.append("poiItem.getWebsite:").append(poiItem.getWebsite()).append("\r\n");
 							mLocationInfos.add(info);
 						}
-						sb.append("=============================\r\n");
+//						sb.append("=============================\r\n");
 					}
 					//TODO 添加适配器
-//					if (mAdapter == null) {
-//						mAdapter = new LocationAdapter(this, android.R.layout.simple_list_item_single_choice, android.R.id.text1, locationArray);
-//						lvLocation.setAdapter(mAdapter);
-//						lvLocation.setItemChecked(0, true);
-//					} else {
-//						mAdapter.notifyDataSetChanged();
-//					}
+					if (mAdapter == null) {
+						mAdapter = new LocationAdapter(mLocationInfos, mContext);
+						lvData.setAdapter(mAdapter);
+						lvData.setItemChecked(0, true);	//第一位默认选中
+					} else {
+						mAdapter.notifyDataSetChanged();
+					}
 //					Log.d(TAG, sb.toString());
 					pbLoading.setVisibility(View.GONE);
 //					tvLocationInfo.setText(sb.toString());
@@ -388,5 +448,41 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 		}
 		mLocationManager = null;
 	}
+	
+	/**
+	 * 位置适配器
+	 * @author huanghui1
+	 * @update 2015年1月6日 上午10:06:46
+	 */
+	class LocationAdapter extends CommonAdapter<LocationInfo> {
 
+		public LocationAdapter(List<LocationInfo> list, Context context) {
+			super(list, context);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			LocationViewHolder holder = null;
+			if (convertView == null) {
+				holder = new LocationViewHolder();
+				convertView = inflater.inflate(R.layout.item_list_single_choice, parent, false);
+				
+				holder.checkedTextView = (CheckedTextView) convertView.findViewById(R.id.tv_content);
+				convertView.setTag(holder);
+			} else {
+				holder = (LocationViewHolder) convertView.getTag();
+			}
+			
+			final LocationInfo locationInfo = list.get(position);
+			
+			holder.checkedTextView.setText(locationInfo.getAddress());
+			
+			return convertView;
+		}
+		
+	}
+
+	final class LocationViewHolder {
+		CheckedTextView checkedTextView;
+	}
 }

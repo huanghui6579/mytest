@@ -130,30 +130,30 @@ public class CoreService extends Service {
 			mHandlerThread.start();
 			mHandler = new MyHandler(mHandlerThread.getLooper());
 		}
-		
-		if (mRosterListener == null) {
-			mRosterListener = new ChatRostListener();
-			Log.d("------------connection-----------" + connection.toString());
-			connection.getRoster().addRosterListener(mRosterListener);
-			ChatRostListener.hasRosterListener = true;
+		if (connection != null) {
+			if (mRosterListener == null) {
+				mRosterListener = new ChatRostListener();
+				Log.d("------------connection-----------" + connection.toString());
+				connection.getRoster().addRosterListener(mRosterListener);
+				ChatRostListener.hasRosterListener = true;
+			}
+			
+			if (mFileTransferListener == null) {
+				mFileTransferManager = FileTransferManager.getInstanceFor(connection);
+				mFileTransferListener = new MyFileTransferListener();
+				mFileTransferManager.addFileTransferListener(mFileTransferListener);
+			}
+			
+			if (mChatMessageListener == null) {
+				mChatMessageListener = new MyChatMessageListener();
+			}
+			
+			if (mChatManager == null) {
+				mChatManager = ChatManager.getInstanceFor(connection);
+				mChatManagerListener = new MyChatManagerListener();
+				mChatManager.addChatListener(mChatManagerListener);
+			}
 		}
-		
-		if (mFileTransferListener == null) {
-			mFileTransferManager = FileTransferManager.getInstanceFor(connection);
-			mFileTransferListener = new MyFileTransferListener();
-			mFileTransferManager.addFileTransferListener(mFileTransferListener);
-		}
-		
-		if (mChatMessageListener == null) {
-			mChatMessageListener = new MyChatMessageListener();
-		}
-		
-		if (mChatManager == null) {
-			mChatManager = ChatManager.getInstanceFor(connection);
-			mChatManagerListener = new MyChatManagerListener();
-			mChatManager.addChatListener(mChatManagerListener);
-		}
-		
 		
 		
 //		SystemUtil.getCachedThreadPool().execute(new ReceiveMessageTask());

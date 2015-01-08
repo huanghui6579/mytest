@@ -406,7 +406,6 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 			int type = getItemViewType(position);
 			if (convertView == null) {
 				holder = new ViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				
 				switch (type) {
 				case TYPE_NEW_FRIEND:	//新的朋友

@@ -20,7 +20,7 @@
 	        android:contentDescription="@null" />
 
         <TextView
-            android:id="@+id/tv_content"
+            android:id="@id/tv_content"
             style="@style/ChatItemContentStyle"
             android:paddingLeft="@dimen/chat_msg_item_in_content_padding_left"
             android:paddingStart="@dimen/chat_msg_item_in_content_padding_left"

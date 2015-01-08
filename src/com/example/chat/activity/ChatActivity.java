@@ -114,6 +114,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * 调用音频的请请求码
 	 */
 	public static final int REQ_AUDIO = 103;
+	/**
+	 * 地理位置请求码
+	 */
+	public static final int REQ_LOCATION = 104;
 	
 	/**
 	 * 默认的编辑模式，文本框内没有任何内容
@@ -403,9 +407,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		}
 		
 		Intent intent = getIntent();
-		
-		otherSide = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
-		msgThread = intent.getParcelableExtra(ARG_THREAD);
+		if (intent != null) {
+			otherSide = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
+			msgThread = intent.getParcelableExtra(ARG_THREAD);
+		}
 
 		//获取个人信息
 		mine = ChatApplication.getInstance().getCurrentUser();
@@ -708,44 +713,50 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				
 				AttachItem attachItem = mAttachItems.get(position);
 				MsgInfo msgInfo = new MsgInfo();
-				msgInfo.setComming(false);
-				msgInfo.setFromUser(mine.getFullJID());
-				msgInfo.setToUser(otherSide.getFullJid());
-				msgInfo.setRead(true);
-				msgInfo.setSendState(MsgInfo.SendState.SENDING);
-				msgInfo.setThreadID(msgThread.getId());
+				if (canSend()) {
+					msgInfo.setComming(false);
+					msgInfo.setFromUser(mine.getFullJID());
+					msgInfo.setToUser(otherSide.getFullJid());
+					msgInfo.setRead(true);
+					msgInfo.setSendState(MsgInfo.SendState.SENDING);
+					msgInfo.setThreadID(msgThread.getId());
+				}
 				
+				int requestCode = 0;
 				switch (attachItem.getAction()) {
 				case AttachItem.ACTION_IMAGE:	//选择图片
 					intent = new Intent(mContext, AlbumActivity.class);
 					msgInfo.setMsgType(MsgInfo.Type.IMAGE);
 					intent.putExtra(ARG_MSG_INFO, msgInfo);
-					startActivityForResult(intent, REQ_ALBUM);
+					requestCode = REQ_ALBUM;
 					break;
 				case AttachItem.ACTION_VIDEO:	//选择视频
 					intent = new Intent(mContext, AlbumActivity.class);
 					msgInfo.setMsgType(MsgInfo.Type.VIDEO);
 					intent.putExtra(ARG_MSG_INFO, msgInfo);
 					intent.putExtra(AlbumActivity.ARG_IS_IMAGE, false);
-					startActivityForResult(intent, REQ_VIDEO);
+					requestCode = REQ_VIDEO;
 					break;
 				case AttachItem.ACTION_FILE:	//选择文件
 					intent = new Intent(mContext, FileExplorerActivity.class);
 					msgInfo.setMsgType(MsgInfo.Type.FILE);
-					intent.putExtra(ARG_MSG_INFO, msgInfo);
-					startActivityForResult(intent, REQ_FILE);
+					requestCode = REQ_FILE;
 					break;
 				case AttachItem.ACTION_AUDIO:	//选择音频
 					intent = new Intent(mContext, AudioListActivity.class);
 					msgInfo.setMsgType(MsgInfo.Type.AUDIO);
-					intent.putExtra(ARG_MSG_INFO, msgInfo);
-					startActivityForResult(intent, REQ_AUDIO);
+					requestCode = REQ_AUDIO;
 					break;
 				case AttachItem.ACTION_LOCATION:	//地理位置
+					intent = new Intent(mContext, LocationShareActivity.class);
+					msgInfo.setMsgType(MsgInfo.Type.LOCATION);
+					requestCode = REQ_LOCATION;
 					break;
 				default:
 					break;
 				}
+				intent.putExtra(ARG_MSG_INFO, msgInfo);
+				startActivityForResult(intent, requestCode);
 			}
 		});
 		lvMsgs.setOnTouchListener(new View.OnTouchListener() {
@@ -891,33 +902,34 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 						}, POLL_INTERVAL);
 					} else {
 						//TODO 发送语音消息
-						
-						MsgInfo msgInfo = new MsgInfo();
-						msgInfo.setComming(false);
-						msgInfo.setFromUser(mine.getFullJID());
-						msgInfo.setToUser(otherSide.getFullJid());
-						msgInfo.setContent(SystemUtil.shortTimeToString(time));
-						msgInfo.setRead(true);
-						msgInfo.setSendState(MsgInfo.SendState.SENDING);
-						msgInfo.setThreadID(msgThread.getId());
-						msgInfo.setMsgType(MsgInfo.Type.VOICE);
-						msgInfo.setCreationDate(System.currentTimeMillis());
-						//设置附件信息
-						MsgPart msgPart = new MsgPart();
-						msgPart.setCreationDate(System.currentTimeMillis());
-						msgPart.setFileName(volumeFile.getName());
-						msgPart.setFilePath(volumeFile.getAbsolutePath());
-						String subfix = SystemUtil.getFileSubfix(volumeFile.getName());
-						msgPart.setMimeTye(MimeUtils.guessMimeTypeFromExtension(subfix));
-						msgPart.setSize(volumeFile.length());
-						
-						msgInfo.setMsgPart(msgPart);
-						
-						mMsgInfos.add(msgInfo);
-						
-						msgAdapter.notifyDataSetChanged();
+						if (canSend()) {
+							MsgInfo msgInfo = new MsgInfo();
+							msgInfo.setComming(false);
+							msgInfo.setFromUser(mine.getFullJID());
+							msgInfo.setToUser(otherSide.getFullJid());
+							msgInfo.setContent(SystemUtil.shortTimeToString(time));
+							msgInfo.setRead(true);
+							msgInfo.setSendState(MsgInfo.SendState.SENDING);
+							msgInfo.setThreadID(msgThread.getId());
+							msgInfo.setMsgType(MsgInfo.Type.VOICE);
+							msgInfo.setCreationDate(System.currentTimeMillis());
+							//设置附件信息
+							MsgPart msgPart = new MsgPart();
+							msgPart.setCreationDate(System.currentTimeMillis());
+							msgPart.setFileName(volumeFile.getName());
+							msgPart.setFilePath(volumeFile.getAbsolutePath());
+							String subfix = SystemUtil.getFileSubfix(volumeFile.getName());
+							msgPart.setMimeTye(MimeUtils.guessMimeTypeFromExtension(subfix));
+							msgPart.setSize(volumeFile.length());
+							
+							msgInfo.setMsgPart(msgPart);
+							
+							mMsgInfos.add(msgInfo);
+							
+							msgAdapter.notifyDataSetChanged();
 
-						sendMsg(msgInfo);
+							sendMsg(msgInfo);
+						}
 					}
 					
 				}
@@ -1349,6 +1361,19 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	}
 	
 	/**
+	 * 检查是否可以发送信息，前提条件是有个人信息和对方信息
+	 * @update 2015年1月8日 下午8:59:25
+	 * @return
+	 */
+	private boolean canSend() {
+		if (otherSide == null || mine == null || msgThread == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
 	 * 
 	 * 处理发送文本消息或者切换到附件模式
 	 * @update 2014年10月28日 上午11:55:35
@@ -1361,6 +1386,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		switch (editMode) {
 		case MODE_SEND:	//发送文本消息
 			String content = etContent.getText().toString();
+			if (!canSend()) {
+				break;
+			}
 			MsgInfo msg = newTextMsgInfo(content);
 			
 			if (msg != null) {
@@ -1504,7 +1532,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			if (convertView == null) {
 				holder = new AttItemViewHolder();
 				
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_attach, parent, false);
 				
 				holder.ivIcon = (ImageView) convertView.findViewById(R.id.iv_icon);
@@ -1559,7 +1586,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		public View getView(int position, View convertView, ViewGroup parent) {
 			MsgViewHolder holder = null;
 			MsgInfo msgInfo = list.get(position);
-			LayoutInflater inflater = LayoutInflater.from(context);
 			int type = getItemViewType(position);
 			
 			if (convertView == null) {

@@ -209,7 +209,6 @@ public class AddFriendActivity extends BaseActivity {
 			ViewHolder holder = null;
 			if (convertView == null) {
 				holder = new ViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_search_friend, parent, false);
 				
 				holder.tvUsername = (TextView) convertView.findViewById(R.id.tv_username);

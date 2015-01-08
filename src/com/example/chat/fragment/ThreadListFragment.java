@@ -172,7 +172,6 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			if (convertView == null) {
 				holder = new MsgThreadViewHolder();
 				
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_msg_thread, parent, false);
 				
 				holder.ivHeadIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);

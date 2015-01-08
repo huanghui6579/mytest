@@ -213,7 +213,6 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 			NewInfoViewHolder holder = null;
 			if (convertView == null) {
 				holder = new NewInfoViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				convertView = inflater.inflate(R.layout.item_new_friend_info, parent, false);
 				
 				holder.ivHeadIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);

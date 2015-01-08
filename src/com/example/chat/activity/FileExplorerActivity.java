@@ -153,7 +153,7 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater menuInflater = getMenuInflater();
-		menuInflater.inflate(R.menu.alibum_select, menu);
+		menuInflater.inflate(R.menu.common_opt, menu);
 		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
 		btnOpt = (TextView) menuDone.getActionView();
 		btnOpt.setOnClickListener(new View.OnClickListener() {
@@ -292,7 +292,6 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 			FileItemViewHolder holder = null;
 			if (convertView == null) {
 				holder = new FileItemViewHolder();
-				LayoutInflater inflater = LayoutInflater.from(context);
 				
 				convertView = inflater.inflate(R.layout.item_file_attach, parent, false);
 				

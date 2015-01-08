@@ -14,6 +14,7 @@
 
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
         <!-- <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item> -->
         <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
@@ -35,6 +36,16 @@
     <!-- 相册菜单字体样式 -->
     <style name="AlbumMenuTextStyle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Menu">
         <item name="android:textSize">16sp</item>
+    </style>
+    
+    <!-- 图片预览的样式 -->
+    <style name="AppTheme.ImagePreviewActivity" parent="AppTheme">
+        <item name="android:windowActionBarOverlay">true</item>
+    </style>
+    
+    <!-- 图片查看的ActionBar样式 -->
+    <style name="CustomActionBarStyle" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@drawable/action_bar_bg</item>
     </style>
     
     <!-- 系统默认的action overflow样式 -->
@@ -132,6 +143,7 @@
         <item name="android:layout_height">match_parent</item>
         <item name="android:cacheColorHint">@android:color/transparent</item>
         <item name="android:listSelector">@drawable/common_list_selector</item>
+        <item name="android:fastScrollEnabled">true</item>
     </style>
     
     <!-- 公共的分割线样式 -->
@@ -238,5 +250,15 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:button">@drawable/album_checkbox_selector</item>
+    </style>
+    
+    <style name="CommonCheckedTextViewStyle">
+	    <item name="android:layout_width">match_parent</item>
+	    <item name="android:layout_height">wrap_content</item>
+	    <item name="android:layout_gravity">center_vertical</item>
+	    <item name="android:padding">@dimen/list_item_padding</item>
+	    <item name="android:maxLines">2</item>
+	    <item name="android:gravity">center_vertical</item>
+	    <item name="android:checkMark">@drawable/album_choice_selector</item>
     </style>
 </resources>
