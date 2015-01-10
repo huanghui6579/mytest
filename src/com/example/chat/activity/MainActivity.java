@@ -201,6 +201,18 @@ public class MainActivity extends BaseActivity {
 	}
 	
 	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		setIntent(intent);
+		
+		initWidow();
+		initView();
+		addListener();
+		initData();
+		
+	}
+	
+	@Override
 	protected void addListener() {
 		// TODO Auto-generated method stub
 		mPageIndicator.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {

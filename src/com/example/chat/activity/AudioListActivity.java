@@ -115,6 +115,13 @@ public class AudioListActivity extends BaseActivity implements LoaderCallbacks<L
 	}
 
 	@Override
+	protected void beforeBack() {
+		if (SystemUtil.isSoftInputActive()) {
+			SystemUtil.hideSoftInput(this);
+		}
+	}
+	
+	@Override
 	public Loader<List<AudioItem>> onCreateLoader(int id, Bundle args) {
 		if (!SystemUtil.isViewVisible(pbLoading)) {
 			pbLoading.setVisibility(View.VISIBLE);

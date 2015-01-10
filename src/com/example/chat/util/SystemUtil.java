@@ -26,6 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -109,8 +110,21 @@ public class SystemUtil {
 	 * @param view
 	 */
 	public static void hideSoftInput(View view) {
-		InputMethodManager imm = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
+	
+	/**
+	 * 隐藏软键盘
+	 * @update 2015年1月9日 上午9:35:31
+	 * @param activity
+	 */
+	public static void hideSoftInput(Activity activity) {
+		View view = activity.getCurrentFocus();
+	    if (view != null) {
+	        InputMethodManager inputManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+	        inputManager.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+	    }
 	}
 	
 	/**

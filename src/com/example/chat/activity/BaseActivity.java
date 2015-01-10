@@ -103,6 +103,7 @@ public abstract class BaseActivity extends FragmentActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:	//返回
+			beforeBack();
 			finish();
 			return true;
 
@@ -110,6 +111,14 @@ public abstract class BaseActivity extends FragmentActivity {
 			break;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	/**
+	 * 在按下左上角的返回按钮时，可以处理的操作，该方法在finish()前调用
+	 * @update 2015年1月9日 上午9:41:44
+	 */
+	protected void beforeBack() {
+		
 	}
 	
 	/**

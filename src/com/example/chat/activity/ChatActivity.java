@@ -755,8 +755,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				default:
 					break;
 				}
-				intent.putExtra(ARG_MSG_INFO, msgInfo);
-				startActivityForResult(intent, requestCode);
+				if (intent != null) {
+					intent.putExtra(ARG_MSG_INFO, msgInfo);
+					startActivityForResult(intent, requestCode);
+				}
 			}
 		});
 		lvMsgs.setOnTouchListener(new View.OnTouchListener() {
