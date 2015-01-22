@@ -40,12 +40,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Environment;
+import android.support.v7.internal.widget.TintTypedArray;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.View.MeasureSpec;
@@ -1777,5 +1779,103 @@ public class SystemUtil {
 			int sec = msec % unit;
 			return hor + ":" + minu + minuChar + sec + secChar;
 		}
+	}
+	
+	/**
+	 * 当前sdk版本是否在14或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK14() {
+		return Build.VERSION_CODES.ICE_CREAM_SANDWICH >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 当前sdk版本是否在15或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK15() {
+		return Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1 >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 当前sdk版本是否在16或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK16() {
+		return Build.VERSION_CODES.JELLY_BEAN >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 当前sdk版本是否在17或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK17() {
+		return Build.VERSION_CODES.JELLY_BEAN_MR1 >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 当前sdk版本是否在18或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK18() {
+		return Build.VERSION_CODES.JELLY_BEAN_MR2 >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 当前sdk版本是否在19或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK19() {
+		return Build.VERSION_CODES.KITKAT >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 当前sdk版本是否在21或者之上
+	 * @update 2015年1月22日 下午3:02:51
+	 * @return
+	 */
+	public static boolean hasSDK21() {
+		return Build.VERSION_CODES.LOLLIPOP >= Build.VERSION.SDK_INT;
+	}
+	
+	/**
+	 * 根据提供的属性获得该属性值对应的资源id
+	 * @update 2015年1月22日 下午6:48:30
+	 * @param attr 属性
+	 * @return
+	 */
+	public static int getResourceId(Context context, int attr) {
+		TypedValue typedValue = new TypedValue();
+		if (context.getTheme().resolveAttribute(attr, typedValue, true)) {
+			if (typedValue.type >= TypedValue.TYPE_FIRST_INT && typedValue.type <= TypedValue.TYPE_LAST_INT) {
+				return typedValue.data;
+			} else if (typedValue.type == TypedValue.TYPE_STRING) {
+				return typedValue.resourceId;
+			} else {
+				return 0;
+			}
+		} else {
+			return 0;
+		}
+	}
+	
+	/**
+	 * 根据提供的属性获得该属性值对应的资源id
+	 * @update 2015年1月22日 下午6:48:30
+	 * @param attr 属性
+	 * @return
+	 */
+	public static int getResourceId(Context context, int defStyleAttr, int attr) {
+		TintTypedArray a = TintTypedArray.obtainStyledAttributes(context, null, new int[] {attr}, defStyleAttr, 0);
+		if (a != null) {
+			return a.getResourceId(0, 0);
+		}
+		return 0;
 	}
 }

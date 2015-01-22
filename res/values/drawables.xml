@@ -9,6 +9,6 @@
 
     <drawable name="transparent">#00000000</drawable>
     
-    <drawable name="action_bar_bg">@color/action_bar_color</drawable>
+    <drawable name="action_bar_bg">?attr/colorPrimary</drawable>
     
 </resources>

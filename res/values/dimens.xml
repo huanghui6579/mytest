@@ -4,6 +4,10 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     
+    <dimen name="progress_wheel_size">80dp</dimen>
+    
+    <dimen name="tool_bar_top_padding">0dp</dimen>
+    
     <dimen name="login_horizontal_margin">20dp</dimen>
     <dimen name="login_vertical_margin">20dp</dimen>
     <dimen name="login_main_margin_top">50dp</dimen>
@@ -25,7 +29,7 @@
     <dimen name="contact_text_index_padding_top">5dp</dimen>
     <dimen name="contact_text_index_padding_bottom">5dp</dimen>
     
-    <dimen name="chat_edit_panel_padding">8dp</dimen>
+    <dimen name="chat_edit_panel_padding">4dp</dimen>
     <dimen name="chat_voice_btn_padding">8dp</dimen>
     <dimen name="chat_send_btn_padding">6dp</dimen>
     

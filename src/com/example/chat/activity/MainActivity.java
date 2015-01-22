@@ -1,7 +1,6 @@
 package com.example.chat.activity;
 
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +11,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -21,7 +19,6 @@ import android.support.v4.view.ViewPager;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.Window;
 
@@ -76,15 +73,7 @@ public class MainActivity extends BaseActivity {
 			coreService.initCurrentUser(initCurrentUserInfo());
 		}
 	};
-    
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		forceShowActionBarOverflowMenu();
-		
-	}
-	
+
 	@Override
 	protected boolean isHomeAsUpEnabled() {
 		return false;
@@ -99,26 +88,22 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	public boolean onMenuOpened(int featureId, Menu menu) {
-	    if(featureId == Window.FEATURE_ACTION_BAR && menu != null){
+	    if((featureId == Window.FEATURE_ACTION_BAR || featureId == Window.FEATURE_OPTIONS_PANEL) && menu != null){
 	        if(menu.getClass().getSimpleName().equals("MenuBuilder")){
 	            try{
 	                Method m = menu.getClass().getDeclaredMethod(
 	                    "setOptionalIconsVisible", Boolean.TYPE);
 	                m.setAccessible(true);
 	                m.invoke(menu, true);
-	            }
-	            catch(NoSuchMethodException e){
+	            } catch(NoSuchMethodException e){
 	                Log.e(TAG, "onMenuOpened", e);
-	            }
-	            catch(Exception e){
+	            } catch(Exception e){
 	                throw new RuntimeException(e);
 	            }
 	        }
 	    }
 	    return super.onMenuOpened(featureId, menu);
 	}
-	
-	
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -141,22 +126,6 @@ public class MainActivity extends BaseActivity {
 		return super.onOptionsItemSelected(item);
 	}
 	
-	/** 
-     * 强制显示 overflow menu 
-     */  
-    private void forceShowActionBarOverflowMenu() {  
-        try {  
-            ViewConfiguration config = ViewConfiguration.get(this);  
-            Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");  
-            if (menuKeyField != null) {  
-                menuKeyField.setAccessible(true);  
-                menuKeyField.setBoolean(config, false);  
-            }  
-        } catch (Exception e) {  
-            e.printStackTrace();  
-        }  
-    }
-    
     /**
      * 初始化当前用户的信息
      */
@@ -254,15 +223,20 @@ public class MainActivity extends BaseActivity {
 	}
 	
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_MENU:
-			break;
+			if (toolbar.isOverflowMenuShowing()) {
+				toolbar.hideOverflowMenu();
+			} else {
+				toolbar.showOverflowMenu();
+			}
+			return true;
 
 		default:
 			break;
 		}
-		return super.onKeyDown(keyCode, event);
+		return super.onKeyUp(keyCode, event);
 	}
 	
 	@Override

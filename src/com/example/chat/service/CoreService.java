@@ -207,13 +207,15 @@ public class CoreService extends Service {
 			
 			@Override
 			public void run() {
-				Personal localPerson = userManager.getLocalSelfInfo(person);
-				if (localPerson == null) {	//本地没有个人信息，则从服务器上同步
-					//从网上同步个人信息
-					XmppUtil.syncPersonalInfo(connection, person);
-					userManager.saveOrUpdateCurrentUser(person);
-				} else {	//本地有个人信息，则只需改变状态就行了
-					userManager.updatePersonStatus(person);
+				if (!person.isEmpty()) {
+					Personal localPerson = userManager.getLocalSelfInfo(person);
+					if (localPerson == null) {	//本地没有个人信息，则从服务器上同步
+						//从网上同步个人信息
+						XmppUtil.syncPersonalInfo(connection, person);
+						userManager.saveOrUpdateCurrentUser(person);
+					} else {	//本地有个人信息，则只需改变状态就行了
+						userManager.updatePersonStatus(person);
+					}
 				}
 			}
 		}).start();
@@ -466,21 +468,22 @@ public class CoreService extends Service {
 		@Override
 		public void run() {
 			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
-			
-			//1、先从服务器上获取所有的好友列表
-			List<User> users = XmppUtil.getFriends(connection);
-			
-			//2、更新本地数据库
-			userManager.updateFriends(users);
-			
-			Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_LIST);
-			sendBroadcast(intent);
-			
-			//3、更新好友的头像等基本信息
-			users = XmppUtil.syncFriendsVcard(connection, users);
-			userManager.updateFriends(users);
-			intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
-			sendBroadcast(intent);
+			if (connection != null && connection.isAuthenticated()) {
+				//1、先从服务器上获取所有的好友列表
+				List<User> users = XmppUtil.getFriends(connection);
+				
+				//2、更新本地数据库
+				userManager.updateFriends(users);
+				
+				Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_LIST);
+				sendBroadcast(intent);
+				
+				//3、更新好友的头像等基本信息
+				users = XmppUtil.syncFriendsVcard(connection, users);
+				userManager.updateFriends(users);
+				intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
+				sendBroadcast(intent);
+			}
 		}
 		
 	}

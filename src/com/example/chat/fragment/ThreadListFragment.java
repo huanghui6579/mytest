@@ -35,6 +35,7 @@ import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
 import com.example.chat.provider.Provider;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.view.ProgressWheel;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -49,7 +50,7 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	private ImageLoader mImageLoader = ImageLoader.getInstance();
 	
 	private ListView mListView;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	private View emptyView;
 	
 	private MsgManager msgManager = MsgManager.getInstance();
@@ -95,7 +96,7 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 		View view = inflater.inflate(R.layout.fragment_session_list, container, false);
 		mListView = (ListView) view.findViewById(R.id.lv_session);
 		emptyView = view.findViewById(R.id.empty_view);
-		pbLoading = (ProgressBar) view.findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) view.findViewById(R.id.pb_loading);
 		return view;
 	}
 	

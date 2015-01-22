@@ -1,33 +1,40 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/LoginRootLayoutStyle" >
-
-    <LinearLayout 
-        android:id="@+id/ll_main"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:orientation="vertical">
-        <EditText 
-            android:id="@+id/et_account"
-            style="@style/AccountTextStyle"
-            android:hint="@string/login_hint_account"/>
-        <EditText 
-            android:id="@+id/et_password"
-            style="@style/PasswordTextStyle"
-            android:hint="@string/login_hint_password"
-            android:imeOptions="actionDone"
-            android:layout_marginTop="@dimen/login_password_margin_top"/>
-        
-        <Button 
-	        android:id="@+id/btn_login"
-	        style="@style/LoginTextStyle"
-	        android:layout_marginTop="@dimen/login_signin_button_margin_top"
-	        android:enabled="false"
-	        android:text="@string/login_text_button_signin"/>
-    </LinearLayout>
-
-    <TextView 
-        android:id="@+id/tv_regist"
-        style="@style/LoginBottomTextStyle"
-        android:text="@string/login_text_regist"/>
-</RelativeLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <include layout="@layout/com_toolbar"/>
+	<RelativeLayout
+	    style="@style/LoginRootLayoutStyle" >
+	    
+	    <LinearLayout 
+	        android:id="@+id/ll_main"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_centerVertical="true"
+	        android:orientation="vertical">
+	        <EditText 
+	            android:id="@+id/et_account"
+	            style="@style/AccountTextStyle"
+	            android:hint="@string/login_hint_account"/>
+	        <EditText 
+	            android:id="@+id/et_password"
+	            style="@style/PasswordTextStyle"
+	            android:hint="@string/login_hint_password"
+	            android:imeOptions="actionDone"
+	            android:layout_marginTop="@dimen/login_password_margin_top"/>
+	        
+	        <Button 
+		        android:id="@+id/btn_login"
+		        style="@style/LoginTextStyle"
+		        android:layout_marginTop="@dimen/login_signin_button_margin_top"
+		        android:enabled="false"
+		        android:text="@string/login_text_button_signin"/>
+	    </LinearLayout>
+	
+	    <TextView 
+	        android:id="@+id/tv_regist"
+	        style="@style/LoginBottomTextStyle"
+	        android:text="@string/login_text_regist"/>
+	</RelativeLayout>
+</LinearLayout>

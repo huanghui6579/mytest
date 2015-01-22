@@ -3,4 +3,5 @@
     <item type="id" name="lv_data" />
     <item type="id" name="pb_loading" />
     <item type="id" name="tv_content" />
+    <item type="id" name="toolbar" />
 </resources>

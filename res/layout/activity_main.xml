@@ -1,19 +1,25 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.example.chat.view.IconTabPageIndicator
-        android:id="@+id/page_indicator"
-        android:layout_alignParentBottom="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-    <View
-        android:id="@+id/divider"
-        android:layout_above="@id/page_indicator"
-        style="@style/CommonDividerStyle"/>
-    <android.support.v4.view.ViewPager
-        android:layout_above="@id/divider"
-        android:id="@+id/view_pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-</RelativeLayout>
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <include layout="@layout/com_toolbar"/>
+    <RelativeLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent">
+	
+	    <com.example.chat.view.IconTabPageIndicator
+	        android:id="@+id/page_indicator"
+	        android:layout_alignParentBottom="true"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"/>
+	    <View
+	        android:id="@+id/divider"
+	        android:layout_above="@id/page_indicator"
+	        style="@style/CommonDividerStyle"/>
+	    <android.support.v4.view.ViewPager
+	        android:layout_above="@id/divider"
+	        android:id="@+id/view_pager"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"/>
+	</RelativeLayout>
+</LinearLayout>

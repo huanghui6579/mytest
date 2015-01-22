@@ -14,22 +14,29 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jxmpp.util.XmppStringUtils;
 
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.ColorStateList;
 import android.database.ContentObserver;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.FragmentTabHost;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.ViewCompat;
+import android.support.v7.internal.widget.TintManager;
+import android.support.v7.internal.widget.TintTypedArray;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -345,6 +352,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		return R.layout.activity_chat1;
 	}
 
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	@Override
 	protected void initView() {
 		lvMsgs = (ListView) findViewById(R.id.lv_msgs);
@@ -375,6 +383,14 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		ivVolume = (ImageView) findViewById(R.id.iv_volume);
 		ivCancelTip = (ImageView) findViewById(R.id.iv_cancel_tip);
 		ivDelTip = (ImageView) findViewById(R.id.iv_del_tip);
+		Drawable drawable = TintManager.getDrawable(mContext, SystemUtil.getResourceId(mContext, android.R.attr.editTextStyle, android.R.attr.background));
+//		Drawable drawable = TintManager.getDrawable(mContext, SystemUtil.getResourceId(mContext, R.attr.editTextBackground));
+		if (SystemUtil.hasSDK16()) {
+			layoutEdit.setBackground(drawable);
+		} else {
+			layoutEdit.setBackgroundDrawable(drawable);
+		}
+//		etContent.setBackgroundResource(0);
 	}
 	
 	/**

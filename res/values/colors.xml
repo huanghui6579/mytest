@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="action_bar_color">#EF2D3537</color>
+    <color name="primary_color">#03a9f4</color>
+    <color name="primary_dark_color">#0099cc</color>
     <!-- 淡灰色 -->
     <color name="login_main_bg">#FDFDFD</color>
     <color name="login_text_regist">#1212EF</color>

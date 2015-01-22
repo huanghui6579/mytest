@@ -1,22 +1,29 @@
 package com.example.chat.activity;
 
-import android.app.ActionBar;
+import java.lang.reflect.Field;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.ViewConfigurationCompat;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.ViewConfiguration;
 
 import com.example.chat.ChatApplication;
+import com.example.chat.R;
 import com.example.chat.util.Constants;
+import com.example.chat.util.SystemUtil;
 
 /**
  * 所有Activity的父类
  * @author huanghui1
  *
  */
-public abstract class BaseActivity extends FragmentActivity {
+public abstract class BaseActivity extends ActionBarActivity {
 	protected Context mContext;
 	protected SharedPreferences preferences;
 	protected ChatApplication application;
@@ -27,6 +34,8 @@ public abstract class BaseActivity extends FragmentActivity {
 	private boolean homeAsUpEnabled = true;
 	
 	protected static String TAG = null; 
+	
+	protected Toolbar toolbar;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +57,34 @@ public abstract class BaseActivity extends FragmentActivity {
 		
 		setContentView(getContentView());
 		
+		initToolBar();
+		
+		forceShowActionBarOverflowMenu();
+		
 		initView();
 		
 		addListener();
 		
 		initData();
 	}
+	
+	/** 
+     * 强制显示 overflow menu 
+     */  
+    protected void forceShowActionBarOverflowMenu() {  
+        try {  
+            ViewConfiguration config = ViewConfiguration.get(this);  
+            if (ViewConfigurationCompat.hasPermanentMenuKey(config)) {
+            	Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");  
+                if (menuKeyField != null) {  
+                    menuKeyField.setAccessible(true);  
+                    menuKeyField.setBoolean(config, false);  
+                }
+            }
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        }  
+    }
 	
 	/**
 	 * 是否有允许ActionBar左上角显示返回按钮
@@ -69,13 +100,34 @@ public abstract class BaseActivity extends FragmentActivity {
 	 * @update 2014年10月10日 下午9:29:18
 	 */
 	protected void initWidow() {
-		ActionBar actionBar = getActionBar();
+		/*ActionBar actionBar = getSupportActionBar();
 		if (homeAsUpEnabled) {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		} else {
 			actionBar.setDisplayHomeAsUpEnabled(false);
+		}*/
+	}
+	
+	/**
+	 * 初始化ToolBar
+	 * @update 2015年1月21日 上午10:04:23
+	 */
+	protected void initToolBar() {
+		toolbar = (Toolbar) findViewById(R.id.toolbar);
+		if (toolbar != null) {
+			setSupportActionBar(toolbar);
 		}
-	};
+		ActionBar actionBar = getSupportActionBar();
+		if (actionBar != null) {
+			if (homeAsUpEnabled) {
+				actionBar.setDisplayHomeAsUpEnabled(true);
+			} else {
+				actionBar.setDisplayHomeAsUpEnabled(false);
+			}
+		} else {
+			SystemUtil.makeShortToast("没有ActionBar或者ToolBar");
+		}
+	}
 	
 	/**
 	 * 获得界面的布局文件id

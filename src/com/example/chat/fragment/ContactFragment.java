@@ -27,7 +27,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
@@ -45,6 +44,7 @@ import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
 import com.example.chat.view.MyAlertDialogFragment;
+import com.example.chat.view.ProgressWheel;
 import com.example.chat.view.SideBar;
 import com.example.chat.view.SideBar.OnTouchingLetterChangedListener;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -63,7 +63,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	private ListView lvContact;
 	private TextView tvIndexDialog;
 	private SideBar sideBar;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	
 	private ContactAdapter mAdapter;
 	
@@ -149,7 +149,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		lvContact = (ListView) view.findViewById(R.id.lv_contact);
 		tvIndexDialog = (TextView) view.findViewById(R.id.tv_text_dialog);
 		sideBar = (SideBar) view.findViewById(R.id.sidrbar);
-		pbLoading = (ProgressBar) view.findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) view.findViewById(R.id.pb_loading);
 		
 		sideBar.setTextView(tvIndexDialog);
 		

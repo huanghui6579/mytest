@@ -1,36 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
         Base application theme, dependent on API level. This theme is replaced
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
-    <style name="AppBaseTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+    <style name="AppBaseTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorPrimaryDark">@color/primary_color</item>
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorAccent">@color/primary_color</item>
+        <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to
             backward-compatibility can go here.
         -->
+        <!-- <item name="windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item> -->
     </style>
 
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
-        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>
+        <!-- <item name="actionBarStyle">@style/CustomActionBarStyle</item> -->
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
         <!-- <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item> -->
-        <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
-        <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
-    	<item name="android:actionMenuTextColor">@android:color/white</item>
-    </style>
-    
-    <!-- 主界面的菜单样式 -->
-    <style name="AppTheme.MainActivity" parent="AppTheme">
-        <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow.MainActivty</item>
-    </style>
-    
-    <!-- 相册的菜单样式 -->
-    <style name="AppTheme.AlbumActivity" parent="AppTheme">
-        <item name="android:actionMenuTextAppearance">@style/AlbumMenuTextStyle</item>
-        <!-- <item name="android:actionBarItemBackground">@drawable/common_button_green_selector</item> -->
+        <!-- <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item> -->
+        <!-- <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
+    	<item name="android:actionMenuTextColor">@android:color/white</item> -->
     </style>
     
     <!-- 相册菜单字体样式 -->
@@ -38,14 +36,11 @@
         <item name="android:textSize">16sp</item>
     </style>
     
-    <!-- 图片预览的样式 -->
-    <style name="AppTheme.ImagePreviewActivity" parent="AppTheme">
-        <item name="android:windowActionBarOverlay">true</item>
-    </style>
-    
     <!-- 图片查看的ActionBar样式 -->
-    <style name="CustomActionBarStyle" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
-        <item name="android:background">@drawable/action_bar_bg</item>
+    <style name="CustomActionBarStyle" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="background">@drawable/action_bar_bg</item>
+        <item name="backgroundStacked">@drawable/action_bar_bg</item>
+        <item name="backgroundSplit">@drawable/action_bar_bg</item>
     </style>
     
     <!-- 系统默认的action overflow样式 -->

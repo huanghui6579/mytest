@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主界面的菜单样式 -->
+    <style name="AppTheme.MainActivity" parent="AppTheme">
+        <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow.MainActivty</item>
+    </style>
+    
+    <!-- 相册的菜单样式 -->
+    <style name="AppTheme.AlbumActivity" parent="AppTheme">
+        <item name="android:actionMenuTextAppearance">@style/AlbumMenuTextStyle</item>
+        <!-- <item name="android:actionBarItemBackground">@drawable/common_button_green_selector</item> -->
+    </style>
+    
+    <!-- 图片预览的样式 -->
+    <style name="AppTheme.ImagePreviewActivity" parent="AppTheme">
+        <item name="android:windowActionBarOverlay">true</item>
+    </style>
+    
+    <!-- Toolbar的样式 -->
+    <style name="AppTheme.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+	    <!-- <item name="android:textColorPrimary">@android:color/white</item> -->
+	</style>
+	
+    <!-- Toolbar菜单的样式 -->
+	<style name="AppTheme.Toolbar.Menu" parent="ThemeOverlay.AppCompat.Light">
+	    <item name="android:background">?attr/colorPrimary</item>
+	    <item name="actionBarItemBackground">?attr/colorPrimary</item>
+	    <item name="colorControlHighlight">?attr/colorPrimary</item>
+	    <item name="android:textColorPrimary">@android:color/white</item>
+	    <!-- <item name="android:selectedWeekBackgroundColor">@color/primary_dark_color</item> -->
+	</style>
+</resources>

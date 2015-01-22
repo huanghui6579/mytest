@@ -47,6 +47,7 @@ import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
 import com.example.chat.util.XmppUtil;
+import com.example.chat.view.ProgressWheel;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -63,7 +64,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	
 	private ListView lvNewInfos;
 	private View emptyView;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	
 	private List<NewFriendInfo> mNewInfos = new ArrayList<>();
 	private NewFriendAdapter mNewFriendAdapter;
@@ -89,7 +90,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	protected void initView() {
 		lvNewInfos = (ListView) findViewById(R.id.lv_new_friend_info);
 		emptyView = findViewById(R.id.empty_view);
-		pbLoading = (ProgressBar) findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) findViewById(R.id.pb_loading);
 	}
 
 	@Override

@@ -2,6 +2,8 @@ package com.example.chat.model;
 
 import org.jxmpp.util.XmppStringUtils;
 
+import android.text.TextUtils;
+
 import com.example.chat.util.Constants;
 
 /**
@@ -230,5 +232,18 @@ public class Personal {
 			return getJID() + "/" + resource;
 		}*/
 		return XmppStringUtils.completeJidFrom(username, Constants.SERVER_NAME, resource);
+	}
+	
+	/**
+	 * 判断该类是否为空
+	 * @update 2015年1月21日 下午5:52:47
+	 * @return
+	 */
+	public boolean isEmpty() {
+		if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

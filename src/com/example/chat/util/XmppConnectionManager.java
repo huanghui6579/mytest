@@ -67,7 +67,7 @@ public class XmppConnectionManager {
 		// 收到好友邀请后manual表示需要经过同意,accept_all表示不经同意自动为好友
 		Roster.setDefaultSubscriptionMode(SubscriptionMode.manual);
 		connection = new XMPPTCPConnection(configuration);
-		connection.setPacketReplyTimeout(10000);
+		connection.setPacketReplyTimeout(15000);	//毫秒为单位
 		
 		//添加监听器
 		connection.addConnectionListener(new ChatConnectionListener());
