@@ -14,6 +14,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -38,6 +40,7 @@ import com.example.chat.model.FileItem;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.util.Constants;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.view.ProgressWheel;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -55,7 +58,7 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 	private ListView lvData;
 	private View emptyView;
 	private TextView backView;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	
 	private ProgressDialog pDialog;
 	
@@ -105,7 +108,7 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 		lvData = (ListView) findViewById(R.id.lv_data);
 		emptyView = findViewById(R.id.empty_view);
 		backView = (TextView) findViewById(R.id.back_view);
-		pbLoading = (ProgressBar) findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) findViewById(R.id.pb_loading);
 	}
 
 	@Override
@@ -155,7 +158,7 @@ public class FileExplorerActivity extends BaseActivity implements LoaderCallback
 		MenuInflater menuInflater = getMenuInflater();
 		menuInflater.inflate(R.menu.common_opt, menu);
 		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
-		btnOpt = (TextView) menuDone.getActionView();
+		btnOpt = (TextView) MenuItemCompat.getActionView(menuDone);
 		btnOpt.setOnClickListener(new View.OnClickListener() {
 			
 			@Override

@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -249,7 +250,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 			MenuInflater menuInflater = getMenuInflater();
 			menuInflater.inflate(R.menu.common_opt, menu);
 			MenuItem menuDone = menu.findItem(R.id.action_select_complete);
-			btnOpt = (TextView) menuDone.getActionView();
+			btnOpt = (TextView) MenuItemCompat.getActionView(menuDone);
 			btnOpt.setOnClickListener(new View.OnClickListener() {
 				
 				@Override

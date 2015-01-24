@@ -14,6 +14,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -55,6 +56,7 @@ import com.amap.api.services.geocoder.RegeocodeResult;
 import com.example.chat.R;
 import com.example.chat.model.LocationInfo;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.view.ProgressWheel;
 
 /**
  * 发送地理位置的界面
@@ -90,7 +92,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	
 	private ListView lvData;
 	
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	
 	/**
 	 * 当前的地图是否加载完毕，只有当地图加载完毕后才可定位，否则会抛异常
@@ -123,7 +125,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 			mMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
 		}
 		lvData = (ListView) findViewById(R.id.lv_data);
-		pbLoading = (ProgressBar) findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) findViewById(R.id.pb_loading);
 	}
 
 	@Override
@@ -155,7 +157,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 		MenuInflater menuInflater = getMenuInflater();
 		menuInflater.inflate(R.menu.common_opt, menu);
 		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
-		btnOpt = (TextView) menuDone.getActionView();
+		btnOpt = (TextView) MenuItemCompat.getActionView(menuDone);
 		btnOpt.setOnClickListener(new View.OnClickListener() {
 			
 			@Override

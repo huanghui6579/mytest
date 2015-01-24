@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -28,6 +29,7 @@ import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AudioItem;
 import com.example.chat.model.MsgInfo;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.view.ProgressWheel;
 
 /**
  * 音频文件列表
@@ -40,7 +42,7 @@ public class AudioListActivity extends BaseActivity implements LoaderCallbacks<L
 	
 	private ListView lvData;
 	private View emptyView;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	
 	private List<AudioItem> mAudioItems = new ArrayList<>();
 	
@@ -57,7 +59,7 @@ public class AudioListActivity extends BaseActivity implements LoaderCallbacks<L
 	protected void initView() {
 		lvData = (ListView) findViewById(R.id.lv_data);
 		emptyView = findViewById(R.id.empty_view);
-		pbLoading = (ProgressBar) findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) findViewById(R.id.pb_loading);
 	}
 
 	@Override
@@ -94,10 +96,10 @@ public class AudioListActivity extends BaseActivity implements LoaderCallbacks<L
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.audio_select, menu);
 		SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-		SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+		android.support.v7.widget.SearchView searchView = (android.support.v7.widget.SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
 		searchView.setQueryHint(getString(R.string.audio_list_search_hint));
 		searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-		searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+		searchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
 			
 			@Override
 			public boolean onQueryTextSubmit(String query) {

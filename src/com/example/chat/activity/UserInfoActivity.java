@@ -104,13 +104,6 @@ public class UserInfoActivity extends BaseActivity {
 		}
 	};
 	
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		ActionBar actionBar = getActionBar();
-		actionBar.setDisplayHomeAsUpEnabled(true);
-	}
 
 	@Override
 	protected int getContentView() {
@@ -119,7 +112,7 @@ public class UserInfoActivity extends BaseActivity {
 
 	@Override
 	protected void initWidow() {
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+//		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 	}
 
 	@Override

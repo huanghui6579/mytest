@@ -11,6 +11,7 @@ import android.widget.ProgressBar;
 import com.example.chat.R;
 import com.example.chat.model.PhotoItem;
 import com.example.chat.util.SystemUtil;
+import com.example.chat.view.ProgressWheel;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
@@ -27,7 +28,7 @@ public class PhotoFragment extends BaseFragment {
 	public static final String ARG_PHOTO = "arg_photo";
 	
 	private PhotoView ivPhoto;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	private PhotoItem mPhoto;
 	
 	private ImageLoader mImageLoader = ImageLoader.getInstance();
@@ -38,7 +39,7 @@ public class PhotoFragment extends BaseFragment {
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_photo_preview, container, false);
 		ivPhoto = (PhotoView) view.findViewById(R.id.iv_photo);
-		pbLoading = (ProgressBar) view.findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) view.findViewById(R.id.pb_loading);
 		pbLoading.setVisibility(View.GONE);
 		return view;
 	}

@@ -551,6 +551,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		
 		@Override
 		protected void onPostExecute(List<MsgInfo> result) {
+			if (otherSide != null) {
+				setTitle(otherSide.getName());
+			}
 			if (!SystemUtil.isEmpty(result)) {
 				msgAdapter.notifyDataSetChanged();
 				if (needScroll) {
