@@ -61,7 +61,6 @@ import com.nostra13.universalimageloader.utils.DiskCacheUtils;
 /**
  * 核心的service服务，主要用来同步联系人数据
  * @author coolpad
- *
  */
 public class CoreService extends Service {
 	public static final String FLAG_SYNC = "flag_sync";
