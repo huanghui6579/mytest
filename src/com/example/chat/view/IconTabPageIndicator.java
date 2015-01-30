@@ -166,24 +166,24 @@ public class IconTabPageIndicator extends LinearLayout implements PageIndicator 
     }
 
     @Override
-    public void onPageScrollStateChanged(int arg0) {
+    public void onPageScrollStateChanged(int state) {
         if (mListener != null) {
-            mListener.onPageScrollStateChanged(arg0);
+            mListener.onPageScrollStateChanged(state);
         }
     }
 
     @Override
-    public void onPageScrolled(int arg0, float arg1, int arg2) {
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
         if (mListener != null) {
-            mListener.onPageScrolled(arg0, arg1, arg2);
+            mListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
         }
     }
 
     @Override
-    public void onPageSelected(int arg0) {
-        setCurrentItem(arg0);
+    public void onPageSelected(int position) {
+        setCurrentItem(position);
         if (mListener != null) {
-            mListener.onPageSelected(arg0);
+            mListener.onPageSelected(position);
         }
     }
 
@@ -207,9 +207,9 @@ public class IconTabPageIndicator extends LinearLayout implements PageIndicator 
     public void notifyDataSetChanged() {
         mTabLayout.removeAllViews();
         PagerAdapter adapter = mViewPager.getAdapter();
-        IconPagerAdapter iconAdapter = null;
-        if (adapter instanceof IconPagerAdapter) {
-            iconAdapter = (IconPagerAdapter)adapter;
+        IconPagerAdapterProvider iconAdapter = null;
+        if (adapter instanceof IconPagerAdapterProvider) {
+            iconAdapter = (IconPagerAdapterProvider)adapter;
         }
         final int count = adapter.getCount();
         for (int i = 0; i < count; i++) {

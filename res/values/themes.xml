@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- 主界面的菜单样式 -->
-    <style name="AppTheme.MainActivity" parent="AppTheme">
+    <style name="AppTheme.MainActivity">
         <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow.MainActivty</item>
+        <item name="vpiTabPageIndicatorStyle">@style/FuncTabView</item>
+    </style>
+    
+    <!-- 聊天界面样式 -->
+    <style name="AppTheme.ChatActivity">
+        <item name="vpiTabPageIndicatorStyle">@style/EmojiTabView</item>
     </style>
     
     <!-- 相册的菜单样式 -->
-    <style name="AppTheme.AlbumActivity" parent="AppTheme">
+    <style name="AppTheme.AlbumActivity">
         <item name="android:actionMenuTextAppearance">@style/AlbumMenuTextStyle</item>
         <!-- <item name="android:actionBarItemBackground">@drawable/common_button_green_selector</item> -->
     </style>
     
     <!-- 图片预览的样式 -->
-    <style name="AppTheme.ImagePreviewActivity" parent="AppTheme">
+    <style name="AppTheme.ImagePreviewActivity">
         <item name="android:windowActionBarOverlay">true</item>
     </style>
     

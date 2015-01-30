@@ -69,6 +69,11 @@ public class Constants {
 	public static final int PAGE_SIZE_MSG = 20;
 	
 	/**
+	 * 表情每页的数量21
+	 */
+	public static final int PAGE_SIZE_EMOJI = 21;
+	
+	/**
 	 * 默认的相册图片选择数量最多为9张
 	 */
 	public static final int ALBUM_SELECT_SIZE = 9;

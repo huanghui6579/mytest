@@ -31,7 +31,7 @@ public class IcsLinearLayout extends LinearLayout {
     private int mDividerPadding;
 
 
-    public IcsLinearLayout(Context context, int themeAttr) {
+	public IcsLinearLayout(Context context, int themeAttr) {
         super(context);
 
         TypedArray a = context.obtainStyledAttributes(null, LL, themeAttr, 0);

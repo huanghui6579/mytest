@@ -10,5 +10,8 @@
     <drawable name="transparent">#00000000</drawable>
     
     <drawable name="action_bar_bg">?attr/colorPrimary</drawable>
+    <drawable name="colorPrimary">?attr/colorPrimary</drawable>
+    
+    <drawable name="emojiType_bg">#535353</drawable>
     
 </resources>

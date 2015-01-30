@@ -32,7 +32,7 @@ import com.example.chat.service.CoreService;
 import com.example.chat.service.CoreService.MainBinder;
 import com.example.chat.util.Constants;
 import com.example.chat.util.Log;
-import com.example.chat.view.IconPagerAdapter;
+import com.example.chat.view.IconPagerAdapterProvider;
 import com.example.chat.view.IconTabPageIndicator;
 
 /**
@@ -254,7 +254,7 @@ public class MainActivity extends BaseActivity {
 		public void onload();
 	}
 	
-	class FragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapter {
+	class FragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapterProvider {
 
 		public FragmentAdapter(FragmentManager fm) {
 			super(fm);
@@ -306,6 +306,11 @@ public class MainActivity extends BaseActivity {
 		@Override
 		public CharSequence getPageTitle(int position) {
 			return CONTENT[position % CONTENT.length];
+		}
+
+		@Override
+		public int getExtraCount() {
+			return 0;
 		}
 		
 	}

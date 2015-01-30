@@ -4,4 +4,6 @@
     <item type="id" name="pb_loading" />
     <item type="id" name="tv_content" />
     <item type="id" name="toolbar" />
+    <item type="id" name="view_pager" />
+    <item type="id" name="empty_view" />
 </resources>

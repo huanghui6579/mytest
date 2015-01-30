@@ -32,4 +32,9 @@
     <color name="contact_chat_bottom_layout">#68FDFDFD</color>
     <color name="contact_chat_msg_time">#89737373</color>
     
+    <!-- pager Tab 选中的颜色 -->
+    <color name="pager_tab_pressed">#6633B5E5</color>
+    <color name="pager_tab_indicator_color">#FF33B5E5</color>
+    <color name="pager_tab_text_selected_color">#FF33B5E5</color>
+    
 </resources>

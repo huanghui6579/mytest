@@ -24,10 +24,19 @@ public class EmojiType implements Parcelable {
 	 */
 	public static final int OPT_ADD = 3;
 	
+	/**
+	 * 删除表情
+	 */
+	public static final int OPT_DEL = 4;
+	
 	private int resId;
 	private String fileName;
 	private String description;
 	private int optType = OPT_EMOJI;
+	/**
+	 * 表情的类型，每一种类型对应一组表情
+	 */
+	private int emojiType = -1;
 
 	public int getResId() {
 		return resId;
@@ -72,16 +81,27 @@ public class EmojiType implements Parcelable {
 		dest.writeString(fileName);
 		dest.writeString(description);
 		dest.writeInt(optType);
+		dest.writeInt(emojiType);
 	}
 	
 	public EmojiType() {
 	}
 	
+	public EmojiType(int resId, String fileName, String description, int optType, int emojiType) {
+		super();
+		this.resId = resId;
+		this.fileName = fileName;
+		this.description = description;
+		this.optType = optType;
+		this.emojiType = emojiType;
+	}
+
 	public EmojiType(Parcel in) {
 		resId = in.readInt();
 		fileName = in.readString();
 		description = in.readString();
 		optType = in.readInt();
+		emojiType = in.readInt();
 	}
 	
 	public static final Parcelable.Creator<EmojiType> CREATOR = new Creator<EmojiType>() {

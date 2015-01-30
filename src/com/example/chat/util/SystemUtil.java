@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -68,6 +69,7 @@ import com.example.chat.model.MsgInfo;
 import com.example.chat.model.MsgInfo.Type;
 import com.example.chat.model.MsgThread;
 import com.example.chat.model.PhotoItem;
+import com.example.chat.model.emoji.Emojicon;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
@@ -1877,5 +1879,50 @@ public class SystemUtil {
 			return a.getResourceId(0, 0);
 		}
 		return 0;
+	}
+	
+	/**
+	 * 根据表情的数量计算表情的页数
+	 * @update 2015年1月26日 下午9:31:45
+	 * @param total
+	 * @return
+	 */
+	public static int getEmojiPageCount(int total) {
+		if (total % Constants.PAGE_SIZE_EMOJI == 0) {	//能整除
+			return total / Constants.PAGE_SIZE_EMOJI;
+		} else {
+			return (int) Math.ceil(total / Constants.PAGE_SIZE_EMOJI + 0.1);
+		}
+	}
+	
+	/**
+	 * 根据第几页的索引位置获得该页的表情数组
+	 * @update 2015年1月26日 下午9:36:00
+	 * @param data 表情数组
+	 * @param index 页数的索引，从0开始
+	 * @return
+	 */
+	public static ArrayList<Emojicon> getCurrentPageEmojis(Emojicon[] data, int index) {
+		return getCurrentPageEmojis(Arrays.asList(data), index);
+	}
+	
+	/**
+	 * 根据第几页的索引位置获得该页的表情数组
+	 * @update 2015年1月26日 下午9:36:00
+	 * @param data 表情数组
+	 * @param index 页数的索引，从0开始
+	 * @return
+	 */
+	public static ArrayList<Emojicon> getCurrentPageEmojis(List<Emojicon> data, int index) {
+		ArrayList<Emojicon> subList = new ArrayList<>();
+		if (SystemUtil.isEmpty(data)) {
+			return subList;
+		}
+		int startIndex = index * Constants.PAGE_SIZE_EMOJI;
+		int endIndex = startIndex + Constants.PAGE_SIZE_EMOJI;
+		int size = data.size();
+		endIndex = endIndex > size ? size : endIndex;
+		subList.addAll(data.subList(startIndex, endIndex));
+		return subList;
 	}
 }

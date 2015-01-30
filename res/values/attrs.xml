@@ -55,4 +55,38 @@
         <attr name="matProg_linearProgress" format="boolean" />
     </declare-styleable>
     
+    <!-- 表情属性 -->
+    <declare-styleable name="Emojicon">
+        <attr name="emojiconSize" format="dimension"/>
+        <attr name="emojiconTextStart" format="integer"/>
+        <attr name="emojiconTextLength" format="integer"/>
+        <attr name="emojiconUseSystemDefault" format="boolean"/>
+    </declare-styleable>
+    
+    <!-- PagerSlidingTabStrip attr -->
+    <declare-styleable name="PagerSlidingTabStrip">
+        <!-- 指示器的颜色 -->
+        <attr name="pstsIndicatorColor" format="color" />
+        <!-- Tab下划线的颜色 -->
+        <attr name="pstsUnderlineColor" format="color" />
+        <!-- tab之间分割线的颜色 -->
+        <attr name="pstsDividerColor" format="color" />
+        <!-- 实施期的高度 -->
+        <attr name="pstsIndicatorHeight" format="dimension" />
+        <!-- tab下划线的高度 -->
+        <attr name="pstsUnderlineHeight" format="dimension" />
+        <!-- tab分割线的间距 -->
+        <attr name="pstsDividerPadding" format="dimension" />
+        <attr name="pstsTabPaddingLeftRight" format="dimension" />
+        <attr name="pstsScrollOffset" format="dimension" />
+        <attr name="pstsTabBackground" format="reference" />
+        <attr name="pstsShouldExpand" format="boolean" />
+        <attr name="pstsTextAllCaps" format="boolean" />
+        <attr name="pstsSelectedTabTextColor" format="color" />
+        <!-- Color of regular titles. -->
+        <attr name="android:textColor" />
+        <!-- Size of title text. -->
+        <attr name="android:textSize" />
+    </declare-styleable>
+    
 </resources>
