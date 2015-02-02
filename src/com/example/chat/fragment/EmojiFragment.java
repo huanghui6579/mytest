@@ -1,29 +1,41 @@
 package com.example.chat.fragment;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.jivesoftware.smack.ReconnectionManager;
+
+import android.R.menu;
+import android.app.Activity;
 import android.content.Context;
+import android.database.DataSetObserver;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.text.Selection;
-import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.activity.CommonAdapter;
-import com.example.chat.model.Emoji;
-import com.example.chat.model.EmojiType;
+import com.example.chat.model.emoji.Emojicon;
+import com.example.chat.model.emoji.EmojiconRecents;
+import com.example.chat.model.emoji.EmojiconRecentsManager;
+import com.example.chat.model.emoji.Nature;
+import com.example.chat.model.emoji.Objects;
+import com.example.chat.model.emoji.People;
+import com.example.chat.model.emoji.Places;
+import com.example.chat.model.emoji.Symbols;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.view.CirclePageIndicator;
 
@@ -33,163 +45,161 @@ import com.example.chat.view.CirclePageIndicator;
  * @version 1.0.0
  * @update 2014年10月27日 下午8:16:15
  */
-public class EmojiFragment extends BaseFragment implements OnItemClickListener{
+public class EmojiFragment extends BaseFragment implements EmojiconRecents {
 	public static final String ARG_EMOJI_TYPE = "arg_emoji_type";
+	public static final String ARG_EMOJIS = "arg_emojis";
+	public static final String ARGS_USE_SYSTEM_DEFAULT_KEY = "useSystemDefaults";
 	
 	private ViewPager mViewPager;
 	private CirclePageIndicator mIndicator;
 	
 	private EmojiPagerAdapter mEmojiPageAdapter;
-	private List<View> emojiViews;
+	/**
+	 * 表情分页的集合
+	 */
+	Map<Integer, ArrayList<Emojicon>> mEmojiMap;
 	
-	private EmojiType mEmojiType;
+	private int mEmojiType;
 	
 	private TextView mTvPrompt;
+	
+	/**
+	 * 表情数组
+	 */
+	private Emojicon[] mData;
 	
 	/**
 	 * 消息编辑输入框，在activty中
 	 */
 	private EditText mEtContent;
+	private boolean mUseSystemDefault;
 	
-	public EmojiFragment() {
-		Bundle args = getArguments();
-		if (args == null) {
-			args = new Bundle();
-			setArguments(args);
-		}
+//	EmojiconRecentsManager recents;
+	
+	private EmojiconRecents recents;
+	
+	public static EmojiFragment newInstance(int emojiType) {
+		return newInstance(emojiType, false);
+	}
+	
+	public static EmojiFragment newInstance(int emojiType, boolean useSystemDefault) {
+		EmojiFragment fragment = new EmojiFragment();
+		Bundle args = new Bundle();
+		args.putInt(ARG_EMOJI_TYPE, emojiType);
+		args.putBoolean(ARGS_USE_SYSTEM_DEFAULT_KEY, useSystemDefault);
+		fragment.setArguments(args);
+		return fragment;
 	}
 	
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		mEmojiType = getArguments().getParcelable(EmojiFragment.ARG_EMOJI_TYPE);
-		super.onCreate(savedInstanceState);
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		
+		if (activity instanceof EmojiconRecents) {
+			recents = (EmojiconRecents) activity;
+		} else if (getParentFragment() instanceof EmojiconRecents) {
+			recents = (EmojiconRecents) getParentFragment();
+		} else {
+			throw new IllegalArgumentException(activity + " must implement interface " + EmojiconRecents.class.getSimpleName());
+		}
 	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		if (mEmojiType == null) {
-			return super.onCreateView(inflater, container, savedInstanceState);
-		}
-		View view = null;
-		switch (mEmojiType.getOptType()) {
-		case EmojiType.OPT_EMOJI:	//显示表情
-			view = inflater.inflate(R.layout.fragment_emoji, container, false);
-			
-			mViewPager = (ViewPager) view.findViewById(R.id.view_pager);
-			mIndicator = (CirclePageIndicator) view.findViewById(R.id.indicator);
-			break;
-		case EmojiType.OPT_ADD:
-		case EmojiType.OPT_MANAGE:
-			view = inflater.inflate(R.layout.layout_emoji_pager_prompt, container, false);
-			mTvPrompt = (TextView) view.findViewById(R.id.tv_prompt);
-			break;
-		default:
-			break;
-		}
+		super.onCreateView(inflater, container, savedInstanceState);
+		View view = inflater.inflate(R.layout.fragment_emoji, container, false);
 		
+		mViewPager = (ViewPager) view.findViewById(R.id.view_pager);
+		mIndicator = (CirclePageIndicator) view.findViewById(R.id.indicator);
 		return view;
 	}
 	
 	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-		if (mEmojiType != null) {
-			switch (mEmojiType.getOptType()) {
-			case EmojiType.OPT_EMOJI:	//显示表情
-				mEtContent = (EditText) getActivity().findViewById(R.id.et_content);
-				
-				initEmojiViews();
-				
-				mEmojiPageAdapter = new EmojiPagerAdapter(emojiViews);
-				mViewPager.setAdapter(mEmojiPageAdapter);
-				
-				mIndicator.setViewPager(mViewPager);
-				break;
-			case EmojiType.OPT_MANAGE:	//管理表情
-			case EmojiType.OPT_ADD:	//添加表情
-				String text = mEmojiType.getDescription();
-				mTvPrompt.setText(text);
-				break;
-			default:
-				break;
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onViewCreated(view, savedInstanceState);
+		//查询最近使用过的表情
+		EmojiconRecentsManager recentsManager = EmojiconRecentsManager
+	            .getInstance(view.getContext());
+		
+		mEtContent = (EditText) getActivity().findViewById(R.id.et_content);
+		Bundle args = getArguments();
+		if (args == null) {
+			mData = People.DATA;
+			mUseSystemDefault = false;
+		} else {
+			mEmojiType = args.getInt(EmojiFragment.ARG_EMOJI_TYPE, People.EMOJI_TYPE);
+			mData = (Emojicon[]) args.getParcelableArray(ARG_EMOJIS);
+			if (mData == null) {
+				switch (mEmojiType) {
+				case 0:	//最近使用过的表情
+					if (!SystemUtil.isEmpty(recentsManager)) {
+						mData = recentsManager.toArray(new Emojicon[recentsManager.size()]);
+					} else {
+						mData = new Emojicon[0];
+					}
+					break;
+				case People.EMOJI_TYPE:
+					mData = People.DATA;
+					break;
+				case Nature.EMOJI_TYPE:
+					mData = Nature.DATA;
+					break;
+				case Objects.EMOJI_TYPE:
+					mData = Objects.DATA;
+					break;
+				case Places.EMOJI_TYPE:
+					mData = Places.DATA;
+					break;
+				case Symbols.EMOJI_TYPE:
+					mData = Symbols.DATA;
+					break;
+				default:
+					mData = new Emojicon[0];
+					break;
+				}
 			}
-			
+			mUseSystemDefault = args.getBoolean(ARGS_USE_SYSTEM_DEFAULT_KEY, false);
 		}
+		
+		initEmojiPageData();
+		
+		mEmojiPageAdapter = new EmojiPagerAdapter(getChildFragmentManager(), mEmojiMap);
+		mViewPager.setAdapter(mEmojiPageAdapter);
+		
+		mIndicator.setViewPager(mViewPager);
+	}
+	
+	public ViewPager getViewPager() {
+		return mViewPager;
+	}
+
+	public EmojiPagerAdapter getEmojiPageAdapter() {
+		return mEmojiPageAdapter;
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		// TODO Auto-generated method stub
+		super.onSaveInstanceState(outState);
+		
+		outState.putParcelableArray(ARG_EMOJIS, mData);
 	}
 	
 	/**
 	 * 初始化表情的个页面
 	 * @update 2014年10月27日 下午2:53:04
 	 */
-	private void initEmojiViews() {
-		emojiViews = new ArrayList<>();
-		LayoutInflater inflater = LayoutInflater.from(mContext);
-		for (int i = 0; i < ChatApplication.emojiPageCount; i++) {
-			View view = inflater.inflate(R.layout.layout_emoji_grid, null);
-			GridView gridView = (GridView) view.findViewById(R.id.gv_emoji);
-			List<Emoji> list = ChatApplication.getCurrentPageEmojis(i);
-			EmojiAdapter adapter = new EmojiAdapter(list, mContext);
-			gridView.setAdapter(adapter);
-			
-			gridView.setOnItemClickListener(this);
-			
-			emojiViews.add(gridView);
-		}
-	}
-	
-	/**
-	 * 表情的网格适配器
-	 * @author huanghui1
-	 * @update 2014年10月27日 下午2:48:31
-	 */
-	class EmojiAdapter extends CommonAdapter<Emoji> {
-
-		public EmojiAdapter(List<Emoji> list, Context context) {
-			super(list, context);
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			EmojiViewHolder holder = null;
-			if (convertView == null) {
-				holder = new EmojiViewHolder();
-				
-				convertView = inflater.inflate(R.layout.item_emoji, parent, false);
-				
-				holder.ivEmoji = (ImageView) convertView.findViewById(R.id.iv_emoji);
-				
-				convertView.setTag(holder);
-			} else {
-				holder = (EmojiViewHolder) convertView.getTag();
-			}
-			
-			final Emoji emoji = list.get(position);
-			int resId = emoji.getResId();
-			int resType = emoji.getResTpe();
-			switch (resType) {
-			case Emoji.TYPE_EMOJI:	//表情类型
-				holder.ivEmoji.setImageResource(resId);
-				break;
-			case Emoji.TYPE_DEL:	//删除类型
-				convertView.setBackgroundDrawable(null);
-				holder.ivEmoji.setImageResource(resId);
-				break;
-			case Emoji.TYPE_EMPTY:	//空的类型
-				convertView.setBackgroundDrawable(null);
-				holder.ivEmoji.setImageDrawable(null);
-				break;
-			default:
-				break;
-			}
-			
-			return convertView;
-		}
-		
-	}
-	
-	final class EmojiViewHolder {
-		ImageView ivEmoji;
+	private void initEmojiPageData() {
+		mEmojiMap = new HashMap<>();
+		int pageCount = SystemUtil.getEmojiPageCount(mData.length);
+		int i = 0;
+		do {
+			ArrayList<Emojicon> data = SystemUtil.getCurrentPageEmojis(mData, i);
+			mEmojiMap.put(i, data);
+			i ++;
+		} while (i < pageCount);
 	}
 	
 	/**
@@ -197,80 +207,77 @@ public class EmojiFragment extends BaseFragment implements OnItemClickListener{
 	 * @author huanghui1
 	 * @update 2014年10月27日 下午8:32:37
 	 */
-	class EmojiPagerAdapter extends PagerAdapter {
-		private List<View> views;
+	class EmojiPagerAdapter extends FragmentStatePagerAdapter {
+		
+		private Map<Integer, ArrayList<Emojicon>> emojiMap;
 
-		public EmojiPagerAdapter(List<View> views) {
-			super();
-			this.views = views;
+		public EmojiPagerAdapter(FragmentManager fm, Map<Integer, ArrayList<Emojicon>> emojiMap) {
+			super(fm);
+			this.emojiMap = emojiMap;
 		}
 
 		@Override
-		public int getCount() {
-			return views.size();
-		}
-
-		@Override
-		public boolean isViewFromObject(View view, Object object) {
-			return view == object;
+		public Fragment getItem(int position) {
+			Fragment fragment = null;
+			if (mEmojiType == 0) {
+				fragment = EmojiRecentGridFragment.newInstance(mEmojiType, emojiMap.get(position));
+			} else {
+				fragment = EmojiGridFragment.newInstance(mEmojiType, emojiMap.get(position), recents, false);
+			}
+			return fragment;
 		}
 
 		@Override
 		public Object instantiateItem(ViewGroup container, int position) {
-			View view = views.get(position);
-			((ViewPager) container).addView(view);
-			view.setTag("emojiPage" + position);
-			return view;
-		}
-
-		@Override
-		public int getItemPosition(Object object) {
 			// TODO Auto-generated method stub
-			return super.getItemPosition(object);
+			Fragment fragment = (Fragment) super.instantiateItem(container, position);
+			if (mEmojiType == 0) {
+				((EmojiRecentGridFragment) fragment).setRecents(null);
+				EmojiconRecentsManager recentsManager = EmojiconRecentsManager.getInstance(mContext);
+				Bundle args = fragment.getArguments();
+				if (args != null) {
+					args.putParcelableArrayList(EmojiGridFragment.ARG_EMOJI_DATA, recentsManager);
+				}
+			} else {
+				((EmojiGridFragment) fragment).setRecents(recents);
+			}
+			return fragment;
 		}
 
 		@Override
-		public void destroyItem(ViewGroup container, int position, Object object) {
-			((ViewPager) container).removeView(views.get(position));
+		public int getCount() {
+			return emojiMap.size();
+		}
+	}
+	
+	/**
+	 * 表情网格点击的回调
+	 * @author huanghui1
+	 * @update 2015年1月26日 下午9:57:23
+	 */
+	public interface OnEmojiconClickedListener {
+        void onEmojiconClicked(Emojicon emojicon);
+    }
+
+	@Override
+	public void addRecentEmoji(Context context, Emojicon emojicon) {
+		/*final ViewPager emojisPager = (ViewPager) getView().findViewById(R.id.view_pager);
+		EmojiRecentGridFragment fragment = (EmojiRecentGridFragment) mEmojiPageAdapter.instantiateItem(emojisPager, 0);
+        fragment.addRecentEmoji(context, emojicon);*/
+		if (recents != null) {
+			recents.addRecentEmoji(context, emojicon);
 		}
 	}
 
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,
-			long id) {
-		//当前页面的索引
-		int currentIndex = mViewPager.getCurrentItem();
-		GridView gridView = (GridView) mViewPager.findViewWithTag("emojiPage" + currentIndex);
-		EmojiAdapter emojiAdapter = (EmojiAdapter) gridView.getAdapter();
-		Emoji emoji = (Emoji) emojiAdapter.getItem(position);
-		int resType = emoji.getResTpe();
-		switch (resType) {
-		case Emoji.TYPE_EMOJI:	//表情类型
-			int cursorStart = mEtContent.getSelectionStart();
-			int cursorEnd = mEtContent.getSelectionEnd();
-			if (cursorStart != cursorEnd) {
-				mEtContent.getText().replace(cursorStart, cursorEnd, "");
+	public void putRecentEmoji(EmojiFragment emojiFragment, Context context, Emojicon emojicon) {
+		// TODO Auto-generated method stub
+		ViewPager viewPager = emojiFragment.getViewPager();
+		FragmentStatePagerAdapter pagerAdapter = emojiFragment.getEmojiPageAdapter();
+		if (viewPager != null && pagerAdapter != null) {
+			Fragment fragment = (Fragment) pagerAdapter.instantiateItem(viewPager, 0);
+			if (fragment instanceof EmojiRecentGridFragment) {
+				((EmojiRecentGridFragment) fragment).addRecentEmoji(context, emojicon);
 			}
-			int cursorIndex = Selection.getSelectionEnd(mEtContent.getText());
-			SpannableStringBuilder emojiText = SystemUtil.addEmojiString(emoji);
-			mEtContent.getText().insert(cursorIndex, emojiText);
-			break;
-		case Emoji.TYPE_DEL:	//删除类型
-			int selectionStart = mEtContent.getSelectionStart();	//光标开始索引位置
-			String content = mEtContent.getText().toString();
-			if (selectionStart > 0) {
-				String text = content.substring(selectionStart - 1, selectionStart);
-				if ("]".equals(text)) {
-					int start = content.lastIndexOf("[");
-					int end = selectionStart;
-					mEtContent.getText().delete(start, end);
-					return;
-				}
-				mEtContent.getText().delete(selectionStart - 1, selectionStart);
-			}
-			break;
-		default:
-			break;
 		}
 	}
 }

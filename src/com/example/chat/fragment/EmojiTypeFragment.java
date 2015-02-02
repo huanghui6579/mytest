@@ -188,7 +188,7 @@ public class EmojiTypeFragment extends BaseFragment implements EmojiconRecents {
 			emojiCategories[i] = emojiType;
 			
 //			Fragment fragment = EmojiGridFragment.newInstance("表情面板" + i);
-			Fragment fragment = EmojiFragment1.newInstance(emojiTypes[i]);
+			Fragment fragment = EmojiFragment.newInstance(emojiTypes[i]);
 //			args.putParcelable(EmojiFragment.ARG_EMOJI_TYPE, emojiType);
 			fragments.add(fragment);
 		}
@@ -254,7 +254,7 @@ public class EmojiTypeFragment extends BaseFragment implements EmojiconRecents {
 
 	@Override
 	public void addRecentEmoji(Context context, Emojicon emojicon) {
-		EmojiFragment1 fragment = (EmojiFragment1) fragments.get(0);
+		EmojiFragment fragment = (EmojiFragment) fragments.get(0);
 		if (fragment != null) {
 			fragment.putRecentEmoji(fragment, context, emojicon);
 		}

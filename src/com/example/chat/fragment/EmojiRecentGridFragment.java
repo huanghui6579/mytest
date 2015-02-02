@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.activity.CommonAdapter;
-import com.example.chat.fragment.EmojiFragment1.OnEmojiconClickedListener;
+import com.example.chat.fragment.EmojiFragment.OnEmojiconClickedListener;
 import com.example.chat.model.emoji.Emojicon;
 import com.example.chat.model.emoji.EmojiconRecents;
 import com.example.chat.model.emoji.EmojiconRecentsManager;
@@ -35,9 +35,9 @@ public class EmojiRecentGridFragment extends EmojiGridFragment implements Emojic
 	protected static EmojiRecentGridFragment newInstance(int emojiType, ArrayList<Emojicon> list, EmojiconRecents recents, boolean useSystemDefault) {
 		EmojiRecentGridFragment fragment = new EmojiRecentGridFragment();
 		Bundle args = new Bundle();
-		args.putInt(EmojiFragment1.ARG_EMOJI_TYPE, emojiType);
+		args.putInt(EmojiFragment.ARG_EMOJI_TYPE, emojiType);
 		args.putParcelableArrayList(ARG_EMOJI_DATA, list);
-		args.putBoolean(EmojiFragment1.ARGS_USE_SYSTEM_DEFAULT_KEY, useSystemDefault);
+		args.putBoolean(EmojiFragment.ARGS_USE_SYSTEM_DEFAULT_KEY, useSystemDefault);
 		if (recents != null) {
 			fragment.setRecents(recents);
 		}

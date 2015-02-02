@@ -46,8 +46,8 @@
             android:name="com.amap.api.v2.apikey"
             android:value="2273245829380d27d37304e62c3d188f" />
         
-        <activity
-            android:name="com.example.chat.activity.ChatActivity1"
+        <!-- <activity
+            android:name="com.example.chat.activity.LocationShareActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.ChatActivity"
             android:configChanges="orientation|screenSize" >
@@ -56,7 +56,18 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity> -->
+        <!-- <activity
+            android:name="com.example.chat.activity.ChatActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.ChatActivity"
+            android:configChanges="orientation|screenSize" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> -->
         <!-- <activity
             android:name="com.example.chat.activity.MainActivity"
             android:label="@string/app_name"
@@ -67,7 +78,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity> -->
-        <!-- <activity
+        <activity
             android:name="com.example.chat.activity.LoginActivity"
             android:label="@string/app_name"
             android:configChanges="orientation|screenSize" >
@@ -76,7 +87,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> -->
+        </activity>
         
         <activity
             android:name="com.example.chat.activity.MainActivity"

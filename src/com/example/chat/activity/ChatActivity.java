@@ -12,7 +12,6 @@ import java.util.Locale;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
-import org.jxmpp.util.XmppStringUtils;
 
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
@@ -21,7 +20,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.res.ColorStateList;
 import android.database.ContentObserver;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -29,14 +27,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.app.FragmentTabHost;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.internal.widget.TintManager;
-import android.support.v7.internal.widget.TintTypedArray;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -60,12 +53,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 
 import com.example.chat.ChatApplication;
 import com.example.chat.R;
 import com.example.chat.fragment.EmojiFragment;
+import com.example.chat.fragment.EmojiTypeFragment;
 import com.example.chat.manage.MsgManager;
 import com.example.chat.model.AttachItem;
 import com.example.chat.model.EmojiType;
@@ -79,6 +72,7 @@ import com.example.chat.model.MsgThread;
 import com.example.chat.model.Personal;
 import com.example.chat.model.User;
 import com.example.chat.model.UserVcard;
+import com.example.chat.model.emoji.Emojicon;
 import com.example.chat.provider.Provider;
 import com.example.chat.service.CoreService;
 import com.example.chat.service.CoreService.MainBinder;
@@ -88,6 +82,7 @@ import com.example.chat.util.MimeUtils;
 import com.example.chat.util.SoundMeter;
 import com.example.chat.util.SystemUtil;
 import com.example.chat.util.XmppConnectionManager;
+import com.example.chat.view.EmojiconEditText;
 import com.example.chat.view.TextViewAware;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -99,7 +94,7 @@ import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
  * @version 1.0.0
  * @update 2014年10月25日 上午10:38:11
  */
-public class ChatActivity extends BaseActivity implements OnClickListener/*, OnItemClickListener*/ {
+public class ChatActivity extends BaseActivity implements OnClickListener/*, OnItemClickListener*/, EmojiFragment.OnEmojiconClickedListener, EmojiTypeFragment.OnEmojiconBackspaceClickedListener {
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 	
 	public static final String ARG_MSG_INFO = "arg_msg_info";
@@ -190,7 +185,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	private TextView btnVoice;
 	private TextView btnSend;
 	private TextView btnEmoji;
-	private EditText etContent;
+	private EmojiconEditText etContent;
 	
 	/**
 	 * 输入框底部的面板
@@ -199,7 +194,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	/**
 	 * 表情面板
 	 */
-	private LinearLayout layoutEmoji;
+	private FrameLayout layoutEmoji;
 	/**
 	 * 中间的消息输入框
 	 */
@@ -209,7 +204,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 */
 	private TextView btnMakeVoice;
 	
-	private FragmentTabHost mTabHost;
+//	private FragmentTabHost mTabHost;
 	
 	/**
 	 * 附件面板
@@ -349,7 +344,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	@Override
 	protected int getContentView() {
 		// TODO Auto-generated method stub
-		return R.layout.activity_chat1;
+		return R.layout.activity_chat2;
 	}
 
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -360,17 +355,17 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		btnEmoji = (TextView) findViewById(R.id.btn_emoji);
 		btnSend = (TextView) findViewById(R.id.btn_send);
 		
-		etContent = (EditText) findViewById(R.id.et_content);
+		etContent = (EmojiconEditText) findViewById(R.id.et_content);
 		layoutBottom = (FrameLayout) findViewById(R.id.layout_bottom);
-		layoutEmoji = (LinearLayout) findViewById(R.id.layout_emoji);
+		layoutEmoji = (FrameLayout) findViewById(R.id.layout_emoji);
 		
 		btnMakeVoice = (TextView) findViewById(R.id.btn_make_voice);
 		layoutEdit = (RelativeLayout) findViewById(R.id.layout_edit);
 		
 		gvAttach = (GridView) findViewById(R.id.gv_attach);
 		
-		mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
-		mTabHost.setup(mContext, getSupportFragmentManager(), R.id.realtabcontent);
+//		mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
+//		mTabHost.setup(mContext, getSupportFragmentManager(), R.id.realtabcontent);
 		
 //		mTabHost.getTabWidget().setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
 //		mTabHost.getTabWidget().setDividerDrawable(R.drawable.list_divider_drawable);
@@ -391,6 +386,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			layoutEdit.setBackgroundDrawable(drawable);
 		}
 //		etContent.setBackgroundResource(0);
+		
+		getSupportFragmentManager().beginTransaction()
+			.replace(R.id.layout_emoji, EmojiTypeFragment.instantiate(mContext, EmojiTypeFragment.class.getCanonicalName()), "emojiFragment")
+			.commit();
 	}
 	
 	/**
@@ -437,16 +436,16 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		lvMsgs.setAdapter(msgAdapter);
 		
 		//初始化表情分类数据
-		List<EmojiType> emojiTypes = ChatApplication.geEmojiTypes();
-		for (int i = 0; i < ChatApplication.emojiTypeCount; i++) {
-			EmojiType emojiType = emojiTypes.get(i);
-			TabSpec tabSpec = mTabHost.newTabSpec(emojiType.getFileName()).setIndicator(getTabIndicatorView(emojiType));
-			Bundle args = new Bundle();
-			args.putParcelable(EmojiFragment.ARG_EMOJI_TYPE, emojiType);
-			mTabHost.addTab(tabSpec, EmojiFragment.class, args);
-			mTabHost.setTag(i);
-			mTabHost.getTabWidget().getChildAt(i).setBackgroundResource(R.drawable.item_tab_selector);
-		}
+//		List<EmojiType> emojiTypes = ChatApplication.geEmojiTypes();
+//		for (int i = 0; i < ChatApplication.emojiTypeCount; i++) {
+//			EmojiType emojiType = emojiTypes.get(i);
+//			TabSpec tabSpec = mTabHost.newTabSpec(emojiType.getFileName()).setIndicator(getTabIndicatorView(emojiType));
+//			Bundle args = new Bundle();
+//			args.putParcelable(EmojiFragment.ARG_EMOJI_TYPE, emojiType);
+//			mTabHost.addTab(tabSpec, EmojiFragment.class, args);
+//			mTabHost.setTag(i);
+//			mTabHost.getTabWidget().getChildAt(i).setBackgroundResource(R.drawable.item_tab_selector);
+//		}
 		
 		attachItemNames = getResources().getStringArray(R.array.att_item_name);
 		//初始化添加附件选项的数据
@@ -551,9 +550,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		
 		@Override
 		protected void onPostExecute(List<MsgInfo> result) {
-			if (otherSide != null) {
-				setTitle(otherSide.getName());
-			}
 			if (!SystemUtil.isEmpty(result)) {
 				msgAdapter.notifyDataSetChanged();
 				if (needScroll) {
@@ -1921,6 +1917,16 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			new LoadDataTask(false).execute();
 		}
 		
+	}
+
+	@Override
+	public void onEmojiconClicked(Emojicon emojicon) {
+		EmojiTypeFragment.input(etContent, emojicon);
+	}
+
+	@Override
+	public void onEmojiconBackspaceClicked(View v) {
+		EmojiTypeFragment.backspace(etContent);
 	}
 
 }

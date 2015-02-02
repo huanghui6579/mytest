@@ -17,7 +17,8 @@ public class Constants {
 	 */
 //	public static final String SERVER_HOST = "192.168.0.104";
 //	public static final String SERVER_HOST = "172.16.45.16";
-	public static final String SERVER_HOST = "10.2.33.237";
+//	public static final String SERVER_HOST = "10.2.33.237";
+	public static final String SERVER_HOST = "192.168.42.25";
 //	public static final String SERVER_HOST = "192.168.0.102";
 //	public static final String SERVER_HOST = "192.168.1.184";
 //	public static final String SERVER_NAME = "tiger.com";

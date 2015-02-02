@@ -14,4 +14,7 @@
     
     <drawable name="emojiType_bg">#535353</drawable>
     
+    <drawable name="black">#000000</drawable>
+    <drawable name="white">#ffffff</drawable>
+    
 </resources>

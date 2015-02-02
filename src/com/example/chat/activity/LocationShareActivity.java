@@ -23,7 +23,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.CheckedTextView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
@@ -38,7 +37,7 @@ import com.amap.api.maps.AMap.OnMapScreenShotListener;
 import com.amap.api.maps.AMap.OnMarkerClickListener;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
-import com.amap.api.maps.MapFragment;
+import com.amap.api.maps.SupportMapFragment;
 import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.CameraPosition;
@@ -83,7 +82,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	 */
 	private static int loadDelay = 1000;
 	
-	private MapFragment mMapFragment;
+	private SupportMapFragment mMapFragment;
 	
 	/**
 	 * 地图对象，地图的关键操作都在这个对象中
@@ -122,7 +121,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	@Override
 	protected void initView() {
 		if (mMapFragment == null) {
-			mMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+			mMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 		}
 		lvData = (ListView) findViewById(R.id.lv_data);
 		pbLoading = (ProgressWheel) findViewById(R.id.pb_loading);
@@ -131,7 +130,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	@Override
 	protected void initData() {
 		// TODO Auto-generated method stub
-		
+		setUpMap();
 	}
 	
 	@Override
@@ -194,25 +193,25 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	private void setUpMap() {
 		if (mAMap == null) {
 			mAMap = mMapFragment.getMap();
-			UiSettings uiSettings = mAMap.getUiSettings();
-			uiSettings.setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
-			uiSettings.setScaleControlsEnabled(true);
-			MyLocationStyle locationStyle = new MyLocationStyle();
-			locationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_markers));
-			int color = getResources().getColor(android.R.color.transparent);
-			locationStyle.strokeColor(color);
-			locationStyle.radiusFillColor(color);
-			mAMap.setMyLocationStyle(locationStyle);
-			mAMap.setLocationSource(this);// 设置定位监听
-			mAMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
-			//设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种 
-			mAMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
-			mAMap.setOnMapLoadedListener(this);
-			mAMap.setOnMarkerClickListener(this);
-			mAMap.setOnInfoWindowClickListener(this);// 设置点击infoWindow事件监听器
-			mAMap.setOnCameraChangeListener(this);
-			
 		}
+		
+		UiSettings uiSettings = mAMap.getUiSettings();
+		uiSettings.setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
+		uiSettings.setScaleControlsEnabled(true);
+		MyLocationStyle locationStyle = new MyLocationStyle();
+		locationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_markers));
+		int color = getResources().getColor(android.R.color.transparent);
+		locationStyle.strokeColor(color);
+		locationStyle.radiusFillColor(color);
+		mAMap.setMyLocationStyle(locationStyle);
+		mAMap.setLocationSource(this);// 设置定位监听
+		mAMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
+		//设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种 
+		mAMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
+		mAMap.setOnMapLoadedListener(this);
+		mAMap.setOnMarkerClickListener(this);
+		mAMap.setOnInfoWindowClickListener(this);// 设置点击infoWindow事件监听器
+		mAMap.setOnCameraChangeListener(this);
 	}
 
 	@Override
@@ -395,9 +394,9 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	@Override
 	public void onLocationChanged(AMapLocation location) {
 		if (mLocationChangedListener != null && location != null) {
-			if (!locationSuccessed) {
+//			if (!locationSuccessed) {
 				drawLocation(location);
-			}
+//			}
 		}
 	}
 	
@@ -407,7 +406,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 	 * @param location
 	 */
 	private void drawLocation(final AMapLocation location) {
-		if (!isMapLoaded) {
+		if (isMapLoaded) {
 			mLocationChangedListener.onLocationChanged(location);	//显示定位后的当前位置的小圆点
 			LatLonPoint latLonPoint = new LatLonPoint(location.getLatitude(), location.getLongitude());
 			RegeocodeQuery query = new RegeocodeQuery(latLonPoint, locationRadius,
@@ -437,7 +436,7 @@ public class LocationShareActivity extends BaseActivity implements LocationSourc
 			 * ，第一个参数是定位provider，第二个参数时间最短是3000毫秒，第三个参数距离间隔单位是米，第四个参数是定位监听者
 			 */
 			mLocationManager.requestLocationData(
-					LocationProviderProxy.AMapNetwork, 3000, 10, this);
+					LocationProviderProxy.AMapNetwork, 2000, 10, this);
 		}
 	}
 

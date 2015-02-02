@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.activity.CommonAdapter;
-import com.example.chat.fragment.EmojiFragment1.OnEmojiconClickedListener;
+import com.example.chat.fragment.EmojiFragment.OnEmojiconClickedListener;
 import com.example.chat.model.emoji.Emojicon;
 import com.example.chat.model.emoji.EmojiconRecents;
 import com.example.chat.model.emoji.EmojiconRecentsManager;
@@ -46,9 +46,9 @@ public class EmojiGridFragment extends BaseFragment implements AdapterView.OnIte
 	protected static EmojiGridFragment newInstance(int emojiType, ArrayList<Emojicon> list, EmojiconRecents recents, boolean useSystemDefault) {
 		EmojiGridFragment fragment = new EmojiGridFragment();
 		Bundle args = new Bundle();
-		args.putInt(EmojiFragment1.ARG_EMOJI_TYPE, emojiType);
+		args.putInt(EmojiFragment.ARG_EMOJI_TYPE, emojiType);
 		args.putParcelableArrayList(ARG_EMOJI_DATA, list);
-		args.putBoolean(EmojiFragment1.ARGS_USE_SYSTEM_DEFAULT_KEY, useSystemDefault);
+		args.putBoolean(EmojiFragment.ARGS_USE_SYSTEM_DEFAULT_KEY, useSystemDefault);
 		if (recents != null) {
 			fragment.setRecents(recents);
 		}
@@ -66,8 +66,8 @@ public class EmojiGridFragment extends BaseFragment implements AdapterView.OnIte
 		
 		Bundle args = getArguments();
 		if (args != null) {
-			mEmojiType = args.getInt(EmojiFragment1.ARG_EMOJI_TYPE, People.EMOJI_TYPE); 
-			mUseSystemDefault = args.getBoolean(EmojiFragment1.ARGS_USE_SYSTEM_DEFAULT_KEY, false);
+			mEmojiType = args.getInt(EmojiFragment.ARG_EMOJI_TYPE, People.EMOJI_TYPE); 
+			mUseSystemDefault = args.getBoolean(EmojiFragment.ARGS_USE_SYSTEM_DEFAULT_KEY, false);
 			List<Emojicon> temp = args.getParcelableArrayList(ARG_EMOJI_DATA);
 			if (temp != null && temp.size() > 0) {
 				data.addAll(temp);
