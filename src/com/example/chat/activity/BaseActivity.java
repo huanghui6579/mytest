@@ -63,9 +63,9 @@ public abstract class BaseActivity extends ActionBarActivity {
 		
 		initView();
 		
-		addListener();
-		
 		initData();
+		
+		addListener();
 	}
 	
 	/** 

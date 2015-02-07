@@ -1,8 +1,0 @@
-com.amap.api.services.busline
-com.amap.api.services.core
-com.amap.api.services.district
-com.amap.api.services.geocoder
-com.amap.api.services.help
-com.amap.api.services.poisearch
-com.amap.api.services.road
-com.amap.api.services.route

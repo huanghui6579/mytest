@@ -84,4 +84,7 @@
     <dimen name="file_explorer_back_horizontal_spacing">2dp</dimen>
     <dimen name="file_explorer_back_vertical_spacing">4dp</dimen>
     
+    <dimen name="location_my_btn_padding">10dp</dimen>
+    <dimen name="location_my_btn_margin">20dp</dimen>
+    
 </resources>
