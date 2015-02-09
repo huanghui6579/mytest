@@ -85,6 +85,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			
 			if (!TextUtils.isEmpty(tPassword)) {
 				etPassword.setText(tPassword);
+				btnLogin.setEnabled(true);
 			}
 		}
 		

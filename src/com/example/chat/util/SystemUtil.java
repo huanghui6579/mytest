@@ -231,7 +231,7 @@ public class SystemUtil {
 	 */
 	public static String getPhoneModel() {
 //		if(TextUtils.isEmpty(model)) {
-		String model = "Spark 2.6.3";
+		String model = "ibaixin";
 //			model = "Android";
 //		}
 		return model;

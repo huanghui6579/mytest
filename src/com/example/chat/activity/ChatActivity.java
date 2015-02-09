@@ -78,6 +78,7 @@ import com.example.chat.service.CoreService;
 import com.example.chat.service.CoreService.MainBinder;
 import com.example.chat.util.Constants;
 import com.example.chat.util.DensityUtil;
+import com.example.chat.util.Log;
 import com.example.chat.util.MimeUtils;
 import com.example.chat.util.SoundMeter;
 import com.example.chat.util.SystemUtil;
@@ -203,6 +204,11 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * 语音模式下按住说话按钮
 	 */
 	private TextView btnMakeVoice;
+	
+	/**
+	 * 录音的根布局
+	 */
+	private View recordRootLayout;
 	
 //	private FragmentTabHost mTabHost;
 	
@@ -344,7 +350,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	@Override
 	protected int getContentView() {
 		// TODO Auto-generated method stub
-		return R.layout.activity_chat2;
+		return R.layout.activity_chat;
 	}
 
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -361,6 +367,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		
 		btnMakeVoice = (TextView) findViewById(R.id.btn_make_voice);
 		layoutEdit = (RelativeLayout) findViewById(R.id.layout_edit);
+		
+		recordRootLayout = findViewById(R.id.record_root_layout);
 		
 		gvAttach = (GridView) findViewById(R.id.gv_attach);
 		
@@ -587,7 +595,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				msgAdapter.notifyDataSetChanged();
 			}
 		}
-		
 	}
 	
 	/**
@@ -864,6 +871,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			if (event.getAction() == MotionEvent.ACTION_DOWN) {	//按下开始录音
 //				//判断手指按下的坐标是否在按钮内部
 				if (event.getRawY() > recordY && event.getRawX() > recordX) {
+					recordRootLayout.setVisibility(View.VISIBLE);
 					layoutVoiceRecordLoading.setVisibility(View.VISIBLE);
 					layoutRecord.setVisibility(View.VISIBLE);
 					layoutVoiceRecording.setVisibility(View.GONE);
@@ -872,7 +880,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					layoutVoiceRecordTooshort.setVisibility(View.GONE);
 					layoutDelRecord.setVisibility(View.GONE);
 					
-					btnMakeVoice.setBackgroundResource(R.drawable.chat_btn_make_voice_background_pressed);
+					btnMakeVoice.setPressed(true);
 //					
 //					//让加载按钮显示300毫秒
 					mHandler.postDelayed(new Runnable() {
@@ -889,16 +897,13 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					startRecord();
 				}
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {	//松手
-				btnMakeVoice.setBackgroundResource(R.drawable.chat_btn_make_voice_background_normal);
+				btnMakeVoice.setPressed(false);
 				float eX = event.getRawX();
 				float eY = event.getRawY();
 				layoutVoiceRecording.setVisibility(View.GONE);
 				//判断松手时的坐标是否在删除区域内
 				if (eY >= delY && eY <= delY + layoutDelRecord.getHeight() && eX >= delX && eX <= delX + layoutDelRecord.getWidth()) {	//在删除区域内
-					layoutVoiceRecordTooshort.setVisibility(View.GONE);
-					layoutDelRecord.setVisibility(View.GONE);
-					
-					deleteRecordFile();
+					cancelRecordVoice();
 				} else {	//结束录音
 					stopRecord();
 					recordEndTime = System.currentTimeMillis();
@@ -958,9 +963,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					Animation outAnim = AnimationUtils.loadAnimation(mContext, R.anim.chat_record_voice_out);
 					layoutDelRecord.setVisibility(View.VISIBLE);
 					ivCancelTip.setVisibility(View.GONE);
-					layoutDelRecord.setBackgroundResource(R.drawable.voice_rcd_cancel_bg);
+					layoutDelRecord.setPressed(false);
 					if (eY >= delY && eY <= delY + layoutDelRecord.getHeight() && eX >= delX && eX <= delX + layoutDelRecord.getWidth()) {	//在删除区域内
-						layoutDelRecord.setBackgroundResource(R.drawable.voice_rcd_cancel_bg_focused);
+						layoutDelRecord.setPressed(true);
 						ivDelTip.startAnimation(inAnim);
 						ivDelTip.startAnimation(outAnim);
 					}
@@ -972,6 +977,18 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			return true;
 		}
 		return super.onTouchEvent(event);
+	}
+	
+	/**
+	 * 取消录音
+	 * @update 2015年2月9日 下午8:36:54
+	 */
+	private void cancelRecordVoice() {
+		recordRootLayout.setVisibility(View.GONE);
+		layoutVoiceRecordTooshort.setVisibility(View.GONE);
+		layoutDelRecord.setVisibility(View.GONE);
+		
+		deleteRecordFile();
 	}
 	
 	/**
@@ -1366,8 +1383,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		msg.setCreationDate(System.currentTimeMillis());
 		msg.setContent(content);
 		msg.setSendState(SendState.SENDING);
-		msg.setFromUser(otherSide.getFullJid());
-		msg.setToUser(mine.getFullJID());
+		msg.setFromUser(mine.getFullJID());
+		msg.setToUser(otherSide.getFullJid());
 		msg.setMsgType(Type.TEXT);
 		msg.setRead(true);
 		msg.setMsgPart(null);
@@ -1483,6 +1500,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	
 	@Override
 	protected void onPause() {
+		//取消录音
+		recordRootLayout.setPressed(false);
+		cancelRecordVoice();
 		//隐藏键盘
 		hideKeybroad();
 		super.onPause();
@@ -1656,7 +1676,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 			MsgInfo.Type msgType = msgInfo.getMsgType();
 			MsgPart msgPart = msgInfo.getMsgPart();
-			holder.tvContent.setGravity(Gravity.LEFT | Gravity.TOP);
+			holder.tvContent.setGravity(Gravity.START | Gravity.TOP);
 			holder.tvContent.setCompoundDrawablePadding(0);
 			switch (msgType) {
 			case TEXT:	//文本消息
@@ -1677,12 +1697,25 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				break;
 			case VOICE:	//语音文件
 				//TODO 等待解决
+				Drawable drawable = null;
 				holder.tvContent.setText("");
+				holder.tvContent.setCompoundDrawablePadding(10);
+				if (type == TYPE_OUT) {	//自己发出去的消息
+					drawable = getResources().getDrawable(R.drawable.chat_voice_out);
+					/// 这一步必须要做,否则不会显示.
+					drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
+					holder.tvContent.setCompoundDrawables(null, null, drawable, null);
+				} else {
+					drawable = getResources().getDrawable(R.drawable.chat_voice_in);
+					/// 这一步必须要做,否则不会显示.
+					drawable.setBounds(drawable.getMinimumWidth(), drawable.getMinimumHeight(), 0, 0);
+					holder.tvContent.setCompoundDrawables(drawable, null, null, null);
+				}
 				break;
 			case AUDIO:
 			case VIDEO:
 			case FILE:	//普通文件类型
-				holder.tvContent.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+				holder.tvContent.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
 				holder.tvContent.setCompoundDrawablePadding((int) getResources().getDimension(R.dimen.chat_msg_item_drawable_spacing));
 				if (msgPart != null) {
 					String partPath = msgPart.getFilePath();

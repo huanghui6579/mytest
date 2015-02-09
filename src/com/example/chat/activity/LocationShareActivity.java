@@ -63,6 +63,11 @@ import com.example.chat.view.ProgressWheel;
 public class LocationShareActivity extends BaseActivity implements OnGetGeoCoderResultListener, 
 	BaiduMap.OnMapLoadedCallback, BaiduMap.SnapshotReadyCallback {
 	
+	/**
+	 * 刷新菜单按钮的消息
+	 */
+	private static final int MSG_REFRESH_MENU = 0x1;
+	
 	private BaiduMap mBaiduMap;
 
 	// UI相关
@@ -93,7 +98,21 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 	private BDLocation mLocation;
 
 	private LocationAdapter mAdapter;
-	private Handler mHandler = new Handler();
+	private Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(android.os.Message msg) {
+			switch (msg.what) {
+			case MSG_REFRESH_MENU:	//刷新菜单按钮
+				if (btnOpt != null && !btnOpt.isEnabled()) {
+					btnOpt.setEnabled(true);
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+	};
 	
 	private ListView lvData;
 	
@@ -209,6 +228,7 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 					.longitude(location.getLongitude()).build();
 			mBaiduMap.setMyLocationData(locData);
 			if (isFirstLoc) {
+				mHandler.sendEmptyMessage(MSG_REFRESH_MENU);	//刷新菜单按钮
 				isFirstLoc = false;
 				mLocation = location;
 				LatLng ll = new LatLng(location.getLatitude(),
@@ -254,7 +274,7 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 		LocationClientOption option = new LocationClientOption();
 		option.setOpenGps(true);// 打开gps
 		option.setCoorType("bd09ll"); // 设置坐标类型
-		option.setScanSpan(1000);	//定位的间隔时间,单位毫秒
+		option.setScanSpan(2000);	//定位的间隔时间,单位毫秒
 		option.setIsNeedAddress(true);
 		mLocClient.setLocOption(option);
 		mLocClient.start();

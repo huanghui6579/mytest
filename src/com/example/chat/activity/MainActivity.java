@@ -48,7 +48,7 @@ public class MainActivity extends BaseActivity {
 	private IconTabPageIndicator mPageIndicator;
 	private ViewPager mViewPager;
 	
-	private static Map<Integer, String> tagMap = null;
+	private static Map<Integer, String> tagMap = new HashMap<>();
 	
 	private static String[] CONTENT = null;
     private static int[] ICONS = new int[] {

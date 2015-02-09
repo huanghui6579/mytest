@@ -57,7 +57,7 @@
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="53xCgO1vglPfHZOggwlqBtep" />
         
-        <activity
+        <!-- <activity
             android:name="com.example.chat.activity.ChatActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.ChatActivity"
@@ -67,7 +67,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity> -->
         <!-- <activity
             android:name="com.example.chat.activity.MainActivity"
             android:label="@string/app_name"
@@ -78,7 +78,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity> -->
-        <!-- <activity
+        <activity
             android:name="com.example.chat.activity.LoginActivity"
             android:label="@string/app_name"
             android:configChanges="orientation|screenSize" >
@@ -87,7 +87,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> -->
+        </activity>
         
         <activity
             android:name="com.example.chat.activity.MainActivity"
@@ -107,11 +107,11 @@
             android:name="com.example.chat.activity.UserInfoActivity"
             android:label="@string/activity_lable_friend_info"
             android:configChanges="orientation|screenSize"/>
-        <!-- <activity
+        <activity
             android:name="com.example.chat.activity.ChatActivity"
             android:label="@string/activity_lable_chat"
             android:theme="@style/AppTheme.ChatActivity"
-            android:configChanges="orientation|screenSize"/> -->
+            android:configChanges="orientation|screenSize"/>
         <activity
             android:name="com.example.chat.activity.NewFriendInfoActivity"
             android:label="@string/activity_lable_new_friend_info"

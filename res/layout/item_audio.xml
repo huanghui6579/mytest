@@ -21,6 +21,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="@dimen/list_item_padding"
+        android:layout_marginStart="@dimen/list_item_padding"
         android:gravity="top|end"
         android:textSize="@dimen/session_list_item_time"
         android:textColor="@color/session_list_item_time"/>
@@ -51,8 +52,8 @@
             android:id="@id/tv_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:gravity="bottom"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
             style="@style/AlbumItemSubTitleStyle"
             android:layout_weight="1"
             android:singleLine="true"/>
