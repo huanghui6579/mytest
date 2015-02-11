@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<net.ibaixin.joke.chat.view.ProgressWheel
+<net.ibaixin.chat.view.ProgressWheel
     xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res/net.ibaixin.joke.chat"    
+	xmlns:app="http://schemas.android.com/apk/res/net.ibaixin.chat"    
     android:id="@id/pb_loading"
     android:layout_width="@dimen/progress_wheel_size"
     android:layout_height="@dimen/progress_wheel_size"

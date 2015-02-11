@@ -10,6 +10,7 @@
         style="@style/ChatItemHeadIconStyle"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
         android:src="@drawable/ic_audio"
         android:contentDescription="@null"/>
     
@@ -35,9 +36,7 @@
         android:layout_toRightOf="@id/iv_head_icon"
         android:layout_toEndOf="@id/iv_head_icon"
         android:layout_toLeftOf="@id/tv_size"
-        android:layout_toStartOf="@id/tv_size"
-        android:layout_alignBottom="@id/iv_head_icon"
-        android:layout_alignTop="@id/iv_head_icon">
+        android:layout_toStartOf="@id/tv_size">
         
         <TextView 
             android:id="@+id/tv_title"

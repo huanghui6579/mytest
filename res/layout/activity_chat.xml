@@ -10,7 +10,7 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
 	    android:gravity="center" >
-	    <net.ibaixin.joke.chat.view.FitSystemWindowLinearLayout
+	    <net.ibaixin.chat.view.FitSystemWindowLinearLayout
 		    android:layout_width="match_parent"
 		    android:layout_height="match_parent"
 		    android:orientation="vertical"
@@ -94,7 +94,7 @@
 					            android:layout_marginTop="@dimen/chat_edit_panel_padding"
 					            android:layout_marginBottom="@dimen/chat_edit_panel_padding"
 					            android:background="@drawable/chat_facial_selector"/>
-				            <net.ibaixin.joke.chat.view.EmojiconEditText
+				            <net.ibaixin.chat.view.EmojiconEditText
 					            android:id="@+id/et_content"
 					            android:layout_width="match_parent"
 					            android:layout_height="wrap_content"
@@ -203,7 +203,7 @@
 				    android:numColumns="4"
 				    android:visibility="gone"/>
 		    </FrameLayout>
-		</net.ibaixin.joke.chat.view.FitSystemWindowLinearLayout>
+		</net.ibaixin.chat.view.FitSystemWindowLinearLayout>
 		
 	    <include
 	        layout="@layout/layout_record_voice"
