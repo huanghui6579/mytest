@@ -7,7 +7,7 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent">
 	
-	    <com.example.chat.view.IconTabPageIndicator
+	    <net.ibaixin.joke.chat.view.IconTabPageIndicator
 	        android:id="@+id/page_indicator"
 	        android:layout_alignParentBottom="true"
 	        android:layout_width="match_parent"

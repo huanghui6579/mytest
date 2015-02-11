@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res/com.example.chat"
+    xmlns:app="http://schemas.android.com/apk/res/net.ibaixin.joke.chat"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- <com.example.chat.view.EmojiPageIndicator
+    <!-- <net.ibaixin.joke.chat.view.EmojiPageIndicator
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/> -->
         
-    <com.example.chat.view.PagerSlidingTabStrip
+    <net.ibaixin.joke.chat.view.PagerSlidingTabStrip
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
