@@ -205,6 +205,22 @@ public class Personal {
 	public void setIconHash(String iconHash) {
 		this.iconHash = iconHash;
 	}
+	
+	/**
+	 * 获得自己的名称，优先显示昵称，没有昵称啧显示真实名称，如果没有真实名称，则显示用户名
+	 * @author tiger
+	 * @update 2015年2月14日 下午9:58:29
+	 * @return
+	 */
+	public String getName() {
+		String name = username;
+		if (!TextUtils.isEmpty(nickname)) {
+			name = nickname;
+		} else if (!TextUtils.isEmpty(realName)) {
+			name = realName;
+		}
+		return name;
+	}
 
 	/**
 	 * 获得用户的jid

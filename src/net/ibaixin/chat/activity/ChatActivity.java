@@ -91,6 +91,8 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.MaterialDialogCompat;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
@@ -1817,9 +1819,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			}
 			
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
-			
+			String title = msgInfo.getFromUser();
 			if (type == TYPE_OUT) {	//自己发送的消息
-				
+				title = mine.getName();
 				//显示自己的头像
 				String iconPath = mine.getIconPath();
 				if (SystemUtil.isFileExists(iconPath)) {
@@ -1848,6 +1850,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					break;
 				}
 			} else {	//接收的消息，对方发送的消息
+				title = otherSide.getName();
 				//显示用户图像
 				UserVcard otherVcard = otherSide.getUserVcard();
 				if (otherVcard != null) {
@@ -1867,16 +1870,23 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					msgInfo = msgManager.updateMsgInfo(msgInfo);
 				}
 			}
-			final String title = msgInfo.getFromUser();
+			final String dialogTitle = title;
 			holder.tvContent.setOnLongClickListener(new View.OnLongClickListener() {
 				
 				@Override
 				public boolean onLongClick(View v) {
-					AlertDialog.Builder builder = new AlertDialog.Builder(context);
-					AlertDialog dialog = builder.setTitle(title)
-						.setItems(new CharSequence[] {"复制", "删除"}, null)
-						.create();
-					dialog.show();
+					MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
+					builder.title(dialogTitle)
+							.items(new CharSequence[] {"复制", "删除", "转发", "更多"})
+							.itemsCallback(new MaterialDialog.ListCallback() {
+								
+								@Override
+								public void onSelection(MaterialDialog dialog, View itemView, int which,
+										CharSequence text) {
+									// TODO Auto-generated method stub
+									
+								}
+							}).show();
 					return true;
 				}
 			});
