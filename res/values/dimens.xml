@@ -123,4 +123,6 @@
     <dimen name="location_my_btn_padding">10dp</dimen>
     <dimen name="location_my_btn_margin">20dp</dimen>
     
+    <dimen name="alert_dialog_padding_material">24dp</dimen>
+    
 </resources>
