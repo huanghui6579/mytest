@@ -30,6 +30,7 @@
 		        android:divider="@android:color/transparent"
 		        android:layout_weight="1"
 		        android:stackFromBottom="true"
+		        android:animateLayoutChanges="true"
 		        android:layout_marginLeft="@dimen/chat_msg_list_spacing_left_right"
 		        android:layout_marginStart="@dimen/chat_msg_list_spacing_left_right"
 		        android:layout_marginRight="@dimen/chat_msg_list_spacing_left_right"
@@ -74,6 +75,8 @@
 		            android:layout_toEndOf="@id/btn_voice"
 		            android:layout_marginLeft="@dimen/chat_edit_panel_padding"
 		            android:layout_marginRight="@dimen/chat_edit_panel_padding"
+		            android:focusable="true"
+		            android:focusableInTouchMode="true"
 		            android:layout_centerVertical="true">
 		            <!-- 文本输入框 --><!-- android:background="@drawable/abc_textfield_searchview_holo_light" -->
 			            <RelativeLayout 

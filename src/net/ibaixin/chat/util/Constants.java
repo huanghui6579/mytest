@@ -93,6 +93,16 @@ public class Constants {
 	public static final int IMAGE_THUMB_HEIGHT = 100;
 	
 	/**
+	 * 地理位置截图的默认缩略图的宽度：200
+	 */
+	public static final int IMAGE_LOCATION_THUMB_WIDTH = 200;
+	
+	/**
+	 * 地理位置截图的默认缩略图的宽度：200
+	 */
+	public static final int IMAGE_LOCATION_THUMB_HEIGHT = 200;
+	
+	/**
 	 * 录音最小的长度为1秒
 	 */
 	public static final int COICE_RECORD_MIN_LENGTH = 1;

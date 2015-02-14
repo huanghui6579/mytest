@@ -457,7 +457,7 @@ public class MsgManager {
 				
 				Type msgType = msg.getMsgType();
 				//如果消息不是文本类型，则加载附件
-				if (msgType != Type.TEXT && msgType != Type.LOCATION) {	//加载附件
+				if (msgType != Type.TEXT) {	//加载附件
 					MsgPart msgPart = getMsgPartByMsgId(msg.getId());
 					msg.setMsgPart(msgPart);
 				}
@@ -743,6 +743,7 @@ public class MsgManager {
 			case FILE:	//文件
 			case VIDEO:	//视频
 			case VCARD:	//电子名片
+			case LOCATION:	//地理位置
 				//添加附件信息
 				MsgPart msgPart = msgInfo.getMsgPart();
 				msgPart.setMsgId(msgInfo.getId());

@@ -17,6 +17,11 @@ public final class MimeUtils {
 	
 	private static final Map<String, Integer> extensionResMap = new HashMap<>();
 	
+	public static final String MIME_TYPE_TEXT = "text/plain";
+	public static final String MIME_TYPE_IMAGE_JPG = "image/jpeg";
+	public static final String MIME_TYPE_IMAGE_PNG = "image/png";
+	public static final String MIME_TYPE_AUDIO_AMR = "audio/amr";
+	
 	static {
 		add("application/andrew-inset", "ez");
 		add("application/dsptype", "tsp");

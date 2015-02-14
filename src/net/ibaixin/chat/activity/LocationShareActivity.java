@@ -9,9 +9,15 @@ import java.util.List;
 
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.model.LocationInfo;
+import net.ibaixin.chat.model.MsgInfo;
+import net.ibaixin.chat.model.MsgPart;
+import net.ibaixin.chat.util.ImageUtil;
+import net.ibaixin.chat.util.MimeUtils;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.view.ProgressWheel;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Color;
@@ -27,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.CheckedTextView;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.baidu.location.BDLocation;
@@ -68,6 +75,16 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 	 */
 	private static final int MSG_REFRESH_MENU = 0x1;
 	
+	/**
+	 * 创建聊天消息对象
+	 */
+	private static final int MSG_CREATE_MSGINFO = 0x2;
+	
+	/**
+	 * 创建聊天消息对象失败
+	 */
+	private static final int MSG_OPT_FAILED = 0x3;
+	
 	private BaiduMap mBaiduMap;
 
 	// UI相关
@@ -98,21 +115,6 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 	private BDLocation mLocation;
 
 	private LocationAdapter mAdapter;
-	private Handler mHandler = new Handler() {
-		@Override
-		public void handleMessage(android.os.Message msg) {
-			switch (msg.what) {
-			case MSG_REFRESH_MENU:	//刷新菜单按钮
-				if (btnOpt != null && !btnOpt.isEnabled()) {
-					btnOpt.setEnabled(true);
-				}
-				break;
-
-			default:
-				break;
-			}
-		}
-	};
 	
 	private ListView lvData;
 	
@@ -134,7 +136,41 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 	 * 当前选中的位置
 	 */
 	private int mCurrentPosition;
-
+	
+	private ProgressDialog mProgressDialog;
+	
+	/**
+	 * 创建的消息对象
+	 */
+	private MsgInfo mMsgInfo;
+	
+	private Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(android.os.Message msg) {
+			if (mProgressDialog != null && mProgressDialog.isShowing()) {
+				mProgressDialog.dismiss();
+			}
+			switch (msg.what) {
+			case MSG_REFRESH_MENU:	//刷新菜单按钮
+				if (btnOpt != null && !btnOpt.isEnabled()) {
+					btnOpt.setEnabled(true);
+				}
+				break;
+			case MSG_CREATE_MSGINFO:	//创建聊天消息对象
+				Intent data = new Intent();
+				data.putExtra(ChatActivity.ARG_MSG_INFO, mMsgInfo);
+				setResult(RESULT_OK, data);
+				finish();
+				break;
+			case MSG_OPT_FAILED:	//创建消息对象失败
+				SystemUtil.makeShortToast(R.string.chat_loction_opt_failed);
+				break;
+			default:
+				break;
+			}
+		}
+	};
+	
 	@Override
 	protected int getContentView() {
 		return R.layout.activity_location_share;
@@ -152,6 +188,9 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 
 	@Override
 	protected void initData() {
+		
+		mMsgInfo = getIntent().getParcelableExtra(ChatActivity.ARG_MSG_INFO);
+		
 		//初始化百度地图
 		setUpMap();
 	}
@@ -166,26 +205,8 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 			
 			@Override
 			public void onClick(View v) {
+				mProgressDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), true, true);
 				mBaiduMap.snapshot(LocationShareActivity.this);
-//				final List<PhotoItem> selects = mPhotoAdapter.getSelectList();
-//				pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
-//				//发送图片
-//				SystemUtil.getCachedThreadPool().execute(new Runnable() {
-//					
-//					@Override
-//					public void run() {
-//						final ArrayList<MsgInfo> msgList = msgManager.getMsgInfoListByPhotos(msgInfo, selects, false);
-//						Message msg = mHandler.obtainMessage();
-//						if (!SystemUtil.isEmpty(msgList)) {	//消息集合
-//							msg.what = Constants.MSG_SUCCESS;
-//							msg.obj = msgList;
-//						} else {
-//							msg.what = Constants.MSG_FAILED;
-//						}
-//						mHandler.sendMessage(msg);
-//					}
-//				});
-				
 			}
 		});
 		return super.onCreateOptionsMenu(menu);
@@ -391,7 +412,7 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 				mLocationInfos.clear();
 			}
 			LatLng location = result.getLocation();
-			LocationInfo info = new LocationInfo(location.latitude, location.longitude, "[位置]" + result.getAddress());
+			LocationInfo info = new LocationInfo(location.latitude, location.longitude, result.getAddress());
 			mLocationInfos.add(info);
 			List<PoiInfo> pois = result.getPoiList();
 			if (pois != null && pois.size() > 0) {
@@ -452,31 +473,44 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 	}
 
 	@Override
-	public void onSnapshotReady(Bitmap snapshot) {
-		if (snapshot != null) {
-			FileOutputStream fos = null;
-			try {
-				File file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
-				fos = new FileOutputStream(file);
-				snapshot.compress(CompressFormat.JPEG, 20, fos);
-				SystemUtil.makeShortToast("截图成功：" + file.getAbsolutePath());
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				if (fos != null) {
+	public void onSnapshotReady(final Bitmap snapshot) {
+		if (mMsgInfo != null) {
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					File file = SystemUtil.generateLocationFile(mMsgInfo.getThreadID());
 					try {
-						fos.close();
+						boolean success = ImageUtil.createLocationFile(snapshot, file);
+						if (success) {
+							LocationInfo locationInfo = mLocationInfos.get(mCurrentPosition);
+							mMsgInfo.setContent(locationInfo.getAddress());	//地理位置名称
+							mMsgInfo.setSubject(locationInfo.getLongitude() + ";" + locationInfo.getLatitude());	//地理位置的经纬度
+							mMsgInfo.setMsgType(MsgInfo.Type.LOCATION);
+							mMsgInfo.setCreationDate(System.currentTimeMillis());
+							//设置附件信息
+							MsgPart msgPart = new MsgPart();
+							msgPart.setCreationDate(System.currentTimeMillis());
+							msgPart.setFileName(file.getName());
+							msgPart.setFilePath(file.getAbsolutePath());
+							msgPart.setMimeTye(MimeUtils.MIME_TYPE_IMAGE_JPG);
+							msgPart.setSize(file.length());
+							
+							mMsgInfo.setMsgPart(msgPart);
+							
+							mHandler.sendEmptyMessage(MSG_CREATE_MSGINFO);
+						} else {
+							mHandler.sendEmptyMessage(MSG_OPT_FAILED);
+						}
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} finally {
+						if (snapshot != null) {
+							snapshot.recycle();
+						}
 					}
 				}
-				if (snapshot != null) {
-					snapshot.recycle();
-				}
-				
-			}
+			}).start();
 		}
 	}
 }

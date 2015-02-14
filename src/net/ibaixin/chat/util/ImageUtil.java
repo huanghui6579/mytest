@@ -190,6 +190,27 @@ public class ImageUtil {
 	}
 	
 	/**
+	 * 创建地理位置截图的图片文件
+	 * @update 2015年2月12日 下午8:01:28
+	 * @param bitmap 原bitmap对象
+	 * @param saveFile 保存的文件
+	 * @throws IOException
+	 */
+	public static boolean createLocationFile(Bitmap bitmap, File saveFile) throws IOException {
+		if(bitmap == null) {
+			return false;
+		}
+		if (saveFile != null && saveFile.exists()) {
+			saveFile.delete();
+		}
+		BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(saveFile));
+		bitmap.compress(CompressFormat.JPEG, 20, os);
+		os.flush();
+		os.close();
+		return true;
+	}
+	
+	/**
 	 * 以最省内存的方式读取本地资源的图片
 	 * @param file 要读取的文件
 	 * @return 返回读取的bitmap

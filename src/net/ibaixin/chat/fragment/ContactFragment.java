@@ -345,19 +345,19 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		@Override
 		protected List<User> doInBackground(Void... params) {
 			List<User> list = userManager.getFriends();
-			if (list != null && list.size() > 0) {
-				if (mUsers != null && mUsers.size() > 0) {
-					mUsers.clear();
-				}
-				mUsers.addAll(list);
-			}
-			return mUsers;
+			return list;
 		}
 		
 		@Override
 		protected void onPostExecute(List<User> result) {
-			pbLoading.setVisibility(View.GONE);
+			if (SystemUtil.isNotEmpty(result)) {
+				if (mUsers.size() > 0) {
+					mUsers.clear();
+				}
+				mUsers.addAll(result);
+			}
 			mAdapter.notifyDataSetChanged();
+			pbLoading.setVisibility(View.GONE);
 			isLoaded = true;
 		}
 		

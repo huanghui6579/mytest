@@ -31,6 +31,7 @@ import net.ibaixin.chat.service.CoreService;
 import net.ibaixin.chat.service.CoreService.MainBinder;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.DensityUtil;
+import net.ibaixin.chat.util.ImageUtil;
 import net.ibaixin.chat.util.MimeUtils;
 import net.ibaixin.chat.util.SoundMeter;
 import net.ibaixin.chat.util.SystemUtil;
@@ -44,13 +45,16 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.database.ContentObserver;
+import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -68,10 +72,12 @@ import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.TextAppearanceSpan;
+import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -87,7 +93,10 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 /**
  * 聊天界面
@@ -547,18 +556,18 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				//TODO 目前固定写死，有、后期会改有群聊的模式
 				otherSide = msgThread.getMembers().get(0);
 			}
-			if (!SystemUtil.isEmpty(list)) {
-				mMsgInfos.clear();
-				mMsgInfos.addAll(list);
-				
-				setPageOffset(list);
-			}
 			return list;
 		}
 		
 		@Override
 		protected void onPostExecute(List<MsgInfo> result) {
+			if (otherSide != null) {
+				setTitle(otherSide.getName());
+			}
 			if (!SystemUtil.isEmpty(result)) {
+				mMsgInfos.clear();
+				mMsgInfos.addAll(result);
+				setPageOffset(result);
 				msgAdapter.notifyDataSetChanged();
 				if (needScroll) {
 					scrollMyListViewToBottom(lvMsgs);
@@ -581,17 +590,15 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				int msgThreadId = params[0];
 				int offset = params[1];	//开始查询的索引
 				list = msgManager.getMsgInfosByThreadId(msgThreadId, offset);
-				if (!SystemUtil.isEmpty(list)) {	//有数据
-					mMsgInfos.addAll(list);
-					setPageOffset(mMsgInfos);
-				}
 			}
 			return list;
 		}
 		
 		@Override
 		protected void onPostExecute(List<MsgInfo> result) {
-			if (!SystemUtil.isEmpty(result)) {
+			if (!SystemUtil.isEmpty(result)) {	//有数据
+				mMsgInfos.addAll(result);
+				setPageOffset(mMsgInfos);
 				msgAdapter.notifyDataSetChanged();
 			}
 		}
@@ -940,8 +947,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 							msgPart.setCreationDate(System.currentTimeMillis());
 							msgPart.setFileName(volumeFile.getName());
 							msgPart.setFilePath(volumeFile.getAbsolutePath());
-							String subfix = SystemUtil.getFileSubfix(volumeFile.getName());
-							msgPart.setMimeTye(MimeUtils.guessMimeTypeFromExtension(subfix));
+//							String subfix = SystemUtil.getFileSubfix(volumeFile.getName());
+//							msgPart.setMimeTye(MimeUtils.guessMimeTypeFromExtension(subfix));
+							msgPart.setMimeTye(MimeUtils.MIME_TYPE_AUDIO_AMR);
 							msgPart.setSize(volumeFile.length());
 							
 							msgInfo.setMsgPart(msgPart);
@@ -1037,6 +1045,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				}
 				break;
 			case REQ_AUDIO:	//音频
+			case REQ_LOCATION:	//地理位置分享
 				if (data != null) {
 					final MsgInfo mi = data.getParcelableExtra(ARG_MSG_INFO);
 					if (mi != null) {
@@ -1652,6 +1661,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				holder.ivHeadIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);
 				holder.ivMsgState = (ImageView) convertView.findViewById(R.id.iv_msg_state);
 				holder.tvContent = (TextView) convertView.findViewById(R.id.tv_content);
+				holder.tvContentDesc = (TextView) convertView.findViewById(R.id.tv_content_desc);
 				
 				convertView.setTag(holder);
 			} else {
@@ -1669,6 +1679,20 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				maxConentWidth = screenSize[0] - 2 * (iconWith + textMargin) - stateWidth - stateMargin;
 			}
 			holder.tvContent.setMaxWidth(maxConentWidth);
+			int paddingLeft = 0;
+			int paddingRight = 0;
+			int extraPad = 1;
+			Resources resources = getResources();
+			int paddingVertical = resources.getDimensionPixelSize(R.dimen.chat_msg_item_content_padding_top_bottom);
+			if (type == TYPE_IN) {	//接收的消息
+				paddingLeft = resources.getDimensionPixelSize(R.dimen.chat_msg_item_in_content_padding_left);
+				paddingRight = resources.getDimensionPixelSize(R.dimen.chat_msg_item_in_content_padding_right);
+			} else {
+				paddingLeft = resources.getDimensionPixelSize(R.dimen.chat_msg_item_out_content_padding_left);
+				paddingRight = resources.getDimensionPixelSize(R.dimen.chat_msg_item_out_content_padding_right);
+			}
+			
+			holder.tvContent.setPadding(paddingLeft, paddingVertical, paddingRight, paddingVertical);
 			long curDate = msgInfo.getCreationDate();
 			if (position == 0) {	//第一条记录，一定显示时间
 				holder.tvMsgTime.setVisibility(View.VISIBLE);
@@ -1684,6 +1708,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					holder.tvMsgTime.setVisibility(View.GONE);
 				}
 			}
+			holder.tvContentDesc.setVisibility(View.GONE);
 			holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 			MsgInfo.Type msgType = msgInfo.getMsgType();
 			MsgPart msgPart = msgInfo.getMsgPart();
@@ -1696,6 +1721,12 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				break;
 			case IMAGE:	//图片消息
 				holder.tvContent.setText("");
+				int extraSpace = Math.abs(paddingLeft - paddingRight) + 3 * extraPad; 
+				if (type == TYPE_IN) {	//接收的消息
+					holder.tvContent.setPadding(extraSpace, extraPad, extraPad, extraPad);
+				} else {
+					holder.tvContent.setPadding(extraPad, extraPad, extraSpace, extraPad);
+				}
 				if (msgPart != null) {
 					String filePath = msgPart.getFilePath();
 					if (SystemUtil.isFileExists(filePath)) {
@@ -1762,6 +1793,25 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					}
 				}
 				break;
+			case LOCATION:	//地理位置
+				holder.tvContent.setText("");
+				int locationXxtraSpace = Math.abs(paddingLeft - paddingRight) + 3 * extraPad; 
+				if (type == TYPE_IN) {	//接收的消息
+					holder.tvContent.setPadding(locationXxtraSpace, extraPad, extraPad, extraPad);
+				} else {
+					holder.tvContent.setPadding(extraPad, extraPad, locationXxtraSpace, extraPad);
+				}
+				if (msgPart != null) {
+					holder.tvContentDesc.setVisibility(View.VISIBLE);
+					String filePath = msgPart.getFilePath();
+					ImageSize imageSize = new ImageSize(Constants.IMAGE_LOCATION_THUMB_WIDTH, Constants.IMAGE_LOCATION_THUMB_HEIGHT);
+					if (SystemUtil.isFileExists(filePath)) {
+						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent, imageSize), chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
+					} else {
+						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent, imageSize), chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
+					}
+				}
+				break;
 			default:
 				break;
 			}
@@ -1817,12 +1867,16 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					msgInfo = msgManager.updateMsgInfo(msgInfo);
 				}
 			}
-			
+			final String title = msgInfo.getFromUser();
 			holder.tvContent.setOnLongClickListener(new View.OnLongClickListener() {
 				
 				@Override
 				public boolean onLongClick(View v) {
-					SystemUtil.makeShortToast("长按了内容");
+					AlertDialog.Builder builder = new AlertDialog.Builder(context);
+					AlertDialog dialog = builder.setTitle(title)
+						.setItems(new CharSequence[] {"复制", "删除"}, null)
+						.create();
+					dialog.show();
 					return true;
 				}
 			});
@@ -1856,6 +1910,58 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		@Override
 		public int getViewTypeCount() {
 			return TYPE_COUNT;
+		}
+		
+	}
+	
+	class MyImageLoaderListener implements ImageLoadingListener {
+		private TextView tvDesc;
+		private int itemType;
+		private MsgInfo msgInfo;
+
+		public MyImageLoaderListener(TextView tvDesc, int itemType, MsgInfo msgInfo) {
+			super();
+			this.tvDesc = tvDesc;
+			this.itemType = itemType;
+			this.msgInfo = msgInfo;
+		}
+
+		@Override
+		public void onLoadingStarted(String imageUri, View view) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onLoadingFailed(String imageUri, View view,
+				FailReason failReason) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onLoadingComplete(String imageUri, View view,
+				Bitmap loadedImage) {
+			// TODO Auto-generated method stub
+			if (loadedImage != null) {
+				if (view instanceof TextView) {
+					TextView textView = (TextView) view;
+					Drawable drawable = ImageUtil.bitmapToDrawable(loadedImage);
+					if (itemType == MsgAdapter.TYPE_IN) {	//接收的消息
+						textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+					} else {
+						textView.setCompoundDrawablesWithIntrinsicBounds(null, null, drawable, null);
+					}
+				}
+				tvDesc.setMaxWidth(loadedImage.getWidth());
+				tvDesc.setText(msgInfo.getContent());
+			}
+		}
+
+		@Override
+		public void onLoadingCancelled(String imageUri, View view) {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
@@ -2060,6 +2166,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		RelativeLayout layoutBody;
 		ImageView ivHeadIcon;
 		TextView tvContent;
+		TextView tvContentDesc;
 		ImageView ivMsgState;
 	}
 	

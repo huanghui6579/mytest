@@ -19,26 +19,46 @@
 	        android:layout_alignParentEnd="true"
 	        android:contentDescription="@null" />
         
-        <TextView
-            android:id="@id/tv_content"
-            style="@style/ChatItemContentStyle"
-            android:background="@drawable/chat_msg_out_selector"
-            android:paddingRight="@dimen/chat_msg_item_out_content_padding_right"
-            android:paddingEnd="@dimen/chat_msg_item_out_content_padding_right"
-            android:paddingLeft="@dimen/chat_msg_item_out_content_padding_left"
-            android:paddingStart="@dimen/chat_msg_item_out_content_padding_left"
-            android:layout_marginRight="@dimen/chat_msg_item_content_margin_left_right"
-	        android:layout_marginEnd="@dimen/chat_msg_item_content_margin_left_right"
-	        android:layout_toStartOf="@id/iv_head_icon"
+        <RelativeLayout
+            android:id="@+id/content_layout" 
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@id/iv_head_icon"
 	        android:layout_toLeftOf="@id/iv_head_icon"
-	        android:layout_alignTop="@id/iv_head_icon"/>
+	        android:gravity="center_horizontal"
+	        android:layout_alignTop="@id/iv_head_icon">
+            <TextView
+	            android:id="@id/tv_content"
+	            style="@style/ChatItemContentStyle"
+	            android:background="@drawable/chat_msg_out_selector"
+	            android:paddingRight="@dimen/chat_msg_item_out_content_padding_right"
+	            android:paddingEnd="@dimen/chat_msg_item_out_content_padding_right"
+	            android:paddingLeft="@dimen/chat_msg_item_out_content_padding_left"
+	            android:paddingStart="@dimen/chat_msg_item_out_content_padding_left"
+	            android:layout_marginRight="@dimen/chat_msg_item_content_margin_left_right"
+		        android:layout_marginEnd="@dimen/chat_msg_item_content_margin_left_right"
+		        android:autoLink="all"
+		        android:textColorLink="?attr/colorPrimary"
+		        android:linksClickable="true"/>
+            
+            <TextView 
+                android:id="@+id/tv_content_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/chat_location_desc_bg"
+                android:layout_alignBottom="@id/tv_content"
+                android:textColor="@android:color/white"
+                android:singleLine="true"
+                android:gravity="center"
+                android:visibility="gone"/>
+        </RelativeLayout>
         
         <ImageView 
             android:id="@+id/iv_msg_state"
             style="@style/ChatItemSendStateStyle"
-            android:layout_toStartOf="@id/tv_content"
-            android:layout_toLeftOf="@id/tv_content"
-            android:layout_alignBottom="@id/tv_content"
+            android:layout_toStartOf="@id/content_layout"
+            android:layout_toLeftOf="@id/content_layout"
+            android:layout_alignBottom="@id/content_layout"
             android:layout_marginRight="@dimen/chat_msg_item_send_state_margin_left_right"
             android:layout_marginEnd="@dimen/chat_msg_item_send_state_margin_left_right"
             android:contentDescription="@null"/>

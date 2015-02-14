@@ -303,8 +303,8 @@ public class User implements Parcelable, Comparator<User> {
 		dest.writeString(username);
 		dest.writeString(email);
 		dest.writeString(nickname);
-//		dest.writeString(phone);
-//		dest.writeString(resource);
+		dest.writeString(phone);
+		dest.writeString(resource);
 		dest.writeString(status);
 		dest.writeString(mode);
 		dest.writeString(fullPinyin);
@@ -319,8 +319,8 @@ public class User implements Parcelable, Comparator<User> {
 		username = in.readString();
 		email = in.readString();
 		nickname = in.readString();
-//		phone = in.readString();
-//		resource = in.readString();
+		phone = in.readString();
+		resource = in.readString();
 		status = in.readString();
 		mode = in.readString();
 		fullPinyin = in.readString();

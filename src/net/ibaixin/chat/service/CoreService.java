@@ -298,7 +298,7 @@ public class CoreService extends Service {
 				senderInfo.msgThread.setSnippetContent(snippetContent);
 				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
 				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
-				if (MsgInfo.Type.TEXT == msgType || MsgInfo.Type.LOCATION == msgType) {	//文本消息或者地理位置消息
+				if (MsgInfo.Type.TEXT == msgType) {	//文本消息
 					if (senderInfo.chat != null) {
 						try {
 							senderInfo.chat.sendMessage(senderInfo.msgInfo.getContent());
@@ -318,7 +318,7 @@ public class CoreService extends Service {
 					OutgoingFileTransfer fileTransfer = mFileTransferManager.createOutgoingFileTransfer(toJid);
 					
 					File sendFile = null;
-					if (msgInfo.getMsgType() == MsgInfo.Type.IMAGE) {	//图片类型
+					if (msgType == MsgInfo.Type.IMAGE) {	//图片类型
 						if (senderInfo.originalImage) {	//原图发送
 							sendFile = new File(msgPart.getFilePath());
 						} else {
@@ -329,12 +329,16 @@ public class CoreService extends Service {
 					}
 					if (sendFile.exists()) {
 						try {
-							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), msgPart.getFileName());
+							String description = msgPart.getFileName();
+							if (msgType == MsgInfo.Type.LOCATION) {	//地理位置信息
+								description = msgInfo.getContent();
+							}
+							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), description);
 //							fileTransfer.sendFile(sendFile, msgPart.getFileName());
 							while (!fileTransfer.isDone()) {	//传输完毕
 //								Log.d("-------------fileTransfer.getStatus()----------------" + fileTransfer.getStatus());
 								if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
-//									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
 								}
 							}
 							Log.d("-------发送完毕------");

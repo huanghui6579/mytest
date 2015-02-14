@@ -63,7 +63,7 @@ public class AudioListActivity extends BaseActivity implements LoaderCallbacks<L
 
 	@Override
 	protected void initData() {
-		msgInfo = getIntent().getParcelableExtra(ChatActivity2.ARG_MSG_INFO);
+		msgInfo = getIntent().getParcelableExtra(ChatActivity.ARG_MSG_INFO);
 		
 		mAudioAdapter = new AudioAdapter(mAudioItems, mContext);
 		lvData.setAdapter(mAudioAdapter);

@@ -179,6 +179,37 @@ public class PhotoPreviewActivity extends BaseActivity {
 		}
 	}
 	
+	/**
+	 * 为呃照片复选框添加监听器
+	 * @update 2015年2月12日 下午7:26:31
+	 */
+	private void addCheckImageListener() {
+		cbChose.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+			
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if (isChecked) {
+					selectCount ++;
+					if (selectCount > Constants.ALBUM_SELECT_SIZE) {	//选择的多于9张
+						selectCount = Constants.ALBUM_SELECT_SIZE;
+						SystemUtil.makeShortToast(getString(R.string.album_tip_max_select, Constants.ALBUM_SELECT_SIZE));
+						cbChose.setChecked(false);
+						return;
+					}
+					mSelectList.add(mPhotos.get(currentPostion));
+				} else {
+					mSelectList.remove(mPhotos.get(currentPostion));
+					selectCount --;
+					selectCount = selectCount < 0 ? 0 : selectCount;
+				}
+				selectOriginalSize = SystemUtil.getFileListSize(mSelectList);
+				selectArray.put(currentPostion, isChecked);
+				updateBtnOpt(selectCount);
+				updateOriginalCheckbox(selectOriginalSize);
+			}
+		});
+	}
+	
 	@Override
 	protected void addListener() {
 		cbOrigianlImage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -189,6 +220,7 @@ public class PhotoPreviewActivity extends BaseActivity {
 				
 			}
 		});
+		addCheckImageListener();
 		mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 			
 			@Override
@@ -198,30 +230,7 @@ public class PhotoPreviewActivity extends BaseActivity {
 				setTitle(getString(R.string.album_preview_photo_index, currentPostion + 1, totalCount));
 				cbChose.setOnCheckedChangeListener(null);
 				cbChose.setChecked(selectArray.indexOfKey(position) >= 0 ? selectArray.get(position) : false);
-				cbChose.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-					
-					@Override
-					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-						if (isChecked) {
-							selectCount ++;
-							if (selectCount > Constants.ALBUM_SELECT_SIZE) {	//选择的多于9张
-								selectCount = Constants.ALBUM_SELECT_SIZE;
-								SystemUtil.makeShortToast(getString(R.string.album_tip_max_select, Constants.ALBUM_SELECT_SIZE));
-								cbChose.setChecked(false);
-								return;
-							}
-							mSelectList.add(mPhotos.get(currentPostion));
-						} else {
-							mSelectList.remove(mPhotos.get(currentPostion));
-							selectCount --;
-							selectCount = selectCount < 0 ? 0 : selectCount;
-						}
-						selectOriginalSize = SystemUtil.getFileListSize(mSelectList);
-						selectArray.put(currentPostion, isChecked);
-						updateBtnOpt(selectCount);
-						updateOriginalCheckbox(selectOriginalSize);
-					}
-				});
+				addCheckImageListener();
 				if (btnOpt != null) {
 					updateBtnOpt(selectCount);
 				}

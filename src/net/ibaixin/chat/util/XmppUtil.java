@@ -24,6 +24,7 @@ import org.jivesoftware.smackx.search.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jivesoftware.smackx.xdata.Form;
+import org.jxmpp.util.XmppStringUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -104,6 +105,15 @@ public class XmppUtil {
 					user.setJID(jid);
 				}
 				String username = SystemUtil.unwrapJid(jid);
+				Presence presence = roster.getPresence(jid);
+				if (presence != null) {
+					user.setStatus(presence.getStatus());
+					user.setResource(XmppStringUtils.parseResource(presence.getFrom()));
+					Presence.Type type = presence.getType();
+					if (type != null) {
+						user.setMode(type.name());
+					}
+				}
 				user.setNickname(name);
 				user.setUsername(username);
 				user.setFullPinyin(user.initFullPinyin());

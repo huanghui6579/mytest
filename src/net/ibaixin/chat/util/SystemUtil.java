@@ -1422,16 +1422,59 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 生成录音文件名，文件已时间戳为为名方式，如:2014_11_24_21_41_56_5435646.amr
+	 * 生成录音文件名，文件以时间戳为为名方式，如:2014_11_24_21_41_56_5435646.amrz
 	 * @update 2014年11月24日 下午9:40:15
 	 * @return
 	 */
 	public static String generateRecordFilename() {
-		return formatTime(System.currentTimeMillis(), "yyyy_MM_dd_HH_mm_ss") + new Random().nextInt(999999) + ".amr";
+		return generateFilename("amrz");
 	}
 	
 	/**
-	 * 根据会话id生成录音文件的全路径,如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.amr
+	 * 生成文件名，文件以时间戳为为名方式，如:2014_11_24_21_41_56_5435646.xxx
+	 * @update 2015年2月12日 下午7:48:35
+	 * @param subfix 文件名的后缀名，参数不包含.
+	 * @return
+	 */
+	public static String generateFilename(String subfix) {
+		String dot = ".";
+		if (TextUtils.isEmpty(subfix)) {	//没有后缀名
+			dot = "";
+		}
+		return formatTime(System.currentTimeMillis(), "yyyy_MM_dd_HH_mm_ss") + new Random().nextInt(999999) + dot + subfix;
+	}
+	
+	/**
+	 * 生成地理位置的截图文件
+	 * @update 2015年2月12日 下午7:52:59
+	 * @return
+	 */
+	public static String generateLocationFilename() {
+		return generateFilename("jpgz");
+	}
+	
+	/**
+	 * 生成地理位置截图的全路径，如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.jpgz
+	 * @update 2015年2月12日 下午7:53:47
+	 * @param threadId 会话id
+	 * @return
+	 */
+	public static String generateLocationFilePath(int threadId) {
+		return generateChatAttachFilePath(threadId, generateLocationFilename());
+	}
+	
+	/**
+	 * 生成地理位置截图的文件，如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.jpgz
+	 * @update 2015年2月12日 下午7:55:51
+	 * @param threadId 会话id
+	 * @return
+	 */
+	public static File generateLocationFile(int threadId) {
+		return generateChatAttachFile(threadId, generateLocationFilename());
+	}
+	
+	/**
+	 * 根据会话id生成录音文件的全路径,如：/mnt/sdcard/CharApp/admin/attachment/12/2014_11_24_21_41_56_543546.amrz
 	 * @update 2014年11月24日 下午9:43:21
 	 * @param threadId
 	 * @return
