@@ -17,6 +17,7 @@
 */
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/net.ibaixin.chat"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -31,10 +32,12 @@
         <!-- This can of course also be a regular indeterminate ProgressBar, but then it won't be styled -->
         <net.ibaixin.chat.view.ProgressWheel
             android:id="@+id/progress"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="@dimen/alert_dialog_padding_material"
-            android:layout_marginRight="@dimen/alert_dialog_padding_material" />
+            android:layout_marginRight="@dimen/alert_dialog_padding_material"
+            app:matProg_barColor="?attr/colorPrimary"
+            app:matProg_progressIndeterminate="true" />
 
         <TextView
             android:id="@+id/message"

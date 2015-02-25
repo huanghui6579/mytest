@@ -9,6 +9,7 @@ import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.Log;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
+import net.ibaixin.chat.view.ProgressDialog;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException;
@@ -18,11 +19,9 @@ import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -203,7 +202,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		@Override
 		protected void onPreExecute() {
 			if (pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining), true, true);
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.logining), true);
 			} else {
 				pDialog.show();
 			}

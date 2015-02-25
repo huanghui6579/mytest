@@ -10,6 +10,7 @@ import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.Log;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
+import net.ibaixin.chat.view.ProgressDialog;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.PacketCollector;
@@ -28,7 +29,6 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.iqregister.packet.Registration;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.text.Editable;
@@ -219,7 +219,7 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 		@Override
 		protected void onPreExecute() {
 			if (pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.registing), true, true);
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.registing), true);
 			} else {
 				pDialog.show();
 			}

@@ -27,7 +27,7 @@ public class ProgressDialog extends MaterialDialog {
 	 * @param message 内容
 	 * @return
 	 */
-	public static MaterialDialog show(Context context, CharSequence title, CharSequence message) {
+	public static ProgressDialog show(Context context, CharSequence title, CharSequence message) {
 		return show(context, title, message, true);
 	}
 	
@@ -41,7 +41,7 @@ public class ProgressDialog extends MaterialDialog {
 	 * @param cancelable 是否可返回消失
 	 * @return
 	 */
-	public static MaterialDialog show(Context context, CharSequence title, CharSequence message, boolean cancelable) {
+	public static ProgressDialog show(Context context, CharSequence title, CharSequence message, boolean cancelable) {
 		return show(context, title, message, cancelable, null);
 	}
 	
@@ -56,7 +56,7 @@ public class ProgressDialog extends MaterialDialog {
 	 * @param cancelListene 对话框消失的监听器
 	 * @return
 	 */
-	public static MaterialDialog show(Context context, CharSequence title, CharSequence message, boolean cancelable, OnCancelListener cancelListene) {
+	public static ProgressDialog show(Context context, CharSequence title, CharSequence message, boolean cancelable, OnCancelListener cancelListene) {
 		MaterialDialog.Builder builder = new MaterialDialog.Builder(context);
 		builder.title(title)
 			.customView(R.layout.progress_dialog_holo, false)

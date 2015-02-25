@@ -14,6 +14,7 @@ import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.EmojiFragment;
 import net.ibaixin.chat.fragment.EmojiTypeFragment;
 import net.ibaixin.chat.model.AttachItem;
+import net.ibaixin.chat.model.ContextMenuItem;
 import net.ibaixin.chat.model.EmojiType;
 import net.ibaixin.chat.model.FileItem;
 import net.ibaixin.chat.model.MsgInfo;
@@ -44,8 +45,8 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -54,7 +55,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.database.ContentObserver;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -72,27 +76,31 @@ import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.TextAppearanceSpan;
-import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.afollestad.materialdialogs.MaterialDialogCompat;
+import com.afollestad.materialdialogs.util.DialogUtils;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
@@ -158,6 +166,23 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	private static final int MODE_SEND = 3;
 	
 	public static final String ARG_THREAD = "arg_thread";
+	
+	/**
+	 * 菜单项：复制
+	 */
+	private static final int MENU_COPY = 0x1;
+	/**
+	 * 菜单项：转发
+	 */
+	private static final int MENU_FORWARD = 0x2;
+	/**
+	 * 菜单项：删除
+	 */
+	private static final int MENU_DELETE = 0x3;
+	/**
+	 * 菜单项：更多
+	 */
+	private static final int MENU_MORE = 0x4;
 	
 	/**
 	 * 聊天的对方
@@ -1819,9 +1844,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			}
 			
 //			holder.ivHeadIcon.setImageResource(R.drawable.ic_chat_default_big_head_icon);
-			String title = msgInfo.getFromUser();
 			if (type == TYPE_OUT) {	//自己发送的消息
-				title = mine.getName();
 				//显示自己的头像
 				String iconPath = mine.getIconPath();
 				if (SystemUtil.isFileExists(iconPath)) {
@@ -1850,7 +1873,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					break;
 				}
 			} else {	//接收的消息，对方发送的消息
-				title = otherSide.getName();
 				//显示用户图像
 				UserVcard otherVcard = otherSide.getUserVcard();
 				if (otherVcard != null) {
@@ -1870,26 +1892,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					msgInfo = msgManager.updateMsgInfo(msgInfo);
 				}
 			}
-			final String dialogTitle = title;
-			holder.tvContent.setOnLongClickListener(new View.OnLongClickListener() {
-				
-				@Override
-				public boolean onLongClick(View v) {
-					MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
-					builder.title(dialogTitle)
-							.items(new CharSequence[] {"复制", "删除", "转发", "更多"})
-							.itemsCallback(new MaterialDialog.ListCallback() {
-								
-								@Override
-								public void onSelection(MaterialDialog dialog, View itemView, int which,
-										CharSequence text) {
-									// TODO Auto-generated method stub
-									
-								}
-							}).show();
-					return true;
-				}
-			});
+			holder.tvContent.setOnLongClickListener(new MyLongClickListener(type, msgInfo));
 			holder.ivHeadIcon.setOnClickListener(new View.OnClickListener() {
 				
 				@Override
@@ -1923,6 +1926,119 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		}
 		
 	}
+	
+	/**
+	 * 控件长按事件
+	 * @author huanghui1
+	 * @update 2015年2月15日 下午8:26:47
+	 */
+	class MyLongClickListener implements OnLongClickListener {
+		/**
+		 * 消息的类型，分为接收的消息和发送的消息
+		 */
+		private int itemType;
+		/**
+		 * 消息对象
+		 */
+		private MsgInfo msgInfo;
+
+		public MyLongClickListener(int itemType, MsgInfo msgInfo) {
+			super();
+			this.itemType = itemType;
+			this.msgInfo = msgInfo;
+		}
+
+		@Override
+		public boolean onLongClick(View v) {
+			String[] array = getResources().getStringArray(R.array.chat_msg_context_menu);
+			List<ContextMenuItem> menus = new ArrayList<>();
+			for (int i = 0; i < array.length; i++) {
+				ContextMenuItem item = new ContextMenuItem(i, array[i]);
+				menus.add(item);
+			}
+			if (SystemUtil.isNotEmpty(menus)) {
+				if (Type.TEXT != msgInfo.getMsgType()) {
+					menus.remove(0);	//除了文本外，其他的消息都不能复制,所以，删除“复制”菜单项
+				}
+				String dialogTitle = null;
+				if (MsgAdapter.TYPE_IN == itemType) {	//接收的消息
+					dialogTitle = otherSide.getName();
+				} else {
+					dialogTitle = mine.getName();
+				}
+				MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
+				MaterialDialog dialog = builder.title(dialogTitle)
+					.titleColorAttr(R.attr.colorPrimary)
+					.autoDismiss(true)
+					.disableDefaultFonts()
+					.adapter(new MenuItemAdapter(menus, mContext))
+					.itemsCallback(new MaterialDialog.ListCallback() {
+						
+						@Override
+						public void onSelection(MaterialDialog dialog, View itemView, int which,
+								CharSequence text) {
+							// TODO Auto-generated method stub
+							
+						}
+					})
+					.build();
+				dialog.show();
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+	}
+	
+	/**
+	 * 菜单列表的适配器
+	 * @author huanghui1
+	 * @update 2015年2月25日 下午5:55:39
+	 */
+	class MenuItemAdapter extends CommonAdapter<ContextMenuItem> {
+
+        final int itemColor;
+        
+        public MenuItemAdapter(List<ContextMenuItem> list, Context context) {
+			super(list, context);
+			itemColor = DialogUtils.resolveColor(context, R.attr.md_item_color, 0);
+		}
+
+        @Override
+        public long getItemId(int position) {
+        	ContextMenuItem item = (ContextMenuItem) getItem(position);
+            return item.getItemId();
+        }
+        
+        @Override
+        public boolean isEnabled(int position) {
+        	ContextMenuItem item = (ContextMenuItem) getItem(position);
+        	return item.isEnable();
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            MenuViewHoler holer = null;
+            if (convertView == null) {
+            	holer = new MenuViewHoler();
+            	convertView = inflater.inflate(R.layout.md_listitem, parent, false);
+            	
+            	holer.textView = (TextView) convertView.findViewById(R.id.title);
+            } else {
+            	holer = (MenuViewHoler) convertView.getTag();
+            }
+            ContextMenuItem item = list.get(position);
+            holer.textView.setText(item.getTitle());
+            holer.textView.setTextColor(itemColor);
+            holer.textView.setTag(item.getItemId() + ":" + item.getTitle());
+            return convertView;
+        }
+        
+        class MenuViewHoler {
+        	TextView textView;
+        }
+    }
 	
 	class MyImageLoaderListener implements ImageLoadingListener {
 		private TextView tvDesc;

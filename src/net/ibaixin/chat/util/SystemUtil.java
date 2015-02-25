@@ -1998,4 +1998,21 @@ public class SystemUtil {
 		subList.addAll(data.subList(startIndex, endIndex));
 		return subList;
 	}
+	
+	/**
+	 * 将数组转换成list,该list可改变大小
+	 * @update 2015年2月15日 下午8:38:01
+	 * @param array
+	 */
+	public static <T> List<T> asList(T[] array) {
+		if (isNotEmpty(array)) {
+			List<T> list = new ArrayList<>();
+			for (T t : array) {
+				list.add(t);
+			}
+			return list;
+		} else {
+			return null;
+		}
+	}
 }

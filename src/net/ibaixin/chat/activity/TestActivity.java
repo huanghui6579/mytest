@@ -3,8 +3,13 @@ package net.ibaixin.chat.activity;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
+import com.afollestad.materialdialogs.MaterialDialog;
+
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.util.UnicodeFormatter;
+import android.graphics.Color;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -15,8 +20,6 @@ import android.widget.TextView;
  * @update 2015年1月31日 上午11:50:55
  */
 public class TestActivity extends BaseActivity {
-	private TextView textView;
-	private EditText editText;
 
 	@Override
 	protected int getContentView() {
@@ -25,7 +28,20 @@ public class TestActivity extends BaseActivity {
 
 	@Override
 	protected void initView() {
-		// TODO Auto-generated method stub
+		Button basicNoTitle = (Button) findViewById(R.id.basicNoTitle);
+		basicNoTitle.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				new MaterialDialog.Builder(TestActivity.this)
+                .title("提示")
+                .titleColorAttr(R.attr.colorPrimary)
+                .content("文本内容")
+                .positiveText("确定")
+                .negativeText("取消")
+                .show();
+			}
+		});
 	}
 
 	@Override
@@ -37,24 +53,5 @@ public class TestActivity extends BaseActivity {
 		// TODO Auto-generated method stub
 
 	}
-	
-	public static String fromCodePoint(int codePoint) {
-        return newString(codePoint);
-    }
-
-    public static String fromChar(char ch) {
-        return Character.toString(ch);
-    }
-
-    public static final String newString(int codePoint) {
-        if (Character.charCount(codePoint) == 1) {
-            return String.valueOf(codePoint);
-        } else {
-            return new String(Character.toChars(codePoint));
-        }
-    }
-    
-    public static void printBytes(byte[] array, String name) {
-    }
 
 }

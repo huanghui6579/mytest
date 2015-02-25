@@ -10,12 +10,12 @@ import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
+import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -24,7 +24,6 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -160,7 +159,7 @@ public class AddFriendActivity extends BaseActivity {
 		@Override
 		protected void onPreExecute() {
 			if (pDialog == null) {
-				pDialog = ProgressDialog.show(mContext, null, getString(R.string.contact_searching), true, true);
+				pDialog = ProgressDialog.show(mContext, null, getString(R.string.contact_searching), true);
 			} else {
 				pDialog.show();
 			}

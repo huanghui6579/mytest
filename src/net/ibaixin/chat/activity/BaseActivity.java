@@ -6,7 +6,7 @@ import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
-import android.app.ProgressDialog;
+import net.ibaixin.chat.view.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
