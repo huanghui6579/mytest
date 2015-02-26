@@ -397,6 +397,7 @@ public class UserManager {
 		cardValues.put(Provider.UserVcardColumns.EMAIL, uCard.getEmail());
 		cardValues.put(Provider.UserVcardColumns.ICONPATH, uCard.getIconPath());
 		cardValues.put(Provider.UserVcardColumns.ICONHASH, uCard.getIconHash());
+		cardValues.put(Provider.UserVcardColumns.NICK_DESCRIPTION, uCard.getNickDescription());
 		return cardValues;
 	}
 	

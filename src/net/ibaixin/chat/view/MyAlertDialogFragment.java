@@ -7,11 +7,12 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 
 /**
- * 
+ * 自定义对话框，已废弃，使用{@link com.afollestad.materialdialogs.MaterialDialog}代替
  * @author huanghui1
  * @version 1.0.0
  * @update 2014年11月12日 下午5:21:42
  */
+@Deprecated
 public class MyAlertDialogFragment extends DialogFragment {
 	public static final String ARG_ICON_ID = "arg_icon_id";
 	public static final String ARG_TITLE = "arg_title";

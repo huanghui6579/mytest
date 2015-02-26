@@ -28,6 +28,8 @@
     <dimen name="contact_item_head_icon_height">48dp</dimen>
     <dimen name="contact_text_index_padding_top">5dp</dimen>
     
+    <dimen name="contact_remark_prompt_vertical_margin">16dp</dimen>
+    
     <!-- material-dialogs -->
     <!-- See http://www.google.com/design/spec/components/dialogs.html#dialogs-specs -->
     <!-- Margin around the dialog, excluding the button bar -->

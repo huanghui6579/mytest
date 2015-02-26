@@ -20,14 +20,14 @@ public class Constants {
 //	public static final String SERVER_HOST = "10.2.33.237";
 //	public static final String SERVER_HOST = "192.168.42.25";
 //	public static final String SERVER_HOST = "123.56.116.45";
-	public static final String SERVER_HOST = "www.ibaixin.net";
-//	public static final String SERVER_HOST = "192.168.0.102";
+//	public static final String SERVER_HOST = "www.ibaixin.net";
+	public static final String SERVER_HOST = "192.168.0.103";
 //	public static final String SERVER_HOST = "192.168.1.184";
 //	public static final String SERVER_NAME = "tiger.com";
 //	public static final String SERVER_NAME = "huanghui4.com";
-	public static final String SERVER_NAME = "ibaixin.net";
+//	public static final String SERVER_NAME = "ibaixin.net";
 //	public static final String SERVER_NAME = "localhost-pc.com";
-//	public static final String SERVER_NAME = "home-pc.com";
+	public static final String SERVER_NAME = "home-pc.com";
 	public static final int SERVER_PORT = 5222;
 	/**
 	 * 用户的登录该系统的客户端类型，如Android、iphone、web等
@@ -66,6 +66,10 @@ public class Constants {
 	public static final String MIME_APK = "apk";
 	public static final String MIME_FILE = "file";
 	
+	/**
+	 * 复制文本到剪贴板的标签
+	 */
+	public static final String LABEL_COPY = "label_copy";
 	
 	/**
 	 * 默认的聊天消息分页加载的页面大小

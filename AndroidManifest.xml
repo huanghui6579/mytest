@@ -152,8 +152,12 @@
         <activity
             android:name="net.ibaixin.chat.activity.LocationShareActivity"
             android:label="@string/activity_lable_location_share"
-            android:configChanges="orientation|screenSize" >
-        </activity>
+            android:configChanges="orientation|screenSize" />
+        
+        <activity
+            android:name="net.ibaixin.chat.activity.RemarkEditActivity"
+            android:label="@string/activity_lable_edit_remark"
+            android:configChanges="orientation|screenSize" />
         
         <provider android:name="net.ibaixin.chat.provider.UserProvider"
             android:authorities="net.ibaixin.chat.provider.user;net.ibaixin.chat.provider.newFriend"

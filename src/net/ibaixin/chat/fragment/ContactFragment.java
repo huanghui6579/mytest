@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.activity.ChatActivity;
 import net.ibaixin.chat.activity.CommonAdapter;
 import net.ibaixin.chat.activity.NewFriendInfoActivity;
+import net.ibaixin.chat.activity.RemarkEditActivity;
 import net.ibaixin.chat.activity.UserInfoActivity;
 import net.ibaixin.chat.activity.MainActivity.LazyLoadCallBack;
 import net.ibaixin.chat.model.User;
@@ -48,6 +50,7 @@ import android.widget.ListView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
@@ -61,6 +64,9 @@ import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
  * @update 2014年10月8日 下午7:44:40
  */
 public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
+	private static final int MENU_EDIT_REMARK = 0;
+	private static final int MENU_DELETE = 0x1;
+	
 	private ListView lvContact;
 	private TextView tvIndexDialog;
 	private SideBar sideBar;
@@ -147,6 +153,13 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_contact, container, false);
 		
+		return view;
+	}
+	
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		
 		lvContact = (ListView) view.findViewById(R.id.lv_contact);
 		tvIndexDialog = (TextView) view.findViewById(R.id.tv_text_dialog);
 		sideBar = (SideBar) view.findViewById(R.id.sidrbar);
@@ -172,6 +185,77 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		/*TextView headView = new TextView(mContext);
 		headView.setText("头部");
 		lvContact.addHeaderView(headView);*/
+		
+		lvContact.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				final User user = (User) mAdapter.getItem(position);
+				if (user != null) {
+					MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
+					builder.title(user.getName())
+						.items(R.array.contact_list_context_menu)
+						.itemsCallback(new MaterialDialog.ListCallback() {
+							
+							@Override
+							public void onSelection(MaterialDialog dialog, View itemView, int which,
+									CharSequence text) {
+								switch (which) {
+								case MENU_EDIT_REMARK:	//修改备注
+									Intent intent = new Intent(mContext, RemarkEditActivity.class);
+									intent.putExtra(UserInfoActivity.ARG_USER, user);
+									startActivity(intent);
+									break;
+								case MENU_DELETE:	//删除好友
+									MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
+									builder.title(R.string.prompt)
+										.content(R.string.contact_list_content_delete_prompt, user.getName())
+										.positiveText(android.R.string.ok)
+										.negativeText(android.R.string.cancel)
+										.callback(new MaterialDialog.ButtonCallback() {
+
+											@Override
+											public void onPositive(MaterialDialog dialog) {
+												pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), false, true);
+												
+												SystemUtil.getCachedThreadPool().execute(new Runnable() {
+													
+													@Override
+													public void run() {
+														AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+														//发送删除好友的信息
+														boolean success = XmppUtil.deleteUser(connection, user.getUsername());
+														if (success) {
+															autoRefresh = false;
+															//删除好友
+															success = userManager.deleteUser(user);
+															//是否成功删除该好友
+															if (success) {
+																mUsers.remove(user);
+																mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
+															} else {
+																mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+															}
+														} else {
+															mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+														}
+													}
+												});
+											}
+										})
+										.show();
+									break;
+								default:
+									break;
+								}
+							}
+						})
+						.show();
+				}
+				return true;
+			}
+		});
 		
 		lvContact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -201,7 +285,6 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 				}
 			}
 		});
-		return view;
 	}
 	
 	@Override
@@ -314,7 +397,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		
-		registerForContextMenu(lvContact);
+//		registerForContextMenu(lvContact);
 		
 		//注册加载好友列表的广播
 		loadDataReceiver = new LoadDataBroadcastReceiver();

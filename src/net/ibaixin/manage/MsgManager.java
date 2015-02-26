@@ -679,21 +679,34 @@ public class MsgManager {
 	}
 	
 	/**
-	 * 根据消息id删除该条消息，该消息实体值包含msgId和msgType
+	 * 根据消息id删除该条消息，该消息实体值包含msgId和msgType，默认不删除该消息对应的本地附件
 	 * @update 2014年11月12日 下午8:08:44
 	 * @param msgInfo
 	 * @return
 	 */
 	public boolean deleteMsgInfoById(MsgInfo msgInfo) {
+		return deleteMsgInfoById(msgInfo, false);
+	}
+	
+	/**
+	 * 根据消息id删除该条消息，该消息实体值包含msgId和msgType
+	 * @update 2015年2月26日 上午11:07:56
+	 * @param msgInfo
+	 * @param deleteAttach 是否删除该消息对应的附件
+	 * @return
+	 */
+	public boolean deleteMsgInfoById(MsgInfo msgInfo, boolean deleteAttach) {
 		if (msgInfo == null) {
 			return false;
 		}
 		int count = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgInfoColumns.CONTENT_URI, msgInfo.getId()), null, null);
 		if (count > 0) {	//删除消息成功
-			Type msgType = msgInfo.getMsgType();
-			if (MsgInfo.Type.TEXT != msgType && MsgInfo.Type.LOCATION != msgType) {	//有附件
-				//删除附件
-				deleteMsgPartByMsgId(msgInfo.getId());
+			if (deleteAttach) {
+				Type msgType = msgInfo.getMsgType();
+				if (MsgInfo.Type.TEXT != msgType) {	//有附件
+					//删除附件
+					deleteMsgPartByMsgId(msgInfo.getId());
+				}
 			}
 			return true;
 		} else {

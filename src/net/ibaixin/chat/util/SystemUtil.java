@@ -38,6 +38,8 @@ import net.ibaixin.chat.model.FileItem.FileType;
 import net.ibaixin.chat.model.MsgInfo.Type;
 import net.ibaixin.chat.model.emoji.Emojicon;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -2014,5 +2016,30 @@ public class SystemUtil {
 		} else {
 			return null;
 		}
+	}
+	
+	/**
+	 * 复制文本内容到剪切板
+	 * @update 2015年2月26日 上午10:54:06
+	 * @param text 要复制的文本内容
+	 * @param lable 文本内容映射到剪切板的lable
+	 */
+	public static void copyText(String text, String label) {
+		ClipboardManager clipboard = (ClipboardManager) ChatApplication.getInstance().getSystemService(Context.CLIPBOARD_SERVICE);
+		if (TextUtils.isEmpty(label)) {
+			label = Constants.LABEL_COPY;
+		}
+		ClipData clip = ClipData.newPlainText(label, text);
+	    clipboard.setPrimaryClip(clip);
+	    makeShortToast(R.string.copy_text_success);
+	}
+	
+	/**
+	 * 复制文本内容到剪切板
+	 * @update 2015年2月26日 上午10:54:06
+	 * @param text 要复制的文本内容
+	 */
+	public static void copyText(String text) {
+		copyText(text, null);
 	}
 }

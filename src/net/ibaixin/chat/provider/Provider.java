@@ -90,6 +90,7 @@ public class Provider {
         public static final String MOBILE = "mobile";
         public static final String ICONPATH = "iconPath";
         public static final String ICONHASH = "iconHash";
+        public static final String NICK_DESCRIPTION = "nickDescription";
 	}
 	
 	/**

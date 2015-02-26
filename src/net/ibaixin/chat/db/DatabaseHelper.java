@@ -13,7 +13,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "ibaixin_chat.db";
-	private static final int DB_VERSION = 6;
+	private static final int DB_VERSION = 7;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -48,7 +48,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.UserVcardColumns.CITY + " TEXT, "
 				+ Provider.UserVcardColumns.ZIPCODE + " TEXT, "
 				+ Provider.UserVcardColumns.ICONPATH + " TEXT, "
-				+ Provider.UserVcardColumns.ICONHASH + " TEXT);");
+				+ Provider.UserVcardColumns.ICONHASH + " TEXT, "
+				+ Provider.UserVcardColumns.NICK_DESCRIPTION + " TEXT);");
 		
 		//创建个人信息表
 		db.execSQL("CREATE TABLE " + Provider.PersonalColums.TABLE_NAME + " ("

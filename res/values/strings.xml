@@ -21,6 +21,7 @@
     <string name="connection_unavailable">与服务器的连接已经断开，请重新登录</string>
     <string name="loading">正在处理，请稍后&#8230;</string>
     <string name="location_prefix">[位置]</string>
+    <string name="copy_text_success">内容成功复制到剪贴板！</string>
     
     <string name="activity_lable_login">用户登录</string>
     <string name="activity_lable_regist">用户注册</string>
@@ -33,6 +34,7 @@
     <string name="activity_lable_audio">音频</string>
     <string name="activity_lable_video">视频</string>
     <string name="activity_lable_location_share">位置</string>
+    <string name="activity_lable_edit_remark">备注信息</string>
     
     <string name="email">邮箱：%1$s</string>
     <string name="username">用户名：%1$s</string>
@@ -74,6 +76,10 @@
     
     <string name="contact_hint_search_friend">账号</string>
     <string name="contact_hint_search">查找</string>
+    <string name="contact_hint_edit_nick">请输入备注</string>
+    <string name="contact_hint_edit_nick_desc">请输入备注描述</string>
+    <string name="contact_prompt_nick">备注名</string>
+    <string name="contact_prompt_nick_desc">描述</string>
     <string name="contact_searching">正在查找，请稍后&#8230;</string>
     <string name="contact_add_friend">添加好友</string>
     <string name="contact_send_msg">发消息</string>

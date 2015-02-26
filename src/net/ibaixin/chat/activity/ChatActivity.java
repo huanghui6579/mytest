@@ -45,7 +45,6 @@ import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -55,10 +54,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.database.ContentObserver;
-import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -78,7 +75,6 @@ import android.text.TextWatcher;
 import android.text.style.TextAppearanceSpan;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -87,15 +83,11 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -1953,7 +1945,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			String[] array = getResources().getStringArray(R.array.chat_msg_context_menu);
 			List<ContextMenuItem> menus = new ArrayList<>();
 			for (int i = 0; i < array.length; i++) {
-				ContextMenuItem item = new ContextMenuItem(i, array[i]);
+				ContextMenuItem item = new ContextMenuItem(i + 1, array[i]);
 				menus.add(item);
 			}
 			if (SystemUtil.isNotEmpty(menus)) {
@@ -1967,21 +1959,35 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					dialogTitle = mine.getName();
 				}
 				MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
-				MaterialDialog dialog = builder.title(dialogTitle)
-					.titleColorAttr(R.attr.colorPrimary)
-					.autoDismiss(true)
+				final MaterialDialog dialog = builder.title(dialogTitle)
 					.disableDefaultFonts()
 					.adapter(new MenuItemAdapter(menus, mContext))
-					.itemsCallback(new MaterialDialog.ListCallback() {
-						
-						@Override
-						public void onSelection(MaterialDialog dialog, View itemView, int which,
-								CharSequence text) {
-							// TODO Auto-generated method stub
-							
-						}
-					})
 					.build();
+				ListView listView = dialog.getListView();
+				listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> parent, View view,
+							int position, long id) {
+						switch ((int) id) {
+						case MENU_COPY:	//复制
+						    SystemUtil.copyText(msgInfo.getContent());
+							break;
+						case MENU_FORWARD:	//转发
+							break;
+						case MENU_DELETE:	//删除
+							if (msgManager.deleteMsgInfoById(msgInfo)) {
+								mMsgInfos.remove(msgInfo);
+								msgAdapter.notifyDataSetChanged();
+							}
+							break;
+
+						default:
+							break;
+						}
+						dialog.dismiss();
+					}
+				});
 				dialog.show();
 				return true;
 			} else {
@@ -2002,7 +2008,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
         
         public MenuItemAdapter(List<ContextMenuItem> list, Context context) {
 			super(list, context);
-			itemColor = DialogUtils.resolveColor(context, R.attr.md_item_color, 0);
+			itemColor = DialogUtils.resolveColor(context, R.attr.md_item_color, Color.BLACK);
 		}
 
         @Override
@@ -2025,6 +2031,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
             	convertView = inflater.inflate(R.layout.md_listitem, parent, false);
             	
             	holer.textView = (TextView) convertView.findViewById(R.id.title);
+            	convertView.setTag(holer);
             } else {
             	holer = (MenuViewHoler) convertView.getTag();
             }
