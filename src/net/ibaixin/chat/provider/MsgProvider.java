@@ -1,13 +1,17 @@
 package net.ibaixin.chat.provider;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.ibaixin.chat.db.DatabaseHelper;
 import net.ibaixin.chat.util.Log;
 import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.OperationApplicationException;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -77,6 +81,7 @@ public class MsgProvider extends ContentProvider {
 		mMsgThreadProjection.put(Provider.MsgThreadColumns.SNIPPET_ID, Provider.MsgThreadColumns.SNIPPET_ID);
 		mMsgThreadProjection.put(Provider.MsgThreadColumns.SNIPPET_CONTENT, Provider.MsgThreadColumns.SNIPPET_CONTENT);
 		mMsgThreadProjection.put(Provider.MsgThreadColumns.MEMBER_IDS, Provider.MsgThreadColumns.MEMBER_IDS);
+		mMsgThreadProjection.put(Provider.MsgThreadColumns.IS_TOP, Provider.MsgThreadColumns.IS_TOP);
 	}
 
 	@Override
@@ -199,18 +204,58 @@ public class MsgProvider extends ContentProvider {
 			break;
 		}
 		SQLiteDatabase db = mDBHelper.getWritableDatabase();
-		db.beginTransaction();
+//		db.beginTransaction();
 		try {
 			long rowId = db.insert(tableName, nullColumn, cv);
 			if (rowId > 0) {
 				Uri noteUri = ContentUris.withAppendedId(uri, rowId);
 				getContext().getContentResolver().notifyChange(noteUri, null);
-				db.setTransactionSuccessful();
+//				db.setTransactionSuccessful();
 				return noteUri;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.e(e.getMessage());
+		}/* finally {
+			db.endTransaction();
+		}*/
+		return null;
+	}
+	
+	/**
+	 * 批量添加数据，提供事务支持
+	 */
+	@Override
+	public int bulkInsert(Uri uri, ContentValues[] values) {
+		int numValues = values.length;
+		SQLiteDatabase db = null;
+        try {
+        	db = mDBHelper.getWritableDatabase();
+        	db.beginTransaction();
+			for (int i = 0; i < numValues; i++) {
+			    insert(uri, values[i]);
+			}
+			db.setTransactionSuccessful();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			db.endTransaction();
+		}
+        return numValues;
+	}
+	
+	@Override
+	public ContentProviderResult[] applyBatch(
+			ArrayList<ContentProviderOperation> operations)
+			throws OperationApplicationException {
+		SQLiteDatabase db = mDBHelper.getWritableDatabase();
+		db.beginTransaction();
+		try {
+			ContentProviderResult[] results = super.applyBatch(operations);
+			db.setTransactionSuccessful();
+			return results;
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			db.endTransaction();
 		}
@@ -221,7 +266,7 @@ public class MsgProvider extends ContentProvider {
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		SQLiteDatabase db = mDBHelper.getWritableDatabase();
 		int count = 0;
-		db.beginTransaction();
+//		db.beginTransaction();
 		try {
 			switch (mUriMatcher.match(uri)) {
 			case MSG_INFOS:
@@ -246,12 +291,12 @@ public class MsgProvider extends ContentProvider {
 				break;
 			}
 			getContext().getContentResolver().notifyChange(uri, null);
-			db.setTransactionSuccessful();
+//			db.setTransactionSuccessful();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
+		}/* finally {
 			db.endTransaction();
-		}
+		}*/
 		return count;
 	}
 
@@ -260,7 +305,7 @@ public class MsgProvider extends ContentProvider {
 			String[] selectionArgs) {
 		SQLiteDatabase db = mDBHelper.getWritableDatabase();
 		int count = 0;
-		db.beginTransaction();
+//		db.beginTransaction();
 		try {
 			switch (mUriMatcher.match(uri)) {
 			case MSG_INFOS:
@@ -285,12 +330,12 @@ public class MsgProvider extends ContentProvider {
 				break;
 			}
 			getContext().getContentResolver().notifyChange(uri, null);
-			db.setTransactionSuccessful();
+//			db.setTransactionSuccessful();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
+		}/* finally {
 			db.endTransaction();
-		}
+		}*/
 		return count;
 	}
 	

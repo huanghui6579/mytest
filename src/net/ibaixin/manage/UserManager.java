@@ -172,6 +172,22 @@ public class UserManager {
 	}
 	
 	/**
+	 * 更新用户的昵称
+	 * @update 2015年2月27日 下午2:22:39
+	 * @param user 要更新的用户实体
+	 * @return 更新后的用户实体
+	 */
+	public User updateFriendNick(User user) {
+		if (user == null) {
+			return null;
+		}
+		ContentValues values = new ContentValues();
+		values.put(Provider.UserColumns.NICKNAME, user.getNickname());
+		mContext.getContentResolver().update(Uri.withAppendedPath(Provider.UserColumns.CONTENT_URI, String.valueOf(user.getId())), values, null, null);
+		return user;
+	}
+	
+	/**
 	 * 保存或更新好友信息
 	 * @update 2014年10月23日 下午7:34:16
 	 * @param user
@@ -397,7 +413,6 @@ public class UserManager {
 		cardValues.put(Provider.UserVcardColumns.EMAIL, uCard.getEmail());
 		cardValues.put(Provider.UserVcardColumns.ICONPATH, uCard.getIconPath());
 		cardValues.put(Provider.UserVcardColumns.ICONHASH, uCard.getIconHash());
-		cardValues.put(Provider.UserVcardColumns.NICK_DESCRIPTION, uCard.getNickDescription());
 		return cardValues;
 	}
 	

@@ -37,11 +37,6 @@ public class UserVcard implements Parcelable {
 	 * 头像的hash值，通过本地hash值与服务器的hash对比来判断用不用重新更新头像
 	 */
 	private String iconHash;
-	
-	/**
-	 * 备注的描述,仅用于手机本地存储
-	 */
-	private String nickDescription;
 
 	public int getId() {
 		return id;
@@ -139,14 +134,6 @@ public class UserVcard implements Parcelable {
 		this.iconHash = iconHash;
 	}
 
-	public String getNickDescription() {
-		return nickDescription;
-	}
-
-	public void setNickDescription(String nickDescription) {
-		this.nickDescription = nickDescription;
-	}
-
 	@Override
 	public int describeContents() {
 		return 0;
@@ -158,8 +145,7 @@ public class UserVcard implements Parcelable {
 				+ nickname + ", realName=" + realName + ", email=" + email
 				+ ", street=" + street + ", city=" + city + ", province="
 				+ province + ", zipCode=" + zipCode + ", mobile=" + mobile
-				+ ", iconPath=" + iconPath + ", iconHash=" + iconHash
-				+ ", nickDescription=" + nickDescription + "]";
+				+ ", iconPath=" + iconPath + ", iconHash=" + iconHash + "]";
 	}
 
 	@Override
@@ -176,7 +162,6 @@ public class UserVcard implements Parcelable {
 //		dest.writeString(mobile);
 		dest.writeString(iconPath);
 		dest.writeString(iconHash);
-//		dest.writeString(nickDescription);
 	}
 	
 	public UserVcard() {}
@@ -194,7 +179,6 @@ public class UserVcard implements Parcelable {
 //		mobile = in.readString();
 		iconPath = in.readString();
 		iconHash = in.readString();
-//		nickDescription = in.readString();
 	}
 	
 	public static final Parcelable.Creator<UserVcard> CREATOR = new Creator<UserVcard>() {

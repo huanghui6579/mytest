@@ -82,7 +82,6 @@ public class UserProvider extends ContentProvider {
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.MOBILE, Provider.UserVcardColumns.MOBILE);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ICONPATH, Provider.UserVcardColumns.ICONPATH);
 		mUserVcardProjectionMap.put(Provider.UserVcardColumns.ICONHASH, Provider.UserVcardColumns.ICONHASH);
-		mUserVcardProjectionMap.put(Provider.UserVcardColumns.NICK_DESCRIPTION, Provider.UserVcardColumns.NICK_DESCRIPTION);
 		
 		mPersonalProjectionMap = new HashMap<String, String>();
 		mPersonalProjectionMap.put(Provider.PersonalColums._ID, Provider.PersonalColums._ID);

@@ -24,16 +24,24 @@
 		<item>标识</item>
     </string-array>
     
+    <!-- 好友列表的长按菜单项 -->
     <string-array name="contact_list_context_menu">
         <item>@string/contact_list_content_menu_set_nickname</item>
         <item>@string/delete</item>
     </string-array>
     
+    <!-- 聊天消息的长按菜单项 -->
     <string-array name="chat_msg_context_menu">
         <item>复制</item>
         <item>转发</item>
         <item>删除</item>
         <item>更多</item>
+    </string-array>
+    
+    <!-- 会话列表的长按菜单项 -->
+    <string-array name="thread_list_context_menu">
+        <item>@string/thread_list_context_menu_top</item>
+        <item>删除该聊天</item>
     </string-array>
     
 </resources>

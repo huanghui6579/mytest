@@ -74,7 +74,7 @@ public class SideBar extends View {
 		}
 
 	}
-
+	
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {

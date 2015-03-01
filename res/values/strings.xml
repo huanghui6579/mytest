@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">IBaixinChat</string>
+    <string name="app_name">百信</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     
@@ -10,9 +10,14 @@
     <string name="delete_success">删除成功</string>
     <string name="add_success">添加成功</string>
     <string name="add_failed">添加失败</string>
+    <string name="save_failed">保存失败</string>
+    <string name="save_success">保存成功</string>
+    <string name="opt_success">操作成功</string>
+    <string name="opt_failed">操作失败</string>
     
     <string name="choice">选择</string>
     <string name="send">发送</string>
+    <string name="save">保存</string>
     <string name="show">查看</string>
     <string name="add">添加</string>
     <string name="no_data">没有数据</string>
@@ -125,6 +130,9 @@
     <string name="msg_thread_snippet_content_location">[地理位置]</string>
     <string name="msg_thread_snippet_content_vcard">[电子名片]</string>
     
+    <string name="thread_list_context_menu_top">置顶聊天</string>
+    <string name="thread_list_context_menu_top_cancel">取消置顶</string>
+    
     <string name="file_explorer_folder_item_num">%1$d项</string>
     <string name="file_explorer_folder_unreadable">不可读</string>
     <string name="file_tip_max_select">只能选择%1$d个文件</string>
@@ -134,5 +142,14 @@
     <string name="audio_list_search_hint">请输入歌曲名</string>
     
     <string name="chat_loction_opt_failed">分享地理位值失败，请稍后再试！</string>
+    
+    <string name="notification_new_msg_title">您有%1$d条未读消息!</string>
+    <string name="notification_batch_promtp_title">未读消息提醒</string>
+    <string name="notification_batch_promtp_content">您有%1$d条未读消息,点击查看详情！</string>
+    
+    <string name="item_setting">设置</string>
+    <string name="item_readjokestext">笑话</string>
+    <string name="item_readjokesimg">趣图</string>
+    <string name="item_readjokeslife">感悟</string>
     
 </resources>

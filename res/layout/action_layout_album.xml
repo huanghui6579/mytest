@@ -12,5 +12,4 @@
     android:enabled="false"
     android:padding="@dimen/album_action_bar_padding" >
     
-
 </TextView>

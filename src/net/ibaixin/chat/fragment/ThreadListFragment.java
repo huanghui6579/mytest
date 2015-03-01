@@ -12,7 +12,9 @@ import net.ibaixin.chat.model.MsgThread;
 import net.ibaixin.chat.model.User;
 import net.ibaixin.chat.model.UserVcard;
 import net.ibaixin.chat.provider.Provider;
+import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
+import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
 import net.ibaixin.manage.MsgManager;
 import android.annotation.TargetApi;
@@ -24,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -35,6 +38,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -46,6 +50,9 @@ import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
  * @update 2014年10月8日 下午7:36:50
  */
 public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<List<MsgThread>> {
+	private static final int MENU_TOP = 0;
+	private static final int MENU_DELETE = 0x1;
+	
 	private ImageLoader mImageLoader = ImageLoader.getInstance();
 	
 	private ListView mListView;
@@ -63,13 +70,40 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	 */
 	private boolean autoRefresh = true;
 	
+	private ProgressDialog pDialog;
+	
 	/**
 	 * 会话集合
 	 */
 	private List<MsgThread> mMsgThreads = new ArrayList<>();
 	private MsgThreadAdapter mThreadAdapter;
 	
-	private Handler mHandler = new Handler();
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			if (pDialog != null && pDialog.isShowing()) {
+				pDialog.dismiss();
+			}
+			switch (msg.what) {
+			case Constants.MSG_SUCCESS:	//会话删除成功
+				mThreadAdapter.notifyDataSetChanged();
+				break;
+			case Constants.MSG_FAILED:	//删除失败
+				SystemUtil.makeShortToast(R.string.delete_failed);
+				break;
+			case Constants.MSG_THREAD_TOP_SUCCESS:	//会话置顶/取消置顶成功
+				mThreadAdapter.notifyDataSetChanged();
+				break;
+			case Constants.MSG_THREAD_TOP_FAILED:	//会话置顶/取消置顶失败
+				SystemUtil.makeShortToast(R.string.opt_failed);
+				break;
+
+			default:
+				break;
+			}
+		}
+	};
 	
 	/**
 	 * 初始化fragment
@@ -112,6 +146,83 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 				Intent intent = new Intent(mContext, ChatActivity.class);
 				intent.putExtra(ChatActivity.ARG_THREAD, msgThread);
 				startActivity(intent);
+			}
+		});
+		mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				final MsgThread thread = (MsgThread) mThreadAdapter.getItem(position);
+				if (thread != null) {
+					String[] menuArray = getResources().getStringArray(R.array.thread_list_context_menu);
+					if (thread.isTop()) {	//已经置顶了，就取消置顶
+						menuArray[0] = getString(R.string.thread_list_context_menu_top_cancel);
+					}
+					MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
+					builder.title(thread.getMsgThreadName())
+						.items(menuArray)
+						.itemsCallback(new MaterialDialog.ListCallback() {
+							
+							@Override
+							public void onSelection(MaterialDialog dialog, View itemView, int which,
+									CharSequence text) {
+								switch (which) {
+								case MENU_TOP:	//置顶/取消置顶该聊天
+									pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading));
+									SystemUtil.getCachedThreadPool().execute(new Runnable() {
+										
+										@Override
+										public void run() {
+											thread.setTop(!thread.isTop());
+											boolean success = msgManager.updateMsgThreadTop(thread);
+											Collections.sort(mMsgThreads, thread);
+											if (success) {
+												mHandler.sendEmptyMessage(Constants.MSG_THREAD_TOP_SUCCESS);
+											} else {
+												mHandler.sendEmptyMessage(Constants.MSG_THREAD_TOP_FAILED);
+											}
+										}
+									});
+									break;
+								case MENU_DELETE:	//删除该聊天会话
+									MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
+									builder.title(R.string.prompt)
+										.content(R.string.contact_list_content_delete_prompt, thread.getMsgThreadName())
+										.positiveText(android.R.string.ok)
+										.negativeText(android.R.string.cancel)
+										.callback(new MaterialDialog.ButtonCallback() {
+
+											@Override
+											public void onPositive(
+													MaterialDialog dialog) {
+												pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading));
+												SystemUtil.getCachedThreadPool().execute(new Runnable() {
+													
+													@Override
+													public void run() {
+														boolean success = msgManager.deleteMsgThreadById(thread.getId());
+														if (success) {	//
+															mMsgThreads.remove(thread);
+															mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
+														} else {
+															mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+														}
+													}
+												});
+											}
+											
+										}).show();
+									
+									break;
+								default:
+									break;
+								}
+							}
+						})
+						.show();
+				}
+				return true;
 			}
 		});
 		mThreadAdapter = new MsgThreadAdapter(mMsgThreads, mContext);
@@ -174,6 +285,7 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 				
 				convertView = inflater.inflate(R.layout.item_msg_thread, parent, false);
 				
+				holder.itemThreadLayout = convertView.findViewById(R.id.item_thread_layout);
 				holder.ivHeadIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);
 				holder.tvTitle = (TextView) convertView.findViewById(R.id.tv_title);
 				holder.tvTime = (TextView) convertView.findViewById(R.id.tv_time);
@@ -185,6 +297,11 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 			}
 			
 			final MsgThread msgThread = list.get(position);
+			if (msgThread.isTop()) {	//该会话已置顶
+				holder.itemThreadLayout.setBackgroundColor(getResources().getColor(R.color.primary_light_color));
+			} else {
+				holder.itemThreadLayout.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+			}
 			holder.tvTitle.setText(msgThread.getMsgThreadName());
 			holder.tvTime.setText(SystemUtil.formatMsgThreadTime(msgThread.getModifyDate()));
 			String snippetContent = msgThread.getSnippetContent();
@@ -211,6 +328,7 @@ public class ThreadListFragment extends BaseFragment implements LoaderCallbacks<
 	}
 	
 	final static class MsgThreadViewHolder {
+		View itemThreadLayout;
 		ImageView ivHeadIcon;
 		TextView tvTime;
 		TextView tvTitle;

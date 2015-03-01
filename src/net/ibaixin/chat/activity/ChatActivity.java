@@ -38,6 +38,7 @@ import net.ibaixin.chat.util.SoundMeter;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.view.EmojiconEditText;
+import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.TextViewAware;
 import net.ibaixin.manage.MsgManager;
 
@@ -322,6 +323,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 */
 	private AnimationDrawable mPlayingAnimation;
 	
+	private ProgressDialog pDialog;
+	
 	private static final int POLL_INTERVAL = 300;
 	
 	private Handler mHandler = new Handler() {
@@ -333,7 +336,12 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				msgAdapter.notifyDataSetChanged();
 				scrollMyListViewToBottom(lvMsgs);
 				break;
-
+			case Constants.MSG_SUCCESS:	//删除成功
+				msgAdapter.notifyDataSetChanged();
+				break;
+			case Constants.MSG_FAILED:	//删除失败
+				SystemUtil.makeShortToast(R.string.delete_failed);
+				break;
 			default:
 				break;
 			}
@@ -1865,18 +1873,22 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					break;
 				}
 			} else {	//接收的消息，对方发送的消息
-				//显示用户图像
-				UserVcard otherVcard = otherSide.getUserVcard();
-				if (otherVcard != null) {
-					String iconPath = otherVcard.getIconPath();
-					if (SystemUtil.isFileExists(iconPath)) {
-						mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, headIconOptions);
+				if (otherSide != null) {
+					//显示用户图像
+					UserVcard otherVcard = otherSide.getUserVcard();
+					if (otherVcard != null) {
+						String iconPath = otherVcard.getIconPath();
+						if (SystemUtil.isFileExists(iconPath)) {
+							mImageLoader.displayImage(Scheme.FILE.wrap(iconPath), holder.ivHeadIcon, headIconOptions);
+						} else {
+							mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
+						}
 					} else {
 						mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
 					}
-	 			} else {
-	 				mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
-	 			}
+				} else {
+					mImageLoader.displayImage(null, holder.ivHeadIcon, headIconOptions);
+				}
 				
 				holder.ivMsgState.setVisibility(View.GONE);
 				if (!msgInfo.isRead()) {	//未读，则更新读取状态
@@ -1976,10 +1988,20 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 						case MENU_FORWARD:	//转发
 							break;
 						case MENU_DELETE:	//删除
-							if (msgManager.deleteMsgInfoById(msgInfo)) {
-								mMsgInfos.remove(msgInfo);
-								msgAdapter.notifyDataSetChanged();
-							}
+							pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), true);
+							SystemUtil.getCachedThreadPool().execute(new Runnable() {
+								
+								@Override
+								public void run() {
+									if (msgManager.deleteMsgInfoById(msgInfo, msgThread)) {
+										mMsgInfos.remove(msgInfo);
+										pDialog.dismiss();
+										mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
+									} else {
+										mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+									}
+								}
+							});
 							break;
 
 						default:

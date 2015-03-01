@@ -1,15 +1,15 @@
 package net.ibaixin.chat.fragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.ibaixin.chat.R;
-import net.ibaixin.chat.activity.ChatActivity;
 import net.ibaixin.chat.activity.CommonAdapter;
+import net.ibaixin.chat.activity.MainActivity.LazyLoadCallBack;
 import net.ibaixin.chat.activity.NewFriendInfoActivity;
 import net.ibaixin.chat.activity.RemarkEditActivity;
 import net.ibaixin.chat.activity.UserInfoActivity;
-import net.ibaixin.chat.activity.MainActivity.LazyLoadCallBack;
 import net.ibaixin.chat.model.User;
 import net.ibaixin.chat.model.UserVcard;
 import net.ibaixin.chat.provider.Provider;
@@ -17,7 +17,7 @@ import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
-import net.ibaixin.chat.view.MyAlertDialogFragment;
+import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
 import net.ibaixin.chat.view.SideBar;
 import net.ibaixin.chat.view.SideBar.OnTouchingLetterChangedListener;
@@ -25,10 +25,8 @@ import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -36,15 +34,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
@@ -217,7 +210,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 
 											@Override
 											public void onPositive(MaterialDialog dialog) {
-												pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), false, true);
+												pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), true);
 												
 												SystemUtil.getCachedThreadPool().execute(new Runnable() {
 													
@@ -287,80 +280,6 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		});
 	}
 	
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenuInfo menuInfo) {
-		AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) menuInfo;
-		User user = (User) mAdapter.getItem(acmi.position);
-		if (user != null) {	//选中的是好友
-			MenuInflater menuInflater = getActivity().getMenuInflater();
-			menuInflater.inflate(R.menu.context_contacts, menu);
-			menu.setHeaderTitle(user.getName());
-		}
-		super.onCreateContextMenu(menu, v, menuInfo);
-	}
-	
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		
-		AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) item.getMenuInfo();
-		final User user = (User) mAdapter.getItem(acmi.position);
-		if (user != null) {
-			switch (item.getItemId()) {
-			case R.id.action_context_set_nickname:	//设置备注
-				
-				return true;
-			case R.id.action_context_delete:	//删除
-				MyAlertDialogFragment alertDialogFragment = (MyAlertDialogFragment) new MyAlertDialogFragment.Builder()
-					.setTitle(getString(R.string.prompt))
-					.setMessage(getString(R.string.contact_list_content_delete_prompt, user.getName()))
-					.setPositiveButtonText(getString(android.R.string.ok))
-					.setNegativeButtonText(getString(android.R.string.cancel))
-					.setPositiveButtonListener(new DialogInterface.OnClickListener() {
-						
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							pDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), false, true);
-							
-							SystemUtil.getCachedThreadPool().execute(new Runnable() {
-								
-								@Override
-								public void run() {
-									AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
-									//发送删除好友的信息
-									boolean success = XmppUtil.deleteUser(connection, user.getUsername());
-									if (success) {
-										autoRefresh = false;
-										//删除好友
-										success = userManager.deleteUser(user);
-										//是否成功删除该好友
-										if (success) {
-											mUsers.remove(user);
-											mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
-										} else {
-											mHandler.sendEmptyMessage(Constants.MSG_FAILED);
-										}
-									} else {
-										mHandler.sendEmptyMessage(Constants.MSG_FAILED);
-									}
-								}
-							});
-						}
-					})
-					.setNegativeButtonListener(null)
-					.create();
-				alertDialogFragment.show(getFragmentManager(), alertDialogFragment.getClass().getCanonicalName());
-				return true;
-
-			default:
-				return super.onContextItemSelected(item);
-			}
-		} else {
-			return super.onContextItemSelected(item);
-		}
-		
-	}
-	
 	/**
 	 * 改变sideBar的显示和隐藏的状态
 	 * @update 2014年10月13日 上午9:53:10
@@ -405,6 +324,7 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_LIST);
 		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
 		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_ADD);
+		filter.addAction(LoadDataBroadcastReceiver.ACTION_USER_UPDATE);
 		mContext.registerReceiver(loadDataReceiver, filter);
 		
 		//初始化数据
@@ -639,11 +559,13 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		public static final String ACTION_USER_LIST = "net.ibaixin.chat.USER_LIST_RECEIVER";
 		public static final String ACTION_USER_INFOS = "net.ibaixin.chat.USER_INFOS_RECEIVER";
 		public static final String ACTION_USER_ADD = "net.ibaixin.chat.USER_ADD_RECEIVER";
+		public static final String ACTION_USER_UPDATE = "net.ibaixin.chat.USER_UPDATE_RECEIVER";
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// TODO Auto-generated method stub
 			if (intent != null) {
+				User user = null;
 				String action = intent.getAction();
 				switch (action) {
 				case ACTION_USER_LIST:	//更新好友列表
@@ -653,9 +575,25 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 					}
 					break;
 				case ACTION_USER_ADD:	//列表中添加一个好友信息
-					User user = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
+					user = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
 					if (user != null) {
 						mUsers.add(user);
+						if (mAdapter == null) {
+							mAdapter= new ContactAdapter(mUsers, mContext);
+							lvContact.setAdapter(mAdapter);
+						} else {
+							mAdapter.notifyDataSetChanged();
+						}
+					}
+					break;
+				case ACTION_USER_UPDATE:	//列表中更新好友
+					user = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
+					if (user != null) {
+						if (mUsers.contains(user)) {
+							mUsers.remove(user);
+						}
+						mUsers.add(user);
+						Collections.sort(mUsers, user);
 						if (mAdapter == null) {
 							mAdapter= new ContactAdapter(mUsers, mContext);
 							lvContact.setAdapter(mAdapter);

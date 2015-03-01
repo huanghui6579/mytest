@@ -267,11 +267,11 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			connection.connect();
 			connection.login(account, password, Constants.CLIENT_RESOURCE);
 			ChatApplication.getInstance().setCurrentAccount(account);
-			Presence presence = new Presence(Presence.Type.available);
-			presence.setStatus("聊天中");
-			presence.setPriority(1);
-			presence.setMode(Presence.Mode.chat);
-			connection.sendPacket(presence);
+//			Presence presence = new Presence(Presence.Type.available);
+//			presence.setStatus("聊天中");
+//			presence.setPriority(1);
+//			presence.setMode(Presence.Mode.chat);
+//			connection.sendPacket(presence);
 			code = Constants.MSG_SUCCESS;
 		} catch (SmackException e) {
 			if (e instanceof ConnectionException) {	//连接地址不可用

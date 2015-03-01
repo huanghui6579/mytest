@@ -1,10 +1,30 @@
 package net.ibaixin.chat.activity;
 
+import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jxmpp.util.XmppStringUtils;
+
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import net.ibaixin.chat.model.User;
-import net.ibaixin.chat.model.UserVcard;
-import net.ibaixin.chat.view.ClearableEditText;
+import net.ibaixin.chat.util.Constants;
+import net.ibaixin.chat.util.SystemUtil;
+import net.ibaixin.chat.util.XmppConnectionManager;
+import net.ibaixin.chat.view.ProgressDialog;
+import net.ibaixin.manage.MsgManager;
+import net.ibaixin.manage.UserManager;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.view.MenuItemCompat;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 /**
  * 修改好友备注的界面
@@ -14,12 +34,38 @@ import android.widget.EditText;
  */
 public class RemarkEditActivity extends BaseActivity {
 	private EditText etNickname;
-	private EditText etNickDesc;
+	
+	private TextView btnOpt;
+	
+	private ProgressDialog pDialog;
+	
+	private UserManager mUserManager;
 	
 	/**
 	 * 传过来的用户实体
 	 */
 	private User mUser;
+	
+	private Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			if (pDialog != null && pDialog.isShowing()) {
+				pDialog.dismiss();
+			}
+			switch (msg.what) {
+			case Constants.MSG_SUCCESS:	//保存成功
+				finish();
+				break;
+			case Constants.MSG_FAILED:	//保存失败
+				SystemUtil.makeShortToast(R.string.save_failed);
+				break;
+
+			default:
+				break;
+			}
+		}
+	};
 
 	@Override
 	protected int getContentView() {
@@ -29,19 +75,15 @@ public class RemarkEditActivity extends BaseActivity {
 	@Override
 	protected void initView() {
 		etNickname = (EditText) findViewById(R.id.et_nickname);
-		etNickDesc = (EditText) findViewById(R.id.et_nick_desc);
 	}
 
 	@Override
 	protected void initData() {
+		mUserManager = UserManager.getInstance();
 		mUser = getIntent().getParcelableExtra(UserInfoActivity.ARG_USER);
 		
 		if (mUser != null) {
 			etNickname.setText(mUser.getNickname());
-			UserVcard userVcard = mUser.getUserVcard();
-			if (userVcard != null) {
-				etNickDesc.setText(userVcard.getNickDescription());
-			}
 		}
 	}
 
@@ -49,6 +91,64 @@ public class RemarkEditActivity extends BaseActivity {
 	protected void addListener() {
 		// TODO Auto-generated method stub
 
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater menuInflater = getMenuInflater();
+		menuInflater.inflate(R.menu.common_opt, menu);
+		MenuItem menuDone = menu.findItem(R.id.action_select_complete);
+		btnOpt = (TextView) MenuItemCompat.getActionView(menuDone);
+		btnOpt.setEnabled(true);
+		btnOpt.setText(R.string.save);
+		btnOpt.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if (!etNickname.getText().toString().equals(mUser.getNickname())) {	//昵称没有做修改，则直接退出
+					pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), true);
+					//保存备注
+					SystemUtil.getCachedThreadPool().execute(new Runnable() {
+						
+						@Override
+						public void run() {
+							XMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+							if (connection != null && connection.isAuthenticated()) {
+								Roster roster = connection.getRoster();
+								String jid  =  mUser.getFullJid() ;
+								if(XmppStringUtils.isFullJID(jid))
+									jid = SystemUtil.unwrapJid2(jid);
+								RosterEntry rosterEntry = roster.getEntry(jid);
+								try {
+									String nickname = etNickname.getText().toString();
+									if(rosterEntry==null){
+										mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+										return ;
+									}
+									rosterEntry.setName(nickname);
+									mUser.setNickname(nickname);
+									mUserManager.updateFriendNick(mUser);
+									//通知好友列表更新好友
+									Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_UPDATE);
+									intent.putExtra(UserInfoActivity.ARG_USER, mUser);
+									sendBroadcast(intent);
+									
+									mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
+								} catch (NotConnectedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+									mHandler.sendEmptyMessage(Constants.MSG_FAILED);
+								}
+							}
+						}
+					});
+				} else {
+					mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
+				}
+				
+			}
+		});
+		return super.onCreateOptionsMenu(menu);
 	}
 
 }

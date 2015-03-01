@@ -10,15 +10,16 @@ import java.util.Locale;
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.activity.ChatActivity;
+import net.ibaixin.chat.activity.MainActivity;
 import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import net.ibaixin.chat.listener.ChatRostListener;
 import net.ibaixin.chat.model.MsgInfo;
+import net.ibaixin.chat.model.MsgInfo.SendState;
 import net.ibaixin.chat.model.MsgPart;
 import net.ibaixin.chat.model.MsgSenderInfo;
 import net.ibaixin.chat.model.MsgThread;
 import net.ibaixin.chat.model.Personal;
 import net.ibaixin.chat.model.User;
-import net.ibaixin.chat.model.MsgInfo.SendState;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.Log;
 import net.ibaixin.chat.util.MimeUtils;
@@ -35,25 +36,38 @@ import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ChatMessageListener;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.filetransfer.FileTransfer;
 import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
 import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
+import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jxmpp.util.XmppStringUtils;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningTaskInfo;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
+import android.text.TextUtils;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
@@ -65,10 +79,21 @@ import com.nostra13.universalimageloader.utils.DiskCacheUtils;
  */
 public class CoreService extends Service {
 	public static final String FLAG_SYNC = "flag_sync";
+	public static final String FLAG_RECEIVE_OFFINE_MSG = "flag_receive_offine_msg";
+	
+	/**
+	 * 聊天新消息的通知id
+	 */
+	public static final int NOTIFY_ID_CHAT_MSG = 100;
+	
 	/**
 	 * 同步更新所有好友到本地数据库的标识
 	 */
 	public static final int FLAG_SYNC_FRENDS = 1;
+	/**
+	 * 接收离线消息
+	 */
+	public static final int FLAG_RECEIVE_OFFINE = 2;
 	
 	private IBinder mBinder = new MainBinder();
 	
@@ -83,10 +108,17 @@ public class CoreService extends Service {
 	private static ChatManagerListener mChatManagerListener;
 	private static ChatMessageListener mChatMessageListener;
 	private static ChatManager mChatManager;
+	private static OfflineMessageManager mOfflineMessageManager;
 	private static FileTransferManager mFileTransferManager;
 	AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 	
 	private ImageLoader mImageLoader = ImageLoader.getInstance();
+	
+	private ActivityManager mActivityManager;
+	
+	private Context mContext;
+	
+	private NotificationManager mNotificationManager;
 	
 //	SendChatMessageReceiver chatMessageReceiver;
 	
@@ -113,7 +145,39 @@ public class CoreService extends Service {
 			switch (msg.what) {
 			case Constants.MSG_RECEIVE_CHAT_MSG:	//接收聊天消息
 				MsgInfo msgInfo = (MsgInfo) msg.obj;
+				String contentTitle = null;
+				String contentText = null;
+				int msgCount = msg.arg1;
+				if (msgInfo != null) {
+					contentTitle = msgInfo.getFromUser();
+					contentText = msgInfo.getContent();
+				} else {
+					contentTitle = getString(R.string.notification_batch_promtp_title);
+					contentText = getString(R.string.notification_batch_promtp_content, msgCount);
+				}
+				// 100 毫秒延迟后，震动 200 毫秒，暂停 100 毫秒后，再震动 300 毫秒
+//				long[] vibrate = {100,200,100,300};
 				//发送广播到对应的界面处理
+				NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplication());
+				builder.setSmallIcon(R.drawable.ic_launcher)
+						.setAutoCancel(true)
+						.setShowWhen(true)
+						.setLights(0x0000FF, 300, 100)
+						.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
+						.setTicker(getString(R.string.notification_new_msg_title, msgCount))
+						.setContentTitle(contentTitle)
+						.setContentText(contentText);
+				Intent resultIntent = new Intent(mContext, ChatActivity.class);
+				TaskStackBuilder stackBuilder = TaskStackBuilder.create(mContext);
+				stackBuilder.addParentStack(MainActivity.class);
+				stackBuilder.addNextIntent(resultIntent);
+				PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+				builder.setContentIntent(resultPendingIntent);
+				if (mNotificationManager == null) {
+					mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);;
+				}
+				// mId allows you to update the notification later on.
+				mNotificationManager.notify(NOTIFY_ID_CHAT_MSG, builder.build());
 				break;
 
 			default:
@@ -125,6 +189,7 @@ public class CoreService extends Service {
 	
 	@Override
 	public void onCreate() {
+		mContext = this;
 		if (mHandlerThread == null) {
 			mHandlerThread = new HandlerThread(this.getClass().getCanonicalName());
 			mHandlerThread.start();
@@ -133,7 +198,6 @@ public class CoreService extends Service {
 		if (connection != null) {
 			if (mRosterListener == null) {
 				mRosterListener = new ChatRostListener();
-				Log.d("------------connection-----------" + connection.toString());
 				connection.getRoster().addRosterListener(mRosterListener);
 				ChatRostListener.hasRosterListener = true;
 			}
@@ -144,14 +208,18 @@ public class CoreService extends Service {
 				mFileTransferManager.addFileTransferListener(mFileTransferListener);
 			}
 			
-			if (mChatMessageListener == null) {
-				mChatMessageListener = new MyChatMessageListener();
-			}
+//			if (mChatMessageListener == null) {
+//				mChatMessageListener = new MyChatMessageListener();
+//			}
 			
 			if (mChatManager == null) {
 				mChatManager = ChatManager.getInstanceFor(connection);
 				mChatManagerListener = new MyChatManagerListener();
 				mChatManager.addChatListener(mChatManagerListener);
+			}
+			
+			if (mOfflineMessageManager == null) {
+				mOfflineMessageManager = new OfflineMessageManager(connection);
 			}
 		}
 		
@@ -176,8 +244,10 @@ public class CoreService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent != null) {
 			//监听消息
-			int flag = intent.getIntExtra(FLAG_SYNC, 0);
-			switch (flag) {
+			int syncFlag = intent.getIntExtra(FLAG_SYNC, 0);
+			int offineFlag = intent.getIntExtra(FLAG_RECEIVE_OFFINE_MSG, 0);
+			//同步好友列表
+			switch (syncFlag) {
 			case FLAG_SYNC_FRENDS:	//从服务器上同步所有的好友列表到本地
 //				new Thread(new SyncFriendsTask()).start();
 				mHandler.post(new SyncFriendsTask());
@@ -185,6 +255,9 @@ public class CoreService extends Service {
 
 			default:
 				break;
+			}
+			if (offineFlag == FLAG_RECEIVE_OFFINE) {	//登录成功后接受离线消息
+				SystemUtil.getCachedThreadPool().execute(new HandleOffineMsgTask());
 			}
 		}
 		
@@ -232,45 +305,6 @@ public class CoreService extends Service {
 	}
 	
 	/**
-	 * 根据消息类型来设置会话最后一条消息的内容
-	 * @update 2014年11月20日 下午3:07:22
-	 * @param msgType 消息类型
-	 * @param msgInfo 消息实体
-	 * @return
-	 */
-	private String getSnippetContentByMsgType(MsgInfo.Type msgType, MsgInfo msgInfo) {
-		String snippetContent = null;
-		switch (msgType) {
-		case TEXT:
-			snippetContent = msgInfo.getContent();
-			break;
-		case IMAGE:
-			snippetContent = getString(R.string.msg_thread_snippet_content_image);
-			break;
-		case AUDIO:
-			snippetContent = getString(R.string.msg_thread_snippet_content_audio);
-			break;
-		case FILE:
-			snippetContent = getString(R.string.msg_thread_snippet_content_file);
-			break;
-		case LOCATION:
-			snippetContent = getString(R.string.msg_thread_snippet_content_location);
-			break;
-		case VIDEO:
-			snippetContent = getString(R.string.msg_thread_snippet_content_video);
-			break;
-		case VCARD:
-			snippetContent = getString(R.string.msg_thread_snippet_content_vcard);
-			break;
-
-		default:
-			snippetContent = msgInfo.getContent();
-			break;
-		}
-		return snippetContent;
-	}
-	
-	/**
 	 * 发送消息的任务线程
 	 * @author huanghui1
 	 * @update 2014年11月17日 上午9:05:04
@@ -294,7 +328,7 @@ public class CoreService extends Service {
 			try {
 				msgInfo = msgManager.addMsgInfo(msgInfo);
 				senderInfo.msgThread.setSnippetId(msgInfo.getId());
-				String snippetContent = getSnippetContentByMsgType(msgType, msgInfo);
+				String snippetContent = msgManager.getSnippetContentByMsgType(msgType, msgInfo);
 				senderInfo.msgThread.setSnippetContent(snippetContent);
 				senderInfo.msgThread.setModifyDate(System.currentTimeMillis());
 				senderInfo.msgThread = msgManager.updateMsgThread(senderInfo.msgThread);
@@ -400,11 +434,19 @@ public class CoreService extends Service {
 	class ProcessMsgTask implements Runnable {
 		Chat chat;
 		Message message;
+		boolean notify = true;
 
 		public ProcessMsgTask(Chat chat, Message message) {
 			super();
 			this.chat = chat;
 			this.message = message;
+		}
+
+		public ProcessMsgTask(Chat chat, Message message, boolean notify) {
+			super();
+			this.chat = chat;
+			this.message = message;
+			this.notify = notify;
 		}
 
 		@Override
@@ -423,11 +465,14 @@ public class CoreService extends Service {
 					intent.putExtra(ChatActivity.ARG_MSG_INFO, msgInfo);
 					sendBroadcast(intent);
 				}
-				if (msgInfo != null) {
-					android.os.Message msg = mHandler.obtainMessage();
-					msg.obj = msgInfo;
-					msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
-					mHandler.sendMessage(msg);
+				if (msgInfo != null && notify) {
+					if (!isChatActivityOnTop()) {
+						android.os.Message msg = mHandler.obtainMessage();
+						msg.obj = msgInfo;
+						msg.arg1 = 1;
+						msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
+						mHandler.sendMessage(msg);
+					}
 				}
 			}
 			
@@ -482,14 +527,115 @@ public class CoreService extends Service {
 				Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_LIST);
 				sendBroadcast(intent);
 				
+				//接收离线消息
+				SystemUtil.getCachedThreadPool().execute(new HandleOffineMsgTask());
+				
+				//同步好友的电子名片信息
+				SystemUtil.getCachedThreadPool().execute(new SyncFriendVcardTask(users));
+				
+			}
+		}
+		
+	}
+	
+	/**
+	 * 同步好友的电子名片信息
+	 * @author tiger
+	 * @update 2015年3月1日 下午6:13:36
+	 *
+	 */
+	class SyncFriendVcardTask implements Runnable {
+		List<User> users;
+
+		public SyncFriendVcardTask(List<User> users) {
+			super();
+			this.users = users;
+		}
+
+		@Override
+		public void run() {
+			if (SystemUtil.isNotEmpty(users)) {
 				//3、更新好友的头像等基本信息
 				users = XmppUtil.syncFriendsVcard(connection, users);
 				userManager.updateFriends(users);
-				intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
+				Intent intent = new Intent(LoadDataBroadcastReceiver.ACTION_USER_INFOS);
 				sendBroadcast(intent);
 			}
 		}
 		
+	}
+	
+	
+	/**
+	 * 处理离线消息的任务
+	 * @author huanghui1
+	 * @update 2015年2月27日 下午5:17:15
+	 */
+	class HandleOffineMsgTask implements Runnable {
+
+		@Override
+		public void run() {
+			AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
+			if (connection != null && connection.isConnected()) {
+				//1、先从服务器上获取所有的好友列表
+				try {
+					if (mOfflineMessageManager != null && mOfflineMessageManager.supportsFlexibleRetrieval()) {
+						int msgCount = mOfflineMessageManager.getMessageCount();
+						if (msgCount > 0) {	//有离线消息
+							//获取离线消息
+							List<Message> offineMessges = mOfflineMessageManager.getMessages();
+							//初始化消息监听器
+							initMessageListener();
+
+							//保存离线消息
+							if (SystemUtil.isNotEmpty(offineMessges)) {
+								for (Message message : offineMessges) {
+									SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(null, message, false));
+								}
+//								mOfflineMessageManager.deleteMessages();	//上报服务器已获取，需删除服务器备份，不然下次登录会重新获取
+								
+								if (!isChatActivityOnTop()) {	//聊天界面不在栈顶时才发送通知
+									//离线消息处理完毕后再一起通知，避免过频繁的通知
+									android.os.Message msg = mHandler.obtainMessage();
+									msg.arg1 = msgCount;
+									msg.what = Constants.MSG_RECEIVE_CHAT_MSG;
+									mHandler.sendMessage(msg);
+								}
+							}
+						}
+					}
+				} catch (NoResponseException | XMPPErrorException
+						| NotConnectedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				try {
+					//上报自己的状态为登录状态
+					Presence presence = new Presence(Presence.Type.available);
+					presence.setStatus("在线");
+					presence.setPriority(1);
+					presence.setMode(Presence.Mode.available);
+					connection.sendPacket(presence);
+				} catch (NotConnectedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		}
+		
+	}
+	
+	//初始化messageListener
+	public void initMessageListener() {
+		if (mChatMessageListener == null) {
+			synchronized (CoreService.class) {
+				if (mChatMessageListener == null) {
+					mChatMessageListener = new MyChatMessageListener();
+				}
+			}
+		}
 	}
 	
 	/**
@@ -538,7 +684,7 @@ public class CoreService extends Service {
 				msgThread.setModifyDate(System.currentTimeMillis());
 				msgThread.setSnippetId(msgInfo.getId());
 				MsgInfo.Type msgType = msgInfo.getMsgType();
-				String snippetContent = getSnippetContentByMsgType(msgType, msgInfo);
+				String snippetContent = msgManager.getSnippetContentByMsgType(msgType, msgInfo);
 				msgThread.setSnippetContent(snippetContent);
 				msgManager.updateMsgThread(msgThread);
 				
@@ -658,6 +804,23 @@ public class CoreService extends Service {
 		public CoreService getService() {
 			return CoreService.this;
 		}
+	}
+	
+	/**
+	 * 判断聊天界面是否在栈顶
+	 * @update 2015年2月28日 上午11:47:36
+	 * @return
+	 */
+	public boolean isChatActivityOnTop() {
+		if (mActivityManager == null) {
+			mActivityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+		}
+		RunningTaskInfo info = mActivityManager.getRunningTasks(1).get(0);
+		String className = info.topActivity.getClassName();
+		if (!TextUtils.isEmpty(className)) {
+			return ChatActivity.class.getCanonicalName().equals(className);
+		}
+		return false;
 	}
 	
 }

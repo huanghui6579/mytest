@@ -13,7 +13,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "ibaixin_chat.db";
-	private static final int DB_VERSION = 7;
+	private static final int DB_VERSION = 8;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -48,8 +48,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.UserVcardColumns.CITY + " TEXT, "
 				+ Provider.UserVcardColumns.ZIPCODE + " TEXT, "
 				+ Provider.UserVcardColumns.ICONPATH + " TEXT, "
-				+ Provider.UserVcardColumns.ICONHASH + " TEXT, "
-				+ Provider.UserVcardColumns.NICK_DESCRIPTION + " TEXT);");
+				+ Provider.UserVcardColumns.ICONHASH + " TEXT);");
 		
 		//创建个人信息表
 		db.execSQL("CREATE TABLE " + Provider.PersonalColums.TABLE_NAME + " ("
@@ -102,7 +101,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ Provider.MsgThreadColumns.MODIFY_DATE + " LONG, "
 				+ Provider.MsgThreadColumns.SNIPPET_ID + " INTEGER, "
 				+ Provider.MsgThreadColumns.SNIPPET_CONTENT + " TEXT, "
-				+ Provider.MsgThreadColumns.MEMBER_IDS + " TEXT);");
+				+ Provider.MsgThreadColumns.MEMBER_IDS + " TEXT, "
+				+ Provider.MsgThreadColumns.IS_TOP + " INTEGER DEFAULT 0);");
 		
 		//创建新的朋友列表
 		db.execSQL("CREATE TABLE " + Provider.NewFriendColumns.TABLE_NAME + " ("

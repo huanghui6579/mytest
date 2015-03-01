@@ -2,6 +2,7 @@
 <resources>
     <color name="primary_color">#03a9f4</color>
     <color name="primary_dark_color">#0099cc</color>
+    <color name="primary_light_color">#6703a9f4</color>
     <!-- 淡灰色 -->
     <color name="login_main_bg">#FDFDFD</color>
     <color name="login_text_regist">#1212EF</color>
@@ -53,5 +54,6 @@
     <color name="md_material_blue_600">#1E88E5</color>
     <color name="md_material_blue_800">#1565C0</color>
     
+    <color name="default_bgcolor">#F5F5F5</color>
     
 </resources>

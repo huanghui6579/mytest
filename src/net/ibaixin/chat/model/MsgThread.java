@@ -50,6 +50,11 @@ public class MsgThread implements Parcelable, Comparator<MsgThread> {
 	 * 该会话里的成员，<b>自己除外</b>
 	 */
 	private List<User> members;
+	
+	/**
+	 * 是否置顶,默认为false
+	 */
+	private boolean isTop = false;
 
 	public int getId() {
 		return id;
@@ -115,13 +120,21 @@ public class MsgThread implements Parcelable, Comparator<MsgThread> {
 		this.members = members;
 	}
 
+	public boolean isTop() {
+		return isTop;
+	}
+
+	public void setTop(boolean isTop) {
+		this.isTop = isTop;
+	}
+
 	@Override
 	public String toString() {
 		return "MsgThread [id=" + id + ", msgThreadName=" + msgThreadName
 				+ ", icon=" + icon + ", unReadCount=" + unReadCount
 				+ ", modifyDate=" + modifyDate + ", snippetId=" + snippetId
 				+ ", snippetContent=" + snippetContent + ", members=" + members
-				+ "]";
+				+ ", isTop=" + isTop + "]";
 	}
 
 	@Override
@@ -180,14 +193,22 @@ public class MsgThread implements Parcelable, Comparator<MsgThread> {
 
 	@Override
 	public int compare(MsgThread lhs, MsgThread rhs) {
-		long ltime = lhs.getModifyDate();
-		long rtime = rhs.getModifyDate();
-		if (ltime > rtime) {
+		boolean lTop = lhs.isTop();
+		boolean rTop = rhs.isTop();
+		if (lTop && !rTop) {
 			return -1;
-		} else if (ltime < rtime) {
+		} else if (!lTop && rTop) {
 			return 1;
 		} else {
-			return 0;
+			long ltime = lhs.getModifyDate();
+			long rtime = rhs.getModifyDate();
+			if (ltime > rtime) {
+				return -1;
+			} else if (ltime < rtime) {
+				return 1;
+			} else {
+				return 0;
+			}
 		}
 	}
 

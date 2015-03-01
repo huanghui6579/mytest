@@ -30,13 +30,11 @@
 	        android:background="@color/album_top_layout_bg"
 	        android:visibility="gone"/>
 	    
-	    <ProgressBar 
-	        android:id="@id/pb_loading"
+	    <include 
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        style="?android:attr/progressBarStyleLargeInverse"
 	        android:layout_centerInParent="true"
-	        android:layout_gravity="center"/>
+	        layout="@layout/layout_loading"/>
 	    
 	    <RelativeLayout
 	        android:id="@+id/layout_bottom" 

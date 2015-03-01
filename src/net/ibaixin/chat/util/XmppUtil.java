@@ -108,7 +108,11 @@ public class XmppUtil {
 				Presence presence = roster.getPresence(jid);
 				if (presence != null) {
 					user.setStatus(presence.getStatus());
-					user.setResource(XmppStringUtils.parseResource(presence.getFrom()));
+					String resource = XmppStringUtils.parseResource(presence.getFrom());
+					if (TextUtils.isEmpty(resource)) {
+						resource = SystemUtil.getPhoneModel();
+					}
+					user.setResource(resource);
 					Presence.Type type = presence.getType();
 					if (type != null) {
 						user.setMode(type.name());

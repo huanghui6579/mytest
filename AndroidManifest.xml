@@ -34,6 +34,12 @@
  
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     
+    <!-- 获取应用程序的运行状态的权限 -->
+    <uses-permission android:name="android.permission.GET_TASKS"/>
+    
+    <!-- 手机震动权限 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
     <!-- 百度地图相关权限 -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />  
 	<uses-permission android:name="android.permission.USE_CREDENTIALS" />  
@@ -122,7 +128,12 @@
             android:name="net.ibaixin.chat.activity.ChatActivity"
             android:label="@string/activity_lable_chat"
             android:theme="@style/AppTheme.ChatActivity"
-            android:configChanges="orientation|screenSize"/>
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName="net.ibaixin.chat.activity.MainActivity">
+            <meta-data
+		        android:name="android.support.PARENT_ACTIVITY"
+		        android:value="net.ibaixin.chat.activity.MainActivity"/>
+        </activity>
         <activity
             android:name="net.ibaixin.chat.activity.NewFriendInfoActivity"
             android:label="@string/activity_lable_new_friend_info"

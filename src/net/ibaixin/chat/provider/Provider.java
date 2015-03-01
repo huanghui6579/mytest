@@ -90,7 +90,6 @@ public class Provider {
         public static final String MOBILE = "mobile";
         public static final String ICONPATH = "iconPath";
         public static final String ICONHASH = "iconHash";
-        public static final String NICK_DESCRIPTION = "nickDescription";
 	}
 	
 	/**
@@ -102,7 +101,8 @@ public class Provider {
 		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY_MSG + "/msgInfos");
 		
 		public static final String TABLE_NAME = "t_msg_info";
-        public static final String DEFAULT_SORT_ORDER = "creationDate ASC";	//默认按时间降序，后面的消息先查出来
+        public static final String DEFAULT_SORT_ORDER = "creationDate ASC";	//默认按时间升序，后面的消息后查出来
+        public static final String REVERSAL_SORT_ORDER = "creationDate DESC";	//按时间降序，后面的消息先查出来
         
         public static final String THREAD_ID = "threadID";
         public static final String FROM_USER = "fromUser";
@@ -142,7 +142,7 @@ public class Provider {
 	public static final class MsgThreadColumns implements BaseColumns {
 		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY_MSG + "/msgThreads");
 		public static final String TABLE_NAME = "t_msg_thread";
-		public static final String DEFAULT_SORT_ORDER = "modifyDate DESC";	//最后修改时间的降序
+		public static final String DEFAULT_SORT_ORDER = "isTop DESC, modifyDate DESC";	//最后修改时间的降序
 		
 		public static final String MSG_THREAD_NAME = "msgThreadName";
 		public static final String UNREAD_COUNT = "unReadCount";
@@ -150,6 +150,7 @@ public class Provider {
 		public static final String SNIPPET_ID = "snippetId";
 		public static final String SNIPPET_CONTENT = "snippetContent";
 		public static final String MEMBER_IDS = "memberIds";
+		public static final String IS_TOP = "isTop";	//是否置顶
 	}
 	
 	/**

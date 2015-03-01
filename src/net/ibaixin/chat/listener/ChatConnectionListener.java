@@ -6,6 +6,8 @@ import java.util.TimerTask;
 
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.model.SystemConfig;
+import net.ibaixin.chat.service.CoreService;
+import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.XmppConnectionManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
@@ -15,6 +17,8 @@ import org.jivesoftware.smack.SmackException.AlreadyLoggedInException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+
+import android.content.Intent;
 
 /**
  * 客户端连接监听器
@@ -98,9 +102,15 @@ public class ChatConnectionListener implements ConnectionListener {
 			if (username != null && password != null) {
 				AbstractXMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 				try {
-					if (!connection.isAuthenticated()) {
+					if (!connection.isConnected()) {
 						connection.connect();
-//						connection.login(username, password, Constants.CLIENT_RESOURCE);
+						if (!connection.isAuthenticated()) {
+							connection.login(username, password, Constants.CLIENT_RESOURCE);
+						}
+						//接收离线消息
+						Intent service = new Intent(ChatApplication.getInstance(), CoreService.class);
+						service.putExtra(CoreService.FLAG_RECEIVE_OFFINE_MSG, CoreService.FLAG_RECEIVE_OFFINE);
+						ChatApplication.getInstance().startService(service);
 					}
 				} catch (XMPPException | SmackException | IOException e) {
 					// TODO Auto-generated catch block

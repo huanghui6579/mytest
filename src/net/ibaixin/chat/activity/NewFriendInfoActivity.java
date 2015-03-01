@@ -8,23 +8,22 @@ import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import net.ibaixin.chat.loader.NewFriendInfoLoader;
 import net.ibaixin.chat.model.NewFriendInfo;
+import net.ibaixin.chat.model.NewFriendInfo.FriendStatus;
 import net.ibaixin.chat.model.User;
 import net.ibaixin.chat.model.UserVcard;
-import net.ibaixin.chat.model.NewFriendInfo.FriendStatus;
 import net.ibaixin.chat.provider.Provider;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
+import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
-import net.ibaixin.manage.MsgManager;
 import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 
 import android.annotation.TargetApi;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -37,7 +36,6 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -46,7 +44,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -71,7 +68,6 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 	private NewFriendAdapter mNewFriendAdapter;
 	
 	private UserManager userManager = UserManager.getInstance();
-	private MsgManager msgManager = MsgManager.getInstance();
 	
 	ProgressDialog pDialog;
 	
@@ -261,7 +257,7 @@ public class NewFriendInfoActivity extends BaseActivity implements LoaderCallbac
 					@Override
 					public void onClick(View v) {
 						//接受对方添加自己为好友,并且也将对方添加为自己的好友
-						pDialog = ProgressDialog.show(context, null, getString(R.string.loading), false, true);
+						pDialog = ProgressDialog.show(context, null, getString(R.string.loading), true);
 						SystemUtil.getCachedThreadPool().execute(new Runnable() {
 							
 							@Override

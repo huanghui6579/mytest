@@ -5,31 +5,39 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.ibaixin.chat.ChatApplication;
+import net.ibaixin.chat.R;
 import net.ibaixin.chat.model.Album;
 import net.ibaixin.chat.model.AudioItem;
 import net.ibaixin.chat.model.FileItem;
 import net.ibaixin.chat.model.MsgInfo;
+import net.ibaixin.chat.model.MsgInfo.SendState;
+import net.ibaixin.chat.model.MsgInfo.Type;
 import net.ibaixin.chat.model.MsgPart;
 import net.ibaixin.chat.model.MsgThread;
 import net.ibaixin.chat.model.PhotoItem;
 import net.ibaixin.chat.model.User;
-import net.ibaixin.chat.model.MsgInfo.SendState;
-import net.ibaixin.chat.model.MsgInfo.Type;
 import net.ibaixin.chat.provider.Provider;
 import net.ibaixin.chat.util.Constants;
+import net.ibaixin.chat.util.Log;
 import net.ibaixin.chat.util.MimeUtils;
 import net.ibaixin.chat.util.SystemUtil;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.View;
@@ -87,6 +95,8 @@ public class MsgManager {
 			
 			List<User> members = getMemebersByMemberIds(memberIds);
 			mt.setMembers(members);
+			
+			mt.setTop(cursor.getInt(cursor.getColumnIndex(Provider.MsgThreadColumns.IS_TOP)) == 0 ? false : true);
 		}
 		if (cursor != null) {
 			cursor.close();
@@ -180,6 +190,7 @@ public class MsgManager {
 			time = System.currentTimeMillis();
 		}
 		values.put(Provider.MsgThreadColumns.MODIFY_DATE, time);
+		values.put(Provider.MsgThreadColumns.IS_TOP, msgThread.isTop() ? 1 : 0);
 		return values;
 	}
 	
@@ -294,7 +305,7 @@ public class MsgManager {
 			if (!SystemUtil.isEmpty(msgInfos)) {	//该会话有消息
 				//删除消息
 				for (MsgInfo msgInfo : msgInfos) {
-					deleteMsgInfoById(msgInfo);
+					deleteMsgInfoById(msgInfo, null);
 				}
 			}
 			falg = true;
@@ -324,6 +335,7 @@ public class MsgManager {
 				
 				List<User> members = getMemebersByMemberIds(memberIds);
 				msgThread.setMembers(members);
+				msgThread.setTop(cursor.getInt(cursor.getColumnIndex(Provider.MsgThreadColumns.IS_TOP)) == 0 ? false : true);
 				list.add(msgThread);
 			}
 			cursor.close();
@@ -442,30 +454,53 @@ public class MsgManager {
 		if (cursor != null) {
 			list = new ArrayList<>();
 			while (cursor.moveToNext()) {
-				MsgInfo msg = new MsgInfo();
-				msg.setId(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns._ID)));
-				msg.setThreadID(threadId);
-				msg.setFromUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.FROM_USER)));
-				msg.setToUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.TO_USER)));
-				msg.setContent(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.CONTENT)));
-				msg.setSubject(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.SUBJECT)));
-				msg.setCreationDate(cursor.getLong(cursor.getColumnIndex(Provider.MsgInfoColumns.CREATIO_NDATE)));
-				msg.setComming(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_COMMING)) == 0 ? false : true);
-				msg.setRead(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_READ)) == 0 ? false : true);
-				msg.setMsgType(Type.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.MSG_TYPE))));
-				msg.setSendState(SendState.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.SEND_STATE))));
-				
-				Type msgType = msg.getMsgType();
-				//如果消息不是文本类型，则加载附件
-				if (msgType != Type.TEXT) {	//加载附件
-					MsgPart msgPart = getMsgPartByMsgId(msg.getId());
-					msg.setMsgPart(msgPart);
-				}
+				MsgInfo msg = initMsgInfoByCursor(cursor, true, threadId, 0);
 				list.add(msg);
 			}
 			cursor.close();
 		}
 		return list;
+	}
+	
+	/**
+	 * 根据cursor来组装msginfo
+	 * @update 2015年2月27日 上午10:29:30
+	 * @param cursor
+	 * @param loadAttach 是否加载消息的附件信息
+	 * @param threadId 该消息所在的会话id,若该值<=0,则从数据库里获取
+	 * @param msgId 该消息id,若该值<=0,则从数据库里获取
+	 * @return 组装后的消息对象
+	 */
+	private MsgInfo initMsgInfoByCursor(Cursor cursor, boolean loadAttach, int threadId, int msgId) {
+		MsgInfo msg = new MsgInfo();
+		if (msgId <= 0) {
+			msg.setId(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns._ID)));
+		} else {
+			msg.setId(msgId);
+		}
+		if (threadId <= 0) {
+			msg.setThreadID(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.THREAD_ID)));
+		} else {
+			msg.setThreadID(threadId);
+		}
+		msg.setFromUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.FROM_USER)));
+		msg.setToUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.TO_USER)));
+		msg.setContent(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.CONTENT)));
+		msg.setSubject(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.SUBJECT)));
+		msg.setCreationDate(cursor.getLong(cursor.getColumnIndex(Provider.MsgInfoColumns.CREATIO_NDATE)));
+		msg.setComming(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_COMMING)) == 0 ? false : true);
+		msg.setRead(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_READ)) == 0 ? false : true);
+		msg.setMsgType(Type.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.MSG_TYPE))));
+		msg.setSendState(SendState.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.SEND_STATE))));
+		if (loadAttach) {
+			Type msgType = msg.getMsgType();
+			//如果消息不是文本类型，则加载附件
+			if (msgType != Type.TEXT) {	//加载附件
+				MsgPart msgPart = getMsgPartByMsgId(msg.getId());
+				msg.setMsgPart(msgPart);
+			}
+		}
+		return msg;
 	}
 	
 	/**
@@ -482,25 +517,7 @@ public class MsgManager {
 		Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
 		MsgInfo msg = null;
 		if (cursor != null && cursor.moveToFirst()) {
-			msg = new MsgInfo();
-			msg.setId(msgId);
-			msg.setThreadID(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.THREAD_ID)));
-			msg.setFromUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.FROM_USER)));
-			msg.setToUser(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.TO_USER)));
-			msg.setContent(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.CONTENT)));
-			msg.setSubject(cursor.getString(cursor.getColumnIndex(Provider.MsgInfoColumns.SUBJECT)));
-			msg.setCreationDate(cursor.getLong(cursor.getColumnIndex(Provider.MsgInfoColumns.CREATIO_NDATE)));
-			msg.setComming(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_COMMING)) == 0 ? false : true);
-			msg.setRead(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.IS_READ)) == 0 ? false : true);
-			msg.setMsgType(Type.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.MSG_TYPE))));
-			msg.setSendState(SendState.valueOf(cursor.getInt(cursor.getColumnIndex(Provider.MsgInfoColumns.SEND_STATE))));
-			
-			Type msgType = msg.getMsgType();
-			//如果消息不是文本类型，则加载附件
-			if (msgType != Type.TEXT && msgType != Type.LOCATION) {	//加载附件
-				MsgPart msgPart = getMsgPartByMsgId(msg.getId());
-				msg.setMsgPart(msgPart);
-			}
+			msg = initMsgInfoByCursor(cursor, true, 0, msgId);
 		}
 		if (cursor != null) {
 			cursor.close();
@@ -585,30 +602,38 @@ public class MsgManager {
 			String strIds = null;
 			if (memAccounts.length == 1) {
 				User u = userManager.getUserByUsername(memAccounts[0]);
-				strIds = String.valueOf(u.getId());
-				members.add(u);
+				Log.d("----------user------" + (u == null ? "" : u.toString()));
+				if (u != null) {
+					strIds = String.valueOf(u.getId());
+					members.add(u);
+				}
 			} else {
 				StringBuilder sb = new StringBuilder();
 				for (String account : memAccounts) {
 					//根据账号查询用户id
 					User u = userManager.getUserByUsername(account);
-					sb.append(u.getId()).append(";");
-					members.add(u);
+					Log.d("-----多用户-----user------" + (u == null ? "" : u.toString()));
+					if (u != null) {
+						sb.append(u.getId()).append(";");
+						members.add(u);
+					}
 				}
 				sb.deleteCharAt(sb.length() - 1);
 				strIds = sb.toString();
 			}
-			Cursor cursor = mContext.getContentResolver().query(Provider.MsgThreadColumns.CONTENT_URI, new String[] {Provider.MsgThreadColumns._ID}, Provider.MsgThreadColumns.MEMBER_IDS + " = ?", new String[] {strIds}, null);
-			if (cursor != null && cursor.moveToFirst()) {	//有该会话
-				tid = cursor.getInt(0);
-			} else {	//没有改会话，则创建一个会话
-				MsgThread msgThread = new MsgThread();
-				msgThread.setMembers(members);
-				msgThread = createMsgThread(msgThread);
-				tid = msgThread.getId();
-			}
-			if (cursor != null) {
-				cursor.close();
+			if (!TextUtils.isEmpty(strIds)) {
+				Cursor cursor = mContext.getContentResolver().query(Provider.MsgThreadColumns.CONTENT_URI, new String[] {Provider.MsgThreadColumns._ID}, Provider.MsgThreadColumns.MEMBER_IDS + " = ?", new String[] {strIds}, null);
+				if (cursor != null && cursor.moveToFirst()) {	//有该会话
+					tid = cursor.getInt(0);
+				} else {	//没有改会话，则创建一个会话
+					MsgThread msgThread = new MsgThread();
+					msgThread.setMembers(members);
+					msgThread = createMsgThread(msgThread);
+					tid = msgThread.getId();
+				}
+				if (cursor != null) {
+					cursor.close();
+				}
 			}
 		}
 		return tid;
@@ -682,25 +707,43 @@ public class MsgManager {
 	 * 根据消息id删除该条消息，该消息实体值包含msgId和msgType，默认不删除该消息对应的本地附件
 	 * @update 2014年11月12日 下午8:08:44
 	 * @param msgInfo
+	 * @param msgThread
 	 * @return
 	 */
-	public boolean deleteMsgInfoById(MsgInfo msgInfo) {
-		return deleteMsgInfoById(msgInfo, false);
+	public boolean deleteMsgInfoById(MsgInfo msgInfo, MsgThread msgThread) {
+		return deleteMsgInfoById(msgInfo, msgThread, false);
 	}
 	
 	/**
 	 * 根据消息id删除该条消息，该消息实体值包含msgId和msgType
 	 * @update 2015年2月26日 上午11:07:56
 	 * @param msgInfo
+	 * @param msgThread 该消息所在的会话，若会话为null，则不更新会话的摘要
 	 * @param deleteAttach 是否删除该消息对应的附件
 	 * @return
 	 */
-	public boolean deleteMsgInfoById(MsgInfo msgInfo, boolean deleteAttach) {
+	public boolean deleteMsgInfoById(MsgInfo msgInfo, MsgThread msgThread, boolean deleteAttach) {
 		if (msgInfo == null) {
 			return false;
 		}
+		//查询该消息是否是该会话的最后一条消息，如果是最后一条消息，则更新该会话的最后一条消息
+		boolean isLastMsg = false;
+		if (msgThread != null) {
+			isLastMsg = isSnippetMsgInThread(msgInfo.getId(), msgThread.getId());
+		}
 		int count = mContext.getContentResolver().delete(ContentUris.withAppendedId(Provider.MsgInfoColumns.CONTENT_URI, msgInfo.getId()), null, null);
 		if (count > 0) {	//删除消息成功
+			if (isLastMsg) {	//是最后一条消息，就跟新会话的最后一条消息的摘要
+				//获取最新的最后一条消息
+				MsgInfo tempMsg = getLastMsgInThread(msgThread.getId());
+				if (tempMsg != null) {
+					//重新设置该会话的最后一条消息的摘要
+					msgThread.setSnippetId(tempMsg.getId());
+					String snippetContent = getSnippetContentByMsgType(tempMsg);
+					msgThread.setSnippetContent(snippetContent);
+					updateSnippet(msgThread);
+				}
+			}
 			if (deleteAttach) {
 				Type msgType = msgInfo.getMsgType();
 				if (MsgInfo.Type.TEXT != msgType) {	//有附件
@@ -732,6 +775,42 @@ public class MsgManager {
 //				SystemUtil.deleteFile(filePath);
 //			}
 		}
+	}
+	
+	/**
+	 * 根据该消息id判断该消息是否是该会话的最后一条消息
+	 * @update 2015年2月27日 上午10:04:55
+	 * @param msgId 消息id
+	 * @param threadId 会话id
+	 * @return
+	 */
+	public boolean isSnippetMsgInThread(int msgId, int threadId) {
+		boolean flag = false;
+		Cursor cursor = mContext.getContentResolver().query(Provider.MsgThreadColumns.CONTENT_URI, new String[] {Provider.MsgThreadColumns._ID}, Provider.MsgThreadColumns._ID + " = ? AND " + Provider.MsgThreadColumns.SNIPPET_ID + " = ?", new String[] {String.valueOf(threadId), String.valueOf(msgId)}, null);
+		if (cursor != null) {
+			flag = cursor.getCount() > 0;
+			cursor.close();
+		}
+		return flag;
+	}
+	
+	/**
+	 * 根据会话id获取该会话中最后的一条消息
+	 * @update 2015年2月27日 上午10:14:33
+	 * @param threadId 会话id
+	 * @return 该会话中最后的一条消息
+	 */
+	public MsgInfo getLastMsgInThread(int threadId) {
+		String sortOrder = Provider.MsgInfoColumns.REVERSAL_SORT_ORDER + " limit 1 offset 0";	//取第一条记录
+		Cursor cursor = mContext.getContentResolver().query(Provider.MsgInfoColumns.CONTENT_URI, null, Provider.MsgInfoColumns.THREAD_ID + " = ?", new String[] {String.valueOf(threadId)}, sortOrder);
+		MsgInfo msg = null;
+		if (cursor != null && cursor.moveToFirst()) {
+			msg = initMsgInfoByCursor(cursor, false, threadId, 0);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return msg;
 	}
 	
 	/**
@@ -772,6 +851,65 @@ public class MsgManager {
 	}
 	
 	/**
+	 * 批量添加消息对象，利用事务，提高效率
+	 * @update 2015年2月27日 下午5:58:00
+	 * @param list 要添加的消息列表
+	 * @return 添加的消息所属会话id的集合
+	 */
+	public List<Integer> addBatchMsgInfo(List<MsgInfo> list) {
+		List<Integer> threadIdList = null;
+		if (SystemUtil.isNotEmpty(list)) {
+			int len = list.size();
+			ContentValues[] arrayValues = new ContentValues[len];
+			ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+			for (int i = 0; i < len; i++) {
+				MsgInfo msgInfo = list.get(i);
+				if (msgInfo != null) {
+					arrayValues[i] = initMsgInfoValues(msgInfo);
+					ops.add(ContentProviderOperation.newInsert(Provider.MsgInfoColumns.CONTENT_URI).withValues(arrayValues[i]).build());
+				}
+			}
+			//批量添加：方法1
+//			count = mContext.getContentResolver().bulkInsert(Provider.MsgInfoColumns.CONTENT_URI, arrayValues);
+			//批量添加：方法2
+			try {
+				ContentProviderResult[] resultes = mContext.getContentResolver().applyBatch(Provider.AUTHORITY_MSG, ops);
+				if (SystemUtil.isNotEmpty(resultes)) {
+					Set<Integer> tempIdSet = new HashSet<>();
+					int count = resultes.length;
+					for (int i = 0; i < count; i++) {
+						MsgInfo msgInfo = list.get(i);
+						if (msgInfo != null) {
+							tempIdSet.add(msgInfo.getThreadID());
+							Uri uri = resultes[i].uri;
+							if (uri != null) {
+								String msgId = uri.getLastPathSegment();
+								msgInfo.setId(Integer.parseInt(msgId));
+								if (msgInfo.getMsgType() != MsgInfo.Type.TEXT) {	//非文本消息就添加附件
+									//添加附件信息
+									MsgPart msgPart = msgInfo.getMsgPart();
+									msgPart.setMsgId(msgInfo.getId());
+									msgPart = addMsgPart(msgPart);
+									msgInfo.setMsgPart(msgPart);
+								}
+							}
+						}
+						
+					}
+					if (SystemUtil.isNotEmpty(tempIdSet)) {
+						threadIdList = new ArrayList<>();
+						threadIdList.addAll(tempIdSet);
+					}
+				}
+			} catch (RemoteException | OperationApplicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return threadIdList;
+	}
+	
+	/**
 	 * 更新该会话的最后一条消息记录
 	 * @update 2014年11月7日 下午8:57:42
 	 * @param msgThread
@@ -808,6 +946,59 @@ public class MsgManager {
 		ContentValues values = initMsgThreadVaule(msgThread);
 		mContext.getContentResolver().update(uri, values, null, null);
 		return msgThread;
+	}
+	
+	/**
+	 * 根据消息类型来设置会话最后一条消息的内容
+	 * @update 2014年11月20日 下午3:07:22
+	 * @param msgType 消息类型
+	 * @param msgInfo 消息实体
+	 * @return
+	 */
+	public String getSnippetContentByMsgType(MsgInfo.Type msgType, MsgInfo msgInfo) {
+		String snippetContent = null;
+		switch (msgType) {
+		case TEXT:
+			snippetContent = msgInfo.getContent();
+			break;
+		case IMAGE:
+			snippetContent = mContext.getString(R.string.msg_thread_snippet_content_image);
+			break;
+		case AUDIO:
+			snippetContent = mContext.getString(R.string.msg_thread_snippet_content_audio);
+			break;
+		case FILE:
+			snippetContent = mContext.getString(R.string.msg_thread_snippet_content_file);
+			break;
+		case LOCATION:
+			snippetContent = mContext.getString(R.string.msg_thread_snippet_content_location);
+			break;
+		case VIDEO:
+			snippetContent = mContext.getString(R.string.msg_thread_snippet_content_video);
+			break;
+		case VCARD:
+			snippetContent = mContext.getString(R.string.msg_thread_snippet_content_vcard);
+			break;
+
+		default:
+			snippetContent = msgInfo.getContent();
+			break;
+		}
+		return snippetContent;
+	}
+	
+	/**
+	 * 根据消息类型来设置会话最后一条消息的内容
+	 * @update 2015年2月27日 上午10:53:59
+	 * @param msgInfo 消息实体
+	 * @return
+	 */
+	public String getSnippetContentByMsgType(MsgInfo msgInfo) {
+		if (msgInfo == null) {
+			return null;
+		}
+		MsgInfo.Type msgType = msgInfo.getMsgType();
+		return getSnippetContentByMsgType(msgType, msgInfo);
 	}
 	
 	/**
@@ -1150,6 +1341,23 @@ public class MsgManager {
 			}
 		}
 		return msgList;
+	}
+	
+	/**
+	 * 更新会话的置顶状态
+	 * @update 2015年2月27日 下午3:54:28
+	 * @param msgThread
+	 * @return
+	 */
+	public boolean updateMsgThreadTop(MsgThread msgThread) {
+		if (msgThread == null) {
+			return false;
+		}
+		Uri uri = ContentUris.withAppendedId(Provider.MsgThreadColumns.CONTENT_URI, msgThread.getId());
+		ContentValues values = new ContentValues();
+		values.put(Provider.MsgThreadColumns.IS_TOP, msgThread.isTop() ? 1 : 0);
+		int count = mContext.getContentResolver().update(uri, values, null, null);
+		return count > 0;
 	}
 	
 	/**

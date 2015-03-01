@@ -153,4 +153,14 @@ public class Constants {
 	 * 【10】改变聊天消息的发送状态
 	 */
 	public static final int MSG_MODIFY_CHAT_MSG_SEND_STATE = 0x00000A;
+	
+	/**
+	 * 【11】聊天会话置顶成功
+	 */
+	public static final int MSG_THREAD_TOP_SUCCESS = 0x00000B;
+	
+	/**
+	 * 【12】聊天会话置顶失败
+	 */
+	public static final int MSG_THREAD_TOP_FAILED = 0x00000C;
 }

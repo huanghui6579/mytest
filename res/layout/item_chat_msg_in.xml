@@ -37,7 +37,7 @@
 		        android:layout_marginStart="@dimen/chat_msg_item_content_margin_left_right"
 		        android:autoLink="all"
 		        android:textColorLink="?attr/colorPrimary"
-		        android:linksClickable="true"/>
+		        android:linksClickable="false"/>
 	        
 	        <TextView 
                 android:id="@+id/tv_content_desc"

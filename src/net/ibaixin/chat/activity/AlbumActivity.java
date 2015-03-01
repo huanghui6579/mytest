@@ -13,8 +13,9 @@ import net.ibaixin.chat.model.PhotoItem;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.DensityUtil;
 import net.ibaixin.chat.util.SystemUtil;
+import net.ibaixin.chat.view.ProgressDialog;
+import net.ibaixin.chat.view.ProgressWheel;
 import net.ibaixin.manage.MsgManager;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -53,7 +54,6 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.PopupWindow;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -77,7 +77,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	private MsgManager msgManager = MsgManager.getInstance();
 	
 	private GridView gvPhoto;
-	private ProgressBar pbLoading;
+	private ProgressWheel pbLoading;
 	private TextView tvAllPhoto;
 	private TextView tvPreview;
 	private TextView tvTime;
@@ -149,7 +149,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 	@Override
 	protected void initView() {
 		gvPhoto = (GridView) findViewById(R.id.gv_photo);
-		pbLoading = (ProgressBar) findViewById(R.id.pb_loading);
+		pbLoading = (ProgressWheel) findViewById(R.id.pb_loading);
 		tvAllPhoto = (TextView) findViewById(R.id.tv_all_photo);
 		tvPreview = (TextView) findViewById(R.id.tv_preview);
 		tvTime = (TextView) findViewById(R.id.tv_time);
@@ -256,7 +256,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 				@Override
 				public void onClick(View v) {
 					final List<PhotoItem> selects = mPhotoAdapter.getSelectList();
-					pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), false, true);
+					pDialog = ProgressDialog.show(mContext, null, getString(R.string.chat_sending_file), true);
 					//发送图片
 					SystemUtil.getCachedThreadPool().execute(new Runnable() {
 						

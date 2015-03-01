@@ -62,8 +62,8 @@ public class XmppConnectionManager {
 		
 		//允许自动连接
 //		configuration.setReconnectionAllowed(true);
-		//允许登录成功后更新状态
-		configuration.setSendPresence(true);
+		//不允许登录成功后更新状态，主要是为了接收离线消息才这样设置的
+		configuration.setSendPresence(false);
 		// 收到好友邀请后manual表示需要经过同意,accept_all表示不经同意自动为好友
 		Roster.setDefaultSubscriptionMode(SubscriptionMode.manual);
 		connection = new XMPPTCPConnection(configuration);

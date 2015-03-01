@@ -31,11 +31,11 @@ import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.model.Emoji;
 import net.ibaixin.chat.model.FileItem;
+import net.ibaixin.chat.model.FileItem.FileType;
 import net.ibaixin.chat.model.MsgInfo;
+import net.ibaixin.chat.model.MsgInfo.Type;
 import net.ibaixin.chat.model.MsgThread;
 import net.ibaixin.chat.model.PhotoItem;
-import net.ibaixin.chat.model.FileItem.FileType;
-import net.ibaixin.chat.model.MsgInfo.Type;
 import net.ibaixin.chat.model.emoji.Emojicon;
 import android.app.Activity;
 import android.content.ClipData;
@@ -997,8 +997,12 @@ public class SystemUtil {
 	 * @return
 	 */
 	public static ExecutorService getCachedThreadPool(){
-		if(cachedThreadPool == null){
-			cachedThreadPool = Executors.newCachedThreadPool();
+		if(cachedThreadPool == null) {
+			synchronized (SystemUtil.class) {
+				if(cachedThreadPool == null) {
+					cachedThreadPool = Executors.newCachedThreadPool();
+				}
+			}
 		}
 		return cachedThreadPool;
 	}
@@ -1114,6 +1118,20 @@ public class SystemUtil {
 	public static String unwrapJid(String jid) {
 		if (!TextUtils.isEmpty(jid)) {
 			return jid.substring(0, jid.indexOf("@"));
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * 将完整的jid托包装为账号，格式为：xxx@doamin
+	 * @update 2014年11月10日 下午8:47:14
+	 * @param jid 账号，格式为：xxx@doamin/ibaixin
+	 * @return
+	 */
+	public static String unwrapJid2(String jid) {
+		if (!TextUtils.isEmpty(jid)) {
+			return jid.substring(0, jid.indexOf("/"));
 		} else {
 			return null;
 		}
@@ -2042,4 +2060,5 @@ public class SystemUtil {
 	public static void copyText(String text) {
 		copyText(text, null);
 	}
+
 }
