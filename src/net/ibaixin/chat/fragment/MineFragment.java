@@ -1,6 +1,8 @@
 package net.ibaixin.chat.fragment;
 
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.activity.JokeReadMainActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,12 +17,10 @@ import android.view.ViewGroup;
 public class MineFragment extends BaseFragment implements OnClickListener{
 	/** 我的资料 */
 	private View item_mine;
-	/** 笑话 */
+	/** 趣味阅读 */
 	private View item_readjokestext;
-	/** 趣图 */
-	private View item_readjokesimg;
-	/** 感悟 */
-	private View item_readjokeslife;
+	/** 趣味视频 */
+	private View item_readjokesvideo;
 	/** 设置 */
 	private View item_setting;
 	
@@ -46,29 +46,25 @@ public class MineFragment extends BaseFragment implements OnClickListener{
 		super.onViewCreated(view, savedInstanceState);
 		item_mine = view.findViewById(R.id.item_mine);
 		item_readjokestext = view.findViewById(R.id.item_readjokestext);
-		item_readjokesimg = view.findViewById(R.id.item_readjokesimg);
-		item_readjokeslife = view.findViewById(R.id.item_readjokeslife);
+		item_readjokesvideo = view.findViewById(R.id.item_readjokesvideo);
 		item_setting = view.findViewById(R.id.item_setting);
 		item_mine.setOnClickListener(this);
 		item_readjokestext.setOnClickListener(this);
-		item_readjokesimg.setOnClickListener(this);
-		item_readjokeslife.setOnClickListener(this);
+		item_readjokesvideo.setOnClickListener(this);
 		item_setting.setOnClickListener(this);
 	}
 
 	@Override
 	public void onClick(View v) {
+		Intent intent = null ;
 		switch (v.getId()) {
 		case R.id.item_mine:
-			
 			break;
 		case R.id.item_readjokestext:
-			
+			intent = new Intent(mContext, JokeReadMainActivity.class);
+			startActivity(intent);
 			break;
-		case R.id.item_readjokesimg:
-			
-			break;
-		case R.id.item_readjokeslife:
+		case R.id.item_readjokesvideo:
 			
 			break;
 		case R.id.item_setting:

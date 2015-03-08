@@ -321,6 +321,9 @@ public class RegistActivity extends BaseActivity implements OnClickListener {
 					connection.connect();
 				}
 				connection.login(username, password, Constants.CLIENT_RESOURCE);
+				if(!registerIbaixinJoke(etNickname.getText().toString())){//注册web服务器 add by dudejin 2015-03-06
+					return REGIST_RESULT_FAIL;
+				}
 				return REGIST_RESULT_SUCCESS;
 			} else {
 				if("conflict".equalsIgnoreCase(result.getError().toString())) {

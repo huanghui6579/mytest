@@ -86,7 +86,7 @@
 		    />
 		</RelativeLayout>
 	<RelativeLayout
-	    android:id="@+id/item_readjokesimg"
+	    android:id="@+id/item_readjokesvideo"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:layout_marginTop="5dp"
@@ -95,54 +95,20 @@
 	    android:paddingTop="5dp"
 	    android:paddingBottom="5dp">
 		<ImageView
-		    android:id="@+id/item_readjokesimg_ico"
+		    android:id="@+id/item_readjokesvideo_ico"
 		    android:layout_width="30dp"
 		    android:layout_height="30dp"
 		    android:layout_marginLeft="10dp"
 		    android:layout_marginRight="10dp"
 		    android:background="@drawable/item_ico_background"
-		    android:src="@drawable/item_readjokesimg_ico"
+		    android:src="@drawable/item_readjokesvideo_ico"
 		    />
 		<TextView 
 		        android:layout_width="wrap_content"
 		    	android:layout_height="wrap_content"
-		    	android:layout_toRightOf="@id/item_readjokesimg_ico"
+		    	android:layout_toRightOf="@id/item_readjokesvideo_ico"
 		    	android:layout_centerVertical="true"
-		    	android:text="@string/item_readjokesimg"/>
-		
-		<ImageView 
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:layout_marginRight="5dp"
-		    android:layout_centerVertical="true"
-		    android:layout_alignParentRight="true"
-		    android:src="@drawable/item_click_abale"
-		    />
-		</RelativeLayout>
-	<RelativeLayout
-	    android:id="@+id/item_readjokeslife"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="5dp"
-	    android:layout_marginBottom="5dp"
-	    android:background="@drawable/item_background"
-	    android:paddingTop="5dp"
-	    android:paddingBottom="5dp">
-		<ImageView
-		    android:id="@+id/item_readjokeslife_ico"
-		    android:layout_width="30dp"
-		    android:layout_height="30dp"
-		    android:layout_marginLeft="10dp"
-		    android:layout_marginRight="10dp"
-		    android:background="@drawable/item_ico_background"
-		    android:src="@drawable/item_readjokeslife_ico"
-		    />
-		<TextView 
-		        android:layout_width="wrap_content"
-		    	android:layout_height="wrap_content"
-		    	android:layout_toRightOf="@id/item_readjokeslife_ico"
-		    	android:layout_centerVertical="true"
-		    	android:text="@string/item_readjokeslife"/>
+		    	android:text="@string/item_readjokesvideo"/>
 		
 		<ImageView 
 		    android:layout_width="wrap_content"

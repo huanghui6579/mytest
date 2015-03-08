@@ -87,8 +87,8 @@
         <!-- <activity
             android:name="net.ibaixin.chat.activity.TestActivity"
             android:label="@string/app_name"
-            android:configChanges="orientation|screenSize"
-            android:theme="@style/AppTheme.ChatActivity" >
+            android:theme="@style/AppTheme.ChatActivity"
+            android:windowSoftInputMode="adjustResize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -129,6 +129,7 @@
             android:label="@string/activity_lable_chat"
             android:theme="@style/AppTheme.ChatActivity"
             android:configChanges="orientation|screenSize"
+            android:launchMode="singleTask"
             android:parentActivityName="net.ibaixin.chat.activity.MainActivity">
             <meta-data
 		        android:name="android.support.PARENT_ACTIVITY"
@@ -169,6 +170,26 @@
             android:name="net.ibaixin.chat.activity.RemarkEditActivity"
             android:label="@string/activity_lable_edit_remark"
             android:configChanges="orientation|screenSize" />
+        
+        <activity
+            android:name="net.ibaixin.chat.activity.ChatImagePreviewActivity"
+            android:label="@string/activity_lable_edit_remark"
+            android:configChanges="orientation|screenSize" />
+        
+        <activity
+            android:name="net.ibaixin.chat.activity.LocationShowActivity"
+            android:label="@string/activity_lable_show_location"
+            android:configChanges="orientation|screenSize" />
+        
+        <activity
+            android:name="net.ibaixin.chat.activity.MsgShowActivity"
+            android:label="@string/activity_lable_show_msg"
+            android:configChanges="orientation|screenSize" />
+        
+        <activity
+            android:name="net.ibaixin.chat.activity.JokeReadMainActivity"
+            android:label="@string/activity_lable_joke"
+            android:configChanges="orientation|screenSize"/>
         
         <provider android:name="net.ibaixin.chat.provider.UserProvider"
             android:authorities="net.ibaixin.chat.provider.user;net.ibaixin.chat.provider.newFriend"

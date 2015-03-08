@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.Album;
 import net.ibaixin.chat.model.MsgInfo;
 import net.ibaixin.chat.model.PhotoItem;
@@ -15,7 +16,6 @@ import net.ibaixin.chat.util.DensityUtil;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
-import net.ibaixin.manage.MsgManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -270,6 +270,7 @@ public class AlbumActivity extends BaseActivity implements OnClickListener {
 							} else {
 								msg.what = Constants.MSG_FAILED;
 							}
+							msg.what = Constants.MSG_FAILED;
 							mHandler.sendMessage(msg);
 						}
 					});

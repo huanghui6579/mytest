@@ -6,12 +6,12 @@ import java.util.List;
 
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.loader.FileItemLoder;
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.FileItem;
 import net.ibaixin.chat.model.MsgInfo;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.view.ProgressWheel;
-import net.ibaixin.manage.MsgManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;

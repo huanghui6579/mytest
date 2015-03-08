@@ -2,8 +2,8 @@ package net.ibaixin.chat.listener;
 
 import java.util.Collection;
 
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.util.SystemUtil;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Presence;

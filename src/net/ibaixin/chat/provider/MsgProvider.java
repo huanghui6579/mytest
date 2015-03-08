@@ -101,7 +101,7 @@ public class MsgProvider extends ContentProvider {
 		case MSG_INFOS:	//查询所有的聊天消息
 			qb.setTables(Provider.MsgInfoColumns.TABLE_NAME);
 			qb.setProjectionMap(mMsgInfoProjection);
-			if (TextUtils.isEmpty(sortOrder)) {
+			if (!TextUtils.isEmpty(sortOrder)) {
 				orderBy = sortOrder;
 			} else {
 				orderBy = Provider.MsgInfoColumns.DEFAULT_SORT_ORDER;
@@ -112,7 +112,7 @@ public class MsgProvider extends ContentProvider {
 		case MSG_PARTS:	//查询消息的附件
 			qb.setTables(Provider.MsgPartColumns.TABLE_NAME);
 			qb.setProjectionMap(mMsgPartProjection);
-			if (TextUtils.isEmpty(sortOrder)) {
+			if (!TextUtils.isEmpty(sortOrder)) {
 				orderBy = sortOrder;
 			} else {
 				orderBy = Provider.MsgPartColumns.DEFAULT_SORT_ORDER;
@@ -122,7 +122,7 @@ public class MsgProvider extends ContentProvider {
 			qb.appendWhere(Provider.MsgThreadColumns._ID + " = " + uri.getLastPathSegment());
 		case MSG_THREADS:	//查询会话列表
 			qb.setTables(Provider.MsgThreadColumns.TABLE_NAME);
-			if (TextUtils.isEmpty(sortOrder)) {
+			if (!TextUtils.isEmpty(sortOrder)) {
 				orderBy = sortOrder;
 			} else {
 				orderBy = Provider.MsgThreadColumns.DEFAULT_SORT_ORDER;

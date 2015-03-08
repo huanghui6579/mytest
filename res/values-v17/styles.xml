@@ -8,5 +8,15 @@
         <item name="android:paddingRight">@dimen/md_button_padding_horizontal_internalexternal</item>
         <item name="android:paddingEnd">@dimen/md_button_padding_horizontal_internalexternal</item>
     </style>
+    
+    <!-- 我的位置按钮的样式 -->
+    <style name="MyLocationBtnStyle">
+        <item name="android:layout_width">wrap_content</item>
+	    <item name="android:layout_height">wrap_content</item>
+	    <item name="android:src">@drawable/main_icon_location</item>
+	    <item name="android:background">@drawable/my_location_btn_selector</item>
+	    <item name="android:padding">@dimen/location_my_btn_padding</item>
+	    <item name="android:layout_margin">@dimen/location_my_btn_margin</item>
+    </style>
 
 </resources>

@@ -13,6 +13,8 @@ import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.EmojiFragment;
 import net.ibaixin.chat.fragment.EmojiTypeFragment;
+import net.ibaixin.chat.fragment.PhotoFragment;
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.AttachItem;
 import net.ibaixin.chat.model.ContextMenuItem;
 import net.ibaixin.chat.model.EmojiType;
@@ -33,6 +35,7 @@ import net.ibaixin.chat.service.CoreService.MainBinder;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.DensityUtil;
 import net.ibaixin.chat.util.ImageUtil;
+import net.ibaixin.chat.util.Log;
 import net.ibaixin.chat.util.MimeUtils;
 import net.ibaixin.chat.util.SoundMeter;
 import net.ibaixin.chat.util.SystemUtil;
@@ -40,7 +43,6 @@ import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.view.EmojiconEditText;
 import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.TextViewAware;
-import net.ibaixin.manage.MsgManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
@@ -66,6 +68,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.internal.widget.TintManager;
 import android.text.Editable;
 import android.text.Spannable;
@@ -80,9 +85,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.GridView;
@@ -99,6 +107,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
+import com.nostra13.universalimageloader.core.imageaware.ImageViewAware;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 /**
@@ -112,6 +121,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	
 	public static final String ARG_MSG_INFO = "arg_msg_info";
 	public static final String ARG_MSG_INFO_LIST = "arg_msg_info_list";
+	public static final String ARG_THREAD_ID = "arg_thread_id";
 	
 	/**
 	 * 调用相册的请请求码
@@ -187,6 +197,11 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * 当前的会话
 	 */
 	private MsgThread msgThread;
+	
+	/**
+	 * 会话id
+	 */
+	private int mThreadId;
 	
 	private MsgManager msgManager = MsgManager.getInstance();
 	
@@ -325,7 +340,36 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	
 	private ProgressDialog pDialog;
 	
+	/**
+	 * 该会话的消息总数量
+	 */
+	private long mMsgTotalCount = 0;
+	/**
+	 * 加载更多是否加载完毕
+	 */
+	private boolean mLoadFinish = true;
+	/**
+	 * listview加载更多的头部view
+	 */
+	private View headView;
+	/**
+	 * 第一个可见项索引
+	 */
+	private int mFirstVisiableItem = 0;
 	private static final int POLL_INTERVAL = 300;
+	/**
+	 * 屏幕尺寸
+	 */
+	public static int[] screenSize = null;
+	
+	private AbstractXMPPConnection connection;
+	private ChatManager chatManager = null;
+	private Chat chat = null;
+	
+	//图片加载器
+	private ImageLoader mImageLoader = null;
+	
+	CoreService coreService;
 	
 	private Handler mHandler = new Handler() {
 
@@ -347,25 +391,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			}
 		}
 	};
-	
-	/**
-	 * 屏幕尺寸
-	 */
-	public static int[] screenSize = null;
-	
-	/**
-	 * 加开始加载数据的索引
-	 */
-	private int pageOffset = 0;
-	
-	private AbstractXMPPConnection connection;
-	private ChatManager chatManager = null;
-	private Chat chat = null;
-	
-	//图片加载器
-	private ImageLoader mImageLoader = null;
-	
-	CoreService coreService;
 	
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -469,6 +494,11 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		if (intent != null) {
 			otherSide = intent.getParcelableExtra(UserInfoActivity.ARG_USER);
 			msgThread = intent.getParcelableExtra(ARG_THREAD);
+			if (msgThread != null) {
+				mThreadId = msgThread.getId();
+			} else {
+				mThreadId = intent.getIntExtra(ARG_THREAD_ID, 0);
+			}
 		}
 
 		//获取个人信息
@@ -511,10 +541,49 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	}
 	
 	@Override
+	protected void onNewIntent(Intent intent) {
+		/*
+    	 * 主要原因是该activity的android:launchMode="singleTask"
+    	 * 所以第一次会或得到intent里的数据，但第二次或者以后就获取不到了，所以需要获取原来intent中的数据并且重新设置
+    	 */
+		super.onNewIntent(intent);
+		setIntent(intent);
+		
+		initData();
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		//清除聊天消息的通知栏
+		clearChatNotify();
+	}
+	
+	/**
+	 * 清除聊天消息的通知栏
+	 * @update 2015年3月3日 下午2:03:47
+	 */
+	private void clearChatNotify() {
+		if (coreService != null) {
+			coreService.clearNotify(CoreService.NOTIFY_ID_CHAT_MSG);
+		}
+	}
+	
+	@Override
+	public void onBackPressed() {
+		if (isEmojiShow || editMode == MODE_ATTACH) {	//表情面板处于显示状态或者附件面板处于显示状态，则先隐藏，变为默认的编辑模式
+			hideBottomLayout(true);
+		} else {
+			super.onBackPressed();
+		}
+	}
+	
+	@Override
 	protected void onDestroy() {
 		//TODO 添加接触服务绑定
 		unbindService(serviceConnection);
 		unregisterReceiver(msgProcessReceiver);
+//		pageOffset = 0;
 		super.onDestroy();
 	}
 	
@@ -570,16 +639,28 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				mt = msgManager.getThreadByMember(otherSide);
 				if (mt != null) {	//有该会话，才查询该会话下的消息
 					msgThread = mt;
-					list = msgManager.getMsgInfosByThreadId(mt.getId(), getPageOffset());
+					mThreadId = mt.getId();
+					list = msgManager.getMsgInfosByThreadId(mThreadId, getPageOffset());
+					mMsgTotalCount = msgManager.getMsgCountByThreadId(mThreadId);
+					
 				} else {	//没有改会话，就创建一个
 					mt = new MsgThread();
 					mt.setMembers(Arrays.asList(otherSide));
 					mt.setMsgThreadName(otherSide.getName());
 					msgThread = msgManager.createMsgThread(mt);
+					mMsgTotalCount = 0;
 				}
 			} else if (msgThread != null) {	//已经有会话了
-				list = msgManager.getMsgInfosByThreadId(msgThread.getId(), getPageOffset());
-				msgThread = msgManager.getThreadById(msgThread.getId());
+				mThreadId = msgThread.getId();
+				list = msgManager.getMsgInfosByThreadId(mThreadId, getPageOffset());
+				mMsgTotalCount = msgManager.getMsgCountByThreadId(mThreadId);
+				msgThread = msgManager.getThreadById(mThreadId);
+				//TODO 目前固定写死，有、后期会改有群聊的模式
+				otherSide = msgThread.getMembers().get(0);
+			} else if (mThreadId > 0) {	//有会话id，可能是从通知栏进入的
+				list = msgManager.getMsgInfosByThreadId(mThreadId, getPageOffset());
+				mMsgTotalCount = msgManager.getMsgCountByThreadId(mThreadId);
+				msgThread = msgManager.getThreadById(mThreadId);
 				//TODO 目前固定写死，有、后期会改有群聊的模式
 				otherSide = msgThread.getMembers().get(0);
 			}
@@ -594,7 +675,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			if (!SystemUtil.isEmpty(result)) {
 				mMsgInfos.clear();
 				mMsgInfos.addAll(result);
-				setPageOffset(result);
 				msgAdapter.notifyDataSetChanged();
 				if (needScroll) {
 					scrollMyListViewToBottom(lvMsgs);
@@ -604,7 +684,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	}
 	
 	/**
-	 * 加载更多消息记录的后台任务
+	 * 加载更多消息记录的后台任务,第一个参数是threadId,第二个参数是开始查询的索引位置:offset，从0开始
 	 * @author huanghui1
 	 * @update 2014年10月31日 下午3:16:09
 	 */
@@ -616,16 +696,21 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			if (params != null && params.length == 2) {
 				int msgThreadId = params[0];
 				int offset = params[1];	//开始查询的索引
-				list = msgManager.getMsgInfosByThreadId(msgThreadId, offset);
+				if (msgThreadId > 0) {
+					list = msgManager.getMsgInfosByThreadId(msgThreadId, offset);
+				}
 			}
 			return list;
 		}
 		
 		@Override
 		protected void onPostExecute(List<MsgInfo> result) {
+			mLoadFinish = true;
+			if (headView != null) {
+				lvMsgs.removeHeaderView(headView);
+			}
 			if (!SystemUtil.isEmpty(result)) {	//有数据
-				mMsgInfos.addAll(result);
-				setPageOffset(mMsgInfos);
+				mMsgInfos.addAll(0, result);
 				msgAdapter.notifyDataSetChanged();
 			}
 		}
@@ -637,17 +722,11 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * @return
 	 */
 	private int getPageOffset() {
-		return pageOffset * Constants.PAGE_SIZE_MSG;
-	}
-	
-	/**
-	 * 根据当前已经加载过的列表来设置新的开始查询索引
-	 * @update 2014年10月31日 下午3:10:59
-	 * @param list
-	 */
-	private void setPageOffset(List<MsgInfo> list) {
-		if (list != null && list.size() > 0) {
-			pageOffset = list.size() - 1;
+		int size = mMsgInfos.size();
+		if (size > 0) {
+			return size - 1;
+		} else {
+			return 0;
 		}
 	}
 	
@@ -835,12 +914,48 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				return false;
 			}
 		});
+		lvMsgs.setOnScrollListener(new AbsListView.OnScrollListener() {
+			
+			@Override
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				boolean canLoadMore = scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE;
+				Log.d("---------mMsgInfos.size()-------" + mMsgInfos.size() + ",--------mMsgTotalCount-----" + mMsgTotalCount);
+				if (canLoadMore && mFirstVisiableItem == 0 && mLoadFinish && (mMsgInfos.size() < mMsgTotalCount)) {
+					//加载跟多数据
+					mLoadFinish = false;
+					if (headView == null) {
+						headView = LayoutInflater.from(mContext).inflate(R.layout.layout_head_loading, null);
+					}
+					lvMsgs.addHeaderView(headView);
+					new LoadMoreDataTask().execute(mThreadId, getPageOffset());
+				}
+				Log.d("----scrollState---------------SCROLL_STATE_TOUCH_SCROLL------------------" + (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL));
+				Log.d("----scrollState---------------SCROLL_STATE_IDLE------------------" + (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE));
+				Log.d("----scrollState---------------SCROLL_STATE_FLING------------------" + (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING));
+			}
+			
+			@Override
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+				mFirstVisiableItem = firstVisibleItem;
+				Log.d("-------onScroll------firstVisibleItem----" + firstVisibleItem);
+//				if (mCanLoadMore && firstVisibleItem == 0 && mLoadFinish && (getPageOffset() + 1) < mMsgTotalCount) {
+//					//加载跟多数据
+//					mLoadFinish = false;
+//					if (headView == null) {
+//						headView = LayoutInflater.from(mContext).inflate(R.layout.layout_head_loading, null);
+//					}
+//					lvMsgs.addHeaderView(headView);
+//					new LoadMoreDataTask().execute(mThreadId, getPageOffset());
+//				}
+			}
+		});
 		etContent.setOnTouchListener(new View.OnTouchListener() {
 			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				switch (event.getAction()) {
-				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_UP:
 					//文本框获取焦点，显示软键盘
 					showKeybroad();
 					//隐藏底部所有的面板
@@ -983,6 +1098,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 							
 							mMsgInfos.add(msgInfo);
 							
+							addMsgTotalCount();
+							
 							msgAdapter.notifyDataSetChanged();
 
 							sendMsg(msgInfo);
@@ -1055,6 +1172,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 						hideAttachLayout();
 						setEditMode();
 						mMsgInfos.addAll(msgList);
+						addMsgTotalCount(msgList.size());
 						msgAdapter.notifyDataSetChanged();
 						scrollMyListViewToBottom(lvMsgs);
 						SystemUtil.getCachedThreadPool().execute(new Runnable() {
@@ -1079,6 +1197,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 						hideAttachLayout();
 						setEditMode();
 						mMsgInfos.add(mi);
+						addMsgTotalCount();
 						msgAdapter.notifyDataSetChanged();
 						scrollMyListViewToBottom(lvMsgs);
 						SystemUtil.getCachedThreadPool().execute(new Runnable() {
@@ -1348,14 +1467,16 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	 * @param listView
 	 */
 	private void scrollMyListViewToBottom(final ListView listView) {
-		listView.post(new Runnable() {
-	        @Override
-	        public void run() {
-	            // Select the last row so it will scroll into view...
-	        	listView.setSelection(listView.getCount() - 1);
+		if (listView != null) {
+			listView.post(new Runnable() {
+				@Override
+				public void run() {
+					// Select the last row so it will scroll into view...
+					listView.setSelection(listView.getCount() - 1);
 //	        	listView.smoothScrollToPosition(0);
-	        }
-	    });
+				}
+			});
+		}
 	}
 
 	/**
@@ -1468,6 +1589,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				sendMsg(msg);
 				
 				mMsgInfos.add(msg);
+				addMsgTotalCount();
 			}
 			
 			msgAdapter.notifyDataSetChanged();
@@ -1688,14 +1810,15 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				holder.ivHeadIcon = (ImageView) convertView.findViewById(R.id.iv_head_icon);
 				holder.ivMsgState = (ImageView) convertView.findViewById(R.id.iv_msg_state);
 				holder.tvContent = (TextView) convertView.findViewById(R.id.tv_content);
+				holder.ivContentImg = (ImageView) convertView.findViewById(R.id.iv_content_img);
 				holder.tvContentDesc = (TextView) convertView.findViewById(R.id.tv_content_desc);
+				holder.contentImgLayout = (FrameLayout) convertView.findViewById(R.id.content_img_layout);
+				holder.contentLayout = convertView.findViewById(R.id.content_layout);
 				
 				convertView.setTag(holder);
 			} else {
 				holder = (MsgViewHolder) convertView.getTag();
 			}
-			
-			holder.tvContent.setOnClickListener(new MsgItemClickListener(type, msgInfo, position));
 			
 			if (maxConentWidth == 0) {
 				//获取头像的宽度
@@ -1705,21 +1828,31 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				int stateMargin = DensityUtil.dip2px(context, getResources().getDimension(R.dimen.chat_msg_item_send_state_margin_left_right));
 				maxConentWidth = screenSize[0] - 2 * (iconWith + textMargin) - stateWidth - stateMargin;
 			}
-			holder.tvContent.setMaxWidth(maxConentWidth);
-			int paddingLeft = 0;
-			int paddingRight = 0;
-			int extraPad = 1;
-			Resources resources = getResources();
-			int paddingVertical = resources.getDimensionPixelSize(R.dimen.chat_msg_item_content_padding_top_bottom);
-			if (type == TYPE_IN) {	//接收的消息
-				paddingLeft = resources.getDimensionPixelSize(R.dimen.chat_msg_item_in_content_padding_left);
-				paddingRight = resources.getDimensionPixelSize(R.dimen.chat_msg_item_in_content_padding_right);
-			} else {
-				paddingLeft = resources.getDimensionPixelSize(R.dimen.chat_msg_item_out_content_padding_left);
-				paddingRight = resources.getDimensionPixelSize(R.dimen.chat_msg_item_out_content_padding_right);
-			}
 			
-			holder.tvContent.setPadding(paddingLeft, paddingVertical, paddingRight, paddingVertical);
+			holder.tvContent.setVisibility(View.VISIBLE);
+			holder.ivContentImg.setVisibility(View.GONE);
+			holder.tvContentDesc.setVisibility(View.GONE);
+			
+			holder.tvContent.setMaxWidth(maxConentWidth);
+			holder.ivContentImg.setMaxWidth(getResources().getDimensionPixelSize(R.dimen.chat_msg_img_max_width));
+			holder.ivContentImg.setMaxHeight(getResources().getDimensionPixelSize(R.dimen.chat_msg_img_max_height));
+			
+			holder.contentImgLayout.setForeground(null);
+			
+//			int paddingLeft = 0;
+//			int paddingRight = 0;
+//			int extraPad = 1;
+			Resources resources = getResources();
+//			int paddingVertical = resources.getDimensionPixelSize(R.dimen.chat_msg_item_content_padding_top_bottom);
+//			if (type == TYPE_IN) {	//接收的消息
+//				paddingLeft = resources.getDimensionPixelSize(R.dimen.chat_msg_item_in_content_padding_left);
+//				paddingRight = resources.getDimensionPixelSize(R.dimen.chat_msg_item_in_content_padding_right);
+//			} else {
+//				paddingLeft = resources.getDimensionPixelSize(R.dimen.chat_msg_item_out_content_padding_left);
+//				paddingRight = resources.getDimensionPixelSize(R.dimen.chat_msg_item_out_content_padding_right);
+//			}
+			
+//			holder.tvContent.setPadding(paddingLeft, paddingVertical, paddingRight, paddingVertical);
 			long curDate = msgInfo.getCreationDate();
 			if (position == 0) {	//第一条记录，一定显示时间
 				holder.tvMsgTime.setVisibility(View.VISIBLE);
@@ -1735,7 +1868,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					holder.tvMsgTime.setVisibility(View.GONE);
 				}
 			}
-			holder.tvContentDesc.setVisibility(View.GONE);
+			holder.tvContent.setText("");
 			holder.tvContent.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 			MsgInfo.Type msgType = msgInfo.getMsgType();
 			MsgPart msgPart = msgInfo.getMsgPart();
@@ -1747,19 +1880,27 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				holder.tvContent.setText(spannableString);
 				break;
 			case IMAGE:	//图片消息
-				holder.tvContent.setText("");
-				int extraSpace = Math.abs(paddingLeft - paddingRight) + 3 * extraPad; 
-				if (type == TYPE_IN) {	//接收的消息
-					holder.tvContent.setPadding(extraSpace, extraPad, extraPad, extraPad);
+//				int extraSpace = Math.abs(paddingLeft - paddingRight) + 3 * extraPad; 
+//				if (type == TYPE_IN) {	//接收的消息
+//					holder.tvContent.setPadding(extraSpace, extraPad, extraPad, extraPad);
+//				} else {
+//					holder.tvContent.setPadding(extraPad, extraPad, extraSpace, extraPad);
+//				}
+				holder.tvContent.setVisibility(View.GONE);
+				holder.ivContentImg.setVisibility(View.VISIBLE);
+				if (type == TYPE_OUT) {	//自己发出去的消息
+					holder.contentImgLayout.setForeground(getResources().getDrawable(R.drawable.chat_msg_out_img_selector));
 				} else {
-					holder.tvContent.setPadding(extraPad, extraPad, extraSpace, extraPad);
+					holder.contentImgLayout.setForeground(getResources().getDrawable(R.drawable.chat_msg_in_img_selector));
 				}
 				if (msgPart != null) {
 					String filePath = msgPart.getFilePath();
 					if (SystemUtil.isFileExists(filePath)) {
-						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent), chatImageOptions);
+//						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent), chatImageOptions);
+						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), holder.ivContentImg, chatImageOptions);
 					} else {
-						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent), chatImageOptions);
+//						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent), chatImageOptions);
+						mImageLoader.displayImage(null, holder.ivContentImg, chatImageOptions);
 					}
 				}
 				
@@ -1767,7 +1908,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 			case VOICE:	//语音文件
 				//TODO 等待解决
 				Drawable drawable = null;
-				holder.tvContent.setText("");
 				holder.tvContent.setCompoundDrawablePadding(10);
 				if (type == TYPE_OUT) {	//自己发出去的消息
 					drawable = getResources().getDrawable(R.drawable.chat_voice_out);
@@ -1821,21 +1961,35 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				}
 				break;
 			case LOCATION:	//地理位置
-				holder.tvContent.setText("");
-				int locationXxtraSpace = Math.abs(paddingLeft - paddingRight) + 3 * extraPad; 
-				if (type == TYPE_IN) {	//接收的消息
-					holder.tvContent.setPadding(locationXxtraSpace, extraPad, extraPad, extraPad);
+//				holder.tvContent.setText("");
+//				int locationXxtraSpace = Math.abs(paddingLeft - paddingRight) + 3 * extraPad; 
+//				if (type == TYPE_IN) {	//接收的消息
+//					holder.tvContent.setPadding(locationXxtraSpace, extraPad, extraPad, extraPad);
+//				} else {
+//					holder.tvContent.setPadding(extraPad, extraPad, locationXxtraSpace, extraPad);
+//				}
+				holder.tvContent.setVisibility(View.GONE);
+				holder.ivContentImg.setVisibility(View.VISIBLE);
+				holder.tvContentDesc.setVisibility(View.VISIBLE);
+				
+				holder.ivContentImg.setMaxWidth(Constants.IMAGE_LOCATION_THUMB_WIDTH);
+				holder.ivContentImg.setMaxHeight(Constants.IMAGE_LOCATION_THUMB_HEIGHT);
+				
+				if (type == TYPE_OUT) {	//自己发出去的消息
+					holder.contentImgLayout.setForeground(getResources().getDrawable(R.drawable.chat_msg_out_img_selector));
 				} else {
-					holder.tvContent.setPadding(extraPad, extraPad, locationXxtraSpace, extraPad);
+					holder.contentImgLayout.setForeground(getResources().getDrawable(R.drawable.chat_msg_in_img_selector));
 				}
+				
 				if (msgPart != null) {
-					holder.tvContentDesc.setVisibility(View.VISIBLE);
 					String filePath = msgPart.getFilePath();
-					ImageSize imageSize = new ImageSize(Constants.IMAGE_LOCATION_THUMB_WIDTH, Constants.IMAGE_LOCATION_THUMB_HEIGHT);
+//					ImageSize imageSize = new ImageSize(Constants.IMAGE_LOCATION_THUMB_WIDTH, Constants.IMAGE_LOCATION_THUMB_HEIGHT);
 					if (SystemUtil.isFileExists(filePath)) {
-						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent, imageSize), chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
+//						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), new TextViewAware(holder.tvContent, imageSize), chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
+						mImageLoader.displayImage(Scheme.FILE.wrap(filePath), holder.ivContentImg, chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
 					} else {
-						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent, imageSize), chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
+//						mImageLoader.displayImage(null, new TextViewAware(holder.tvContent, imageSize), chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
+						mImageLoader.displayImage(null, holder.ivContentImg, chatImageOptions, new MyImageLoaderListener(holder.tvContentDesc, type, msgInfo));
 					}
 				}
 				break;
@@ -1896,7 +2050,11 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 					msgInfo = msgManager.updateMsgInfo(msgInfo);
 				}
 			}
-			holder.tvContent.setOnLongClickListener(new MyLongClickListener(type, msgInfo));
+
+			holder.contentLayout.setOnClickListener(new MsgItemClickListener(type, msgInfo, position));
+			
+//			holder.tvContent.setOnTouchListener(new MyMsgItemTouchListener(msgInfo));
+			holder.contentLayout.setOnLongClickListener(new MyMsgItemLongClickListener(type, msgInfo));
 			holder.ivHeadIcon.setOnClickListener(new View.OnClickListener() {
 				
 				@Override
@@ -1932,11 +2090,83 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 	}
 	
 	/**
+	 * 控件的touch事件监听器
+	 * @author huanghui1
+	 * @update 2015年3月4日 下午6:11:49
+	 */
+	class MyMsgItemTouchListener implements OnTouchListener {
+		/**
+		 * 消息对象
+		 */
+		private MsgInfo msgInfo;
+		
+		private final int DOUBLE_TAP_TIMEOUT = 200;
+		private final int LONG_CLICK_TIMEOUT = 1000;
+		private MotionEvent mCurrentDownEvent;  
+		private MotionEvent mPreviousUpEvent; 
+		private long firstDownTime = 0;
+
+		public MyMsgItemTouchListener(MsgInfo msgInfo) {
+			super();
+			this.msgInfo = msgInfo;
+		}
+
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				v.setPressed(true);
+			} else if (event.getAction() == MotionEvent.ACTION_UP) {
+				v.setPressed(false);
+			}
+			if (msgInfo.getMsgType() == Type.TEXT) {	//文本消息
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {  //双击
+					firstDownTime = System.currentTimeMillis();
+		            if (mPreviousUpEvent != null  
+		                    && mCurrentDownEvent != null  
+		                    && isConsideredDoubleTap(mCurrentDownEvent,  
+		                            mPreviousUpEvent, event)) {
+		            	Intent intent = new Intent(mContext, MsgShowActivity.class);
+		            	intent.putExtra(MsgShowActivity.ARG_MSG_CONTENT, msgInfo.getContent());
+		            	ActivityOptionsCompat options = ActivityOptionsCompat.makeScaleUpAnimation(v, 0, 0, v.getWidth(), v.getHeight());
+						ActivityCompat.startActivity(ChatActivity.this, intent, options.toBundle());
+		            } else if (isLongClick(firstDownTime)) {
+		            	v.performLongClick();
+		            	return true;
+		            }
+		            mCurrentDownEvent = MotionEvent.obtain(event);  
+//		            event.recycle();
+		        } else if (event.getAction() == MotionEvent.ACTION_UP) {  
+		            mPreviousUpEvent = MotionEvent.obtain(event);
+//		            event.recycle();
+		        }
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		private boolean isConsideredDoubleTap(MotionEvent firstDown,  
+		        MotionEvent firstUp, MotionEvent secondDown) {  
+		    if (secondDown.getEventTime() - firstUp.getEventTime() > DOUBLE_TAP_TIMEOUT) {  
+		        return false;  
+		    }  
+		    int deltaX = (int) firstUp.getX() - (int) secondDown.getX();  
+		    int deltaY = (int) firstUp.getY() - (int) secondDown.getY();  
+		    return deltaX * deltaX + deltaY * deltaY < 10000;  
+		}
+		
+		private boolean isLongClick(long previousTime) {
+			return System.currentTimeMillis() - previousTime >= LONG_CLICK_TIMEOUT;
+		}
+		
+	}
+	
+	/**
 	 * 控件长按事件
 	 * @author huanghui1
 	 * @update 2015年2月15日 下午8:26:47
 	 */
-	class MyLongClickListener implements OnLongClickListener {
+	class MyMsgItemLongClickListener implements OnLongClickListener {
 		/**
 		 * 消息的类型，分为接收的消息和发送的消息
 		 */
@@ -1946,7 +2176,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		 */
 		private MsgInfo msgInfo;
 
-		public MyLongClickListener(int itemType, MsgInfo msgInfo) {
+		public MyMsgItemLongClickListener(int itemType, MsgInfo msgInfo) {
 			super();
 			this.itemType = itemType;
 			this.msgInfo = msgInfo;
@@ -1995,6 +2225,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 								public void run() {
 									if (msgManager.deleteMsgInfoById(msgInfo, msgThread)) {
 										mMsgInfos.remove(msgInfo);
+										minusMsgTotalCount();
 										pDialog.dismiss();
 										mHandler.sendEmptyMessage(Constants.MSG_SUCCESS);
 									} else {
@@ -2091,7 +2322,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		public void onLoadingFailed(String imageUri, View view,
 				FailReason failReason) {
 			// TODO Auto-generated method stub
-			
+			((ImageView) view).setImageResource(R.drawable.chat_msg_default_location); 
 		}
 
 		@Override
@@ -2144,21 +2375,74 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		@Override
 		public void onClick(View v) {
 			MsgInfo.Type msgType = msgInfo.getMsgType();
-			switch (msgType) {
-			case VOICE:	//语音类型的消息
+			Intent intent = null;
+			if (msgType == Type.TEXT) {	//文本消息
+				intent = new Intent(mContext, MsgShowActivity.class);
+            	intent.putExtra(MsgShowActivity.ARG_MSG_CONTENT, msgInfo.getContent());
+            	ActivityOptionsCompat options = ActivityOptionsCompat.makeScaleUpAnimation(v, 0, 0, v.getWidth(), v.getHeight());
+				ActivityCompat.startActivity(ChatActivity.this, intent, options.toBundle());
+			} else {
 				MsgPart msgPart = msgInfo.getMsgPart();
 				if (msgPart != null) {
 					String filePath = msgPart.getFilePath();
-					if (SystemUtil.isFileExists(filePath)) {
-						playVoice(filePath, position, itemType, v);
+					File file = new File(filePath);
+					if (msgType == Type.LOCATION) {	//地理位置的文件，不需要判断文件是否存在
+						String subject = msgInfo.getSubject();
+						if (!TextUtils.isEmpty(subject)) {
+							String[] array = subject.split(Constants.SPLITE_TAG_LOCATION); 
+							//查看地理位置
+							//纬度
+							double latitude = 0.00;
+							//经度
+							double longitude = 0.00;
+							try {
+								latitude = Double.parseDouble(array[0]);
+								longitude = Double.parseDouble(array[1]);
+							} catch (NumberFormatException e) {
+								e.printStackTrace();
+							}
+							intent = new Intent(mContext, LocationShowActivity.class);
+							intent.putExtra(LocationShowActivity.ARG_LATITUDE, latitude);
+							intent.putExtra(LocationShowActivity.ARG_LONGITUDE, longitude);
+							intent.putExtra(LocationShowActivity.ARG_LOCATION_INFO, msgInfo.getContent());
+							ActivityOptionsCompat options = ActivityOptionsCompat.makeScaleUpAnimation(v, 0, 0, v.getWidth(), v.getHeight());
+							ActivityCompat.startActivity(ChatActivity.this, intent, options.toBundle());
+						} else {
+							SystemUtil.makeShortToast(R.string.location_info_error);
+						}
 					} else {
-						SystemUtil.makeShortToast(R.string.file_not_exists);
+						if (SystemUtil.isFileExists(file)) {
+							switch (msgType) {
+							case IMAGE:	//打开图片
+								intent = new Intent(mContext, ChatImagePreviewActivity.class);
+								intent.putExtra(ChatImagePreviewActivity.ARG_IMAGE_PATH, filePath);
+								intent.putExtra(PhotoFragment.ARG_TOUCH_FINISH, true);
+								ActivityOptionsCompat options = ActivityOptionsCompat.makeScaleUpAnimation(v, 0, 0, v.getWidth(), v.getHeight());
+								ActivityCompat.startActivity(ChatActivity.this, intent, options.toBundle());
+								break;
+							case VOICE:	//语音类型的消息
+								playVoice(filePath, position, itemType, v);
+								break;
+							case AUDIO:	//音频文件，则调用系统或者第三方应用打开
+								intent = MimeUtils.getAudioFileIntent(file);
+								startActivity(intent);
+								break;
+							case VIDEO:	//视频
+								intent = MimeUtils.getVideoFileIntent(file);
+								startActivity(intent);
+								break;
+							case FILE:	//其他文件
+								intent = MimeUtils.getFileIntent(file, msgPart.getMimeTye());
+								startActivity(intent);
+								break;
+							default:
+								break;
+							}
+						} else {
+							SystemUtil.makeShortToast(R.string.file_not_exists);
+						}
 					}
 				}
-				break;
-
-			default:
-				break;
 			}
 		}
 		
@@ -2321,8 +2605,47 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 		RelativeLayout layoutBody;
 		ImageView ivHeadIcon;
 		TextView tvContent;
+		ImageView ivContentImg;
 		TextView tvContentDesc;
 		ImageView ivMsgState;
+		FrameLayout contentImgLayout;
+		View contentLayout;
+	}
+	
+	/**
+	 * 添加消息的总量
+	 * @update 2015年3月6日 下午5:19:20
+	 */
+	private synchronized void addMsgTotalCount() {
+		mMsgTotalCount += 1;
+	}
+	
+	/**
+	 * 添加置顶数量的消息数量
+	 * @update 2015年3月6日 下午5:32:48
+	 * @param count
+	 */
+	public synchronized void addMsgTotalCount(int count) {
+		mMsgTotalCount += count;
+	}
+	
+	/**
+	 * 减少消息的总量
+	 * @update 2015年3月6日 下午5:24:35
+	 */
+	private synchronized void minusMsgTotalCount() {
+		mMsgTotalCount -= 1;
+		mMsgTotalCount = mMsgTotalCount < 0 ? 0 : mMsgTotalCount;
+	}
+	
+	/**
+	 * 减少置顶数量的消息数量
+	 * @update 2015年3月6日 下午5:33:16
+	 * @param count
+	 */
+	private synchronized void minusMsgTotalCount(int count) {
+		mMsgTotalCount -= count;
+		mMsgTotalCount = mMsgTotalCount < 0 ? 0 : mMsgTotalCount;
 	}
 	
 	/**
@@ -2342,6 +2665,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				MsgInfo msgInfo = intent.getParcelableExtra(ARG_MSG_INFO);
 				if (msgInfo != null) {
 					mMsgInfos.add(msgInfo);
+					addMsgTotalCount();
 					msgAdapter.notifyDataSetChanged();
 				}
 				break;
@@ -2376,6 +2700,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 				if (msgInfo != null) {
 					if (!mMsgInfos.contains(msgInfo)) {
 						mMsgInfos.add(msgInfo);
+						addMsgTotalCount();
 					}
 					msgAdapter.notifyDataSetChanged();
 					if (etContent.hasFocus() && !lvMsgs.hasFocus()) {	//有焦点就滚动到最后一条记录
@@ -2389,7 +2714,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener/*, OnI
 
 		@Override
 		public void onChange(boolean selfChange) {
-			pageOffset = 0;
 			new LoadDataTask(false).execute();
 		}
 		

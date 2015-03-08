@@ -101,8 +101,8 @@ public class Provider {
 		public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY_MSG + "/msgInfos");
 		
 		public static final String TABLE_NAME = "t_msg_info";
-        public static final String DEFAULT_SORT_ORDER = "creationDate ASC";	//默认按时间升序，后面的消息后查出来
-        public static final String REVERSAL_SORT_ORDER = "creationDate DESC";	//按时间降序，后面的消息先查出来
+        public static final String DEFAULT_SORT_ORDER = "creationDate DESC";	//按时间降序，后面的消息先查出来
+        public static final String REVERSAL_SORT_ORDER = "creationDate ASC";	//默认按时间升序，后面的消息后查出来
         
         public static final String THREAD_ID = "threadID";
         public static final String FROM_USER = "fromUser";

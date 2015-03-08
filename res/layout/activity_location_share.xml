@@ -16,16 +16,11 @@
 	        android:layout_height="match_parent"/>
 	    <ImageButton 
 	        android:id="@+id/btn_my_location"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:src="@drawable/main_icon_location"
-	        android:background="@drawable/my_location_btn_selector"
-	        android:padding="@dimen/location_my_btn_padding"
+	        style="@style/MyLocationBtnStyle"
 	        android:layout_alignParentTop="true"
 	        android:layout_alignParentRight="true"
 	        android:layout_alignParentEnd="true"
-	        android:contentDescription="@null"
-	        android:layout_margin="@dimen/location_my_btn_margin"/>
+	        android:contentDescription="@null"/>
     </RelativeLayout>
     
     <FrameLayout 

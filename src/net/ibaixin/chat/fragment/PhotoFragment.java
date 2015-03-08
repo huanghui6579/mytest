@@ -5,12 +5,13 @@ import net.ibaixin.chat.model.PhotoItem;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.view.ProgressWheel;
 import uk.co.senab.photoview.PhotoView;
+import uk.co.senab.photoview.PhotoViewAttacher;
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -26,10 +27,18 @@ import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
  */
 public class PhotoFragment extends BaseFragment {
 	public static final String ARG_PHOTO = "arg_photo";
+	public static final String ARG_TOUCH_FINISH = "arg_touch_finish";
 	
 	private PhotoView ivPhoto;
 	private ProgressWheel pbLoading;
 	private PhotoItem mPhoto;
+	
+	private FinishCallBackListener mFinishCallBackListener;
+	
+	/**
+	 * 是否点击屏幕就退出该界面
+	 */
+	private boolean mOnTouchFinish = false;
 	
 	private ImageLoader mImageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options = SystemUtil.getPhotoPreviewOptions();
@@ -45,9 +54,38 @@ public class PhotoFragment extends BaseFragment {
 	}
 	
 	@Override
+	public void onAttach(Activity activity) {
+		if (activity instanceof FinishCallBackListener) {
+			mFinishCallBackListener = (FinishCallBackListener) activity;
+		}
+		super.onAttach(activity);
+	}
+	
+	@Override
+	public void onDetach() {
+		if (mFinishCallBackListener != null) {
+			mFinishCallBackListener = null;
+		}
+		super.onDetach();
+	}
+	
+	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		mPhoto = getArguments().getParcelable(ARG_PHOTO);
+		Bundle args = getArguments();
+		if (args != null) {
+			mPhoto = args.getParcelable(ARG_PHOTO);
+			mOnTouchFinish = args.getBoolean(ARG_TOUCH_FINISH, false);
+		}
+		ivPhoto.setOnViewTapListener(new PhotoViewAttacher.OnViewTapListener() {
+			
+			@Override
+			public void onViewTap(View view, float x, float y) {
+				if (mOnTouchFinish && mFinishCallBackListener != null) {
+					mFinishCallBackListener.onFinish();
+				}
+			}
+		});
 		
 		if (mPhoto != null) {
 			String filePath = mPhoto.getFilePath();
@@ -87,5 +125,18 @@ public class PhotoFragment extends BaseFragment {
 		} else {
 			ivPhoto.setImageResource(R.drawable.ic_default_icon_error);
 		}
+	}
+	
+	/**
+	 * 该activity消失的回调事件
+	 * @author huanghui1
+	 * @update 2015年3月4日 下午3:15:34
+	 */
+	public interface FinishCallBackListener {
+		/**
+		 * 该activity消失
+		 * @update 2015年3月4日 下午3:16:22
+		 */
+		public void onFinish();
 	}
 }

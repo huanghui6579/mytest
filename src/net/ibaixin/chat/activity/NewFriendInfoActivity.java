@@ -7,6 +7,7 @@ import java.util.List;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import net.ibaixin.chat.loader.NewFriendInfoLoader;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.NewFriendInfo;
 import net.ibaixin.chat.model.NewFriendInfo.FriendStatus;
 import net.ibaixin.chat.model.User;
@@ -18,7 +19,6 @@ import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
 import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException.NotConnectedException;

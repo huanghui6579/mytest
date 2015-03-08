@@ -5,13 +5,13 @@ import java.util.List;
 
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.User;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
 import net.ibaixin.chat.view.ProgressDialog;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 
@@ -179,11 +179,18 @@ public class AddFriendActivity extends BaseActivity {
 		
 		@Override
 		protected void onPostExecute(List<User> result) {
+			users.clear();
+			if (SystemUtil.isNotEmpty(result)) {
+				users.addAll(result);
+			}
 			if(adapter == null) {
 				adapter = new FriendResultAdapter(users, mContext);
 				lvResult.setAdapter(adapter);
 				lvResult.setEmptyView(emptyView);
 			} else {
+				if (lvResult.getEmptyView() == null) {
+					lvResult.setEmptyView(emptyView);
+				}
 				adapter.notifyDataSetChanged();
 			}
 			hideLoadingDialog(pDialog);

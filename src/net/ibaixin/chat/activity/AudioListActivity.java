@@ -6,11 +6,11 @@ import java.util.Locale;
 
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.loader.AudioLoader;
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.AudioItem;
 import net.ibaixin.chat.model.MsgInfo;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.view.ProgressWheel;
-import net.ibaixin.manage.MsgManager;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;

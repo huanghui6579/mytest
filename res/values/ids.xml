@@ -6,4 +6,5 @@
     <item type="id" name="toolbar" />
     <item type="id" name="view_pager" />
     <item type="id" name="empty_view" />
+    <item type="id" name="main_container" />
 </resources>

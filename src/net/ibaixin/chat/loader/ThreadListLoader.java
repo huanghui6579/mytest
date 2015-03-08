@@ -2,8 +2,8 @@ package net.ibaixin.chat.loader;
 
 import java.util.List;
 
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.MsgThread;
-import net.ibaixin.manage.MsgManager;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 

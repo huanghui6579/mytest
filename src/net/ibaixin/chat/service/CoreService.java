@@ -13,6 +13,8 @@ import net.ibaixin.chat.activity.ChatActivity;
 import net.ibaixin.chat.activity.MainActivity;
 import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
 import net.ibaixin.chat.listener.ChatRostListener;
+import net.ibaixin.chat.manage.MsgManager;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.MsgInfo;
 import net.ibaixin.chat.model.MsgInfo.SendState;
 import net.ibaixin.chat.model.MsgPart;
@@ -26,8 +28,6 @@ import net.ibaixin.chat.util.MimeUtils;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
-import net.ibaixin.manage.MsgManager;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;
@@ -66,7 +66,6 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.text.TextUtils;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -106,7 +105,7 @@ public class CoreService extends Service {
 	private static RosterListener mRosterListener;
 	private static FileTransferListener mFileTransferListener;
 	private static ChatManagerListener mChatManagerListener;
-	private static ChatMessageListener mChatMessageListener;
+	private static MyChatMessageListener mChatMessageListener;
 	private static ChatManager mChatManager;
 	private static OfflineMessageManager mOfflineMessageManager;
 	private static FileTransferManager mFileTransferManager;
@@ -148,12 +147,17 @@ public class CoreService extends Service {
 				String contentTitle = null;
 				String contentText = null;
 				int msgCount = msg.arg1;
+				Intent resultIntent = new Intent(mContext, ChatActivity.class);
 				if (msgInfo != null) {
+					resultIntent.putExtra(ChatActivity.ARG_THREAD_ID, msgInfo.getThreadID());
 					contentTitle = msgInfo.getFromUser();
 					contentText = msgInfo.getContent();
 				} else {
 					contentTitle = getString(R.string.notification_batch_promtp_title);
 					contentText = getString(R.string.notification_batch_promtp_content, msgCount);
+					resultIntent.setClass(mContext, MainActivity.class);
+					resultIntent.putExtra(MainActivity.ARG_SYNC_FRIENDS, false);
+					resultIntent.putExtra(MainActivity.ARG_INIT_POSITION, true);
 				}
 				// 100 毫秒延迟后，震动 200 毫秒，暂停 100 毫秒后，再震动 300 毫秒
 //				long[] vibrate = {100,200,100,300};
@@ -162,16 +166,16 @@ public class CoreService extends Service {
 				builder.setSmallIcon(R.drawable.ic_launcher)
 						.setAutoCancel(true)
 						.setShowWhen(true)
-						.setLights(0x0000FF, 300, 100)
-						.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
+						.setDefaults(Notification.DEFAULT_ALL)
+						.setAutoCancel(true)
 						.setTicker(getString(R.string.notification_new_msg_title, msgCount))
 						.setContentTitle(contentTitle)
 						.setContentText(contentText);
-				Intent resultIntent = new Intent(mContext, ChatActivity.class);
-				TaskStackBuilder stackBuilder = TaskStackBuilder.create(mContext);
-				stackBuilder.addParentStack(MainActivity.class);
-				stackBuilder.addNextIntent(resultIntent);
-				PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+//				TaskStackBuilder stackBuilder = TaskStackBuilder.create(mContext);
+//				stackBuilder.addParentStack(MainActivity.class);
+//				stackBuilder.addNextIntent(resultIntent);
+				PendingIntent resultPendingIntent = PendingIntent.getActivity(mContext, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 				builder.setContentIntent(resultPendingIntent);
 				if (mNotificationManager == null) {
 					mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);;
@@ -208,9 +212,9 @@ public class CoreService extends Service {
 				mFileTransferManager.addFileTransferListener(mFileTransferListener);
 			}
 			
-//			if (mChatMessageListener == null) {
-//				mChatMessageListener = new MyChatMessageListener();
-//			}
+			if (mChatMessageListener == null) {
+				mChatMessageListener = new MyChatMessageListener();
+			}
 			
 			if (mChatManager == null) {
 				mChatManager = ChatManager.getInstanceFor(connection);
@@ -363,20 +367,35 @@ public class CoreService extends Service {
 					}
 					if (sendFile.exists()) {
 						try {
-							String description = msgPart.getFileName();
+							StringBuilder description = new StringBuilder();
 							if (msgType == MsgInfo.Type.LOCATION) {	//地理位置信息
-								description = msgInfo.getContent();
+								description.append(msgInfo.getContent()).append(Constants.SPLITE_TAG_MSG_TYPE).append(msgInfo.getSubject());
+							} else {
+								description.append(msgPart.getFileName());
 							}
-							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), description);
+							description.append(Constants.SPLITE_TAG_MSG_TYPE).append(msgType.ordinal());
+							fileTransfer.sendStream(new FileInputStream(sendFile), msgPart.getFileName(), sendFile.length(), description.toString());
 //							fileTransfer.sendFile(sendFile, msgPart.getFileName());
 							while (!fileTransfer.isDone()) {	//传输完毕
 //								Log.d("-------------fileTransfer.getStatus()----------------" + fileTransfer.getStatus());
-								if (fileTransfer.getStatus() == FileTransfer.Status.in_progress) {
-									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+//								if (fileTransfer.getStatus() == FileTransfer.Status.error) {
+//									msgInfo.setSendState(SendState.FAILED);
+//									Log.d("----FileTransferManager------" + fileTransfer.getStatus() + "--" + fileTransfer.getProgress());
+//								}
+								switch (fileTransfer.getStatus()) {
+								case complete:
+									msgInfo.setSendState(SendState.SUCCESS);
+									break;
+								case error:
+								case cancelled:
+									msgInfo.setSendState(SendState.FAILED);
+									break;
+								default:
+									break;
 								}
 							}
 							Log.d("-------发送完毕------");
-							msgInfo.setSendState(SendState.SUCCESS);
+//							msgInfo.setSendState(SendState.SUCCESS);
 						} catch (FileNotFoundException e) {
 							msgInfo.setSendState(SendState.FAILED);
 							e.printStackTrace();
@@ -465,7 +484,7 @@ public class CoreService extends Service {
 					intent.putExtra(ChatActivity.ARG_MSG_INFO, msgInfo);
 					sendBroadcast(intent);
 				}
-				if (msgInfo != null && notify) {
+				if (notify && msgInfo != null) {
 					if (!isChatActivityOnTop()) {
 						android.os.Message msg = mHandler.obtainMessage();
 						msg.obj = msgInfo;
@@ -582,19 +601,19 @@ public class CoreService extends Service {
 					if (mOfflineMessageManager != null && mOfflineMessageManager.supportsFlexibleRetrieval()) {
 						int msgCount = mOfflineMessageManager.getMessageCount();
 						if (msgCount > 0) {	//有离线消息
+							if (msgCount > 1) {	//有多条离线消息
+								if (mChatMessageListener != null) {
+									mChatMessageListener.setNotify(false);
+								}
+							}
 							//获取离线消息
 							List<Message> offineMessges = mOfflineMessageManager.getMessages();
-							//初始化消息监听器
-							initMessageListener();
-
+							
 							//保存离线消息
 							if (SystemUtil.isNotEmpty(offineMessges)) {
-								for (Message message : offineMessges) {
-									SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(null, message, false));
-								}
-//								mOfflineMessageManager.deleteMessages();	//上报服务器已获取，需删除服务器备份，不然下次登录会重新获取
+								mOfflineMessageManager.deleteMessages();	//上报服务器已获取，需删除服务器备份，不然下次登录会重新获取
 								
-								if (!isChatActivityOnTop()) {	//聊天界面不在栈顶时才发送通知
+								if (msgCount > 1 && !isChatActivityOnTop()) {	//聊天界面不在栈顶时才发送通知
 									//离线消息处理完毕后再一起通知，避免过频繁的通知
 									android.os.Message msg = mHandler.obtainMessage();
 									msg.arg1 = msgCount;
@@ -609,7 +628,6 @@ public class CoreService extends Service {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
 				try {
 					//上报自己的状态为登录状态
 					Presence presence = new Presence(Presence.Type.available);
@@ -623,6 +641,10 @@ public class CoreService extends Service {
 				}
 				
 			}
+			
+			if (mChatMessageListener != null) {
+				mChatMessageListener.setNotify(true);
+			}
 		}
 		
 	}
@@ -633,6 +655,9 @@ public class CoreService extends Service {
 			synchronized (CoreService.class) {
 				if (mChatMessageListener == null) {
 					mChatMessageListener = new MyChatMessageListener();
+					if (mChatManagerListener != null) {
+						mChatManager.addChatListener(mChatManagerListener);
+					}
 				}
 			}
 		}
@@ -659,10 +684,18 @@ public class CoreService extends Service {
 	 * @update 2014年11月20日 下午8:41:17
 	 */
 	public class MyChatMessageListener implements ChatMessageListener {
+		/**
+		 * 是否通知,默认为true
+		 */
+		private boolean notify = true;
+		
+		public void setNotify(boolean notify) {
+			this.notify = notify;
+		}
 
 		@Override
 		public void processMessage(Chat chat, Message message) {
-			SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message));
+			SystemUtil.getCachedThreadPool().execute(new ProcessMsgTask(chat, message, notify));
 		}
 		
 	}
@@ -709,22 +742,51 @@ public class CoreService extends Service {
 		String fromUser = SystemUtil.unwrapJid(request.getRequestor());
 		MsgInfo msgInfo = new MsgInfo();
 		msgInfo.setComming(true);
-		msgInfo.setContent(request.getDescription());
+		String description = request.getDescription();
+		String desc = description;
+		int type = -1;
+		if (!TextUtils.isEmpty(description)) {
+			int index = description.lastIndexOf(Constants.SPLITE_TAG_MSG_TYPE);
+			if (index != -1) {
+				desc = description.substring(0, index);
+				try {
+					type = Integer.parseInt(description.substring(index + 1));
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		msgInfo.setCreationDate(System.currentTimeMillis());
 		msgInfo.setFromUser(fromUser);
-		
-		//TODO 类型匹配
-		//获得文件的后缀名，不包含".",如mp3
-		String subfix = SystemUtil.getFileSubfix(request.getFileName()).toLowerCase(Locale.getDefault());;
-		//获得文件的mimetype，如image/jpeg
-		String mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
-		mimeType = (mimeType == null) ? request.getMimeType() : mimeType;
-		
-		MsgInfo.Type msgType = SystemUtil.getMsgInfoType(subfix, mimeType);
-		
-		msgInfo.setMsgType(msgType);
+		String mimeType = null;
+		String subJect = null;
+		if (type == MsgInfo.Type.LOCATION.ordinal()) {	//地理位置的消息
+			msgInfo.setMsgType(MsgInfo.Type.LOCATION);
+			mimeType = Constants.MIME_IMAGE;
+			String[] array = desc.split(Constants.SPLITE_TAG_MSG_TYPE);
+			if (SystemUtil.isNotEmpty(array)) {
+				try {
+					desc = array[0];
+					subJect = array[1];
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} else {	//普通的文件
+			//TODO 类型匹配
+			//获得文件的后缀名，不包含".",如mp3
+			String subfix = SystemUtil.getFileSubfix(request.getFileName()).toLowerCase(Locale.getDefault());;
+			//获得文件的mimetype，如image/jpeg
+			mimeType = MimeUtils.guessMimeTypeFromExtension(subfix);
+			mimeType = (mimeType == null) ? request.getMimeType() : mimeType;
+			
+			MsgInfo.Type msgType = SystemUtil.getMsgInfoType(subfix, mimeType);
+			
+			msgInfo.setMsgType(msgType);
+		}
+		msgInfo.setContent(desc);
 		msgInfo.setRead(false);
-		msgInfo.setSubject(null);
+		msgInfo.setSubject(subJect);
 		msgInfo.setSendState(SendState.SUCCESS);
 		msgInfo.setToUser(ChatApplication.getInstance().getCurrentAccount());
 		
@@ -745,6 +807,29 @@ public class CoreService extends Service {
 		msgInfo.setMsgPart(msgPart);
 		
 		return msgInfo;
+	}
+	
+	/**
+	 * 根据通知id清除通知栏
+	 * @update 2015年3月3日 下午2:05:56
+	 * @param nofifyId 通知的id
+	 */
+	public void clearNotify(int nofifyId) {
+		if (mNotificationManager == null) {
+			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);;
+		}
+		mNotificationManager.cancel(nofifyId);
+	}
+	
+	/**
+	 * 清除全部通知
+	 * @update 2015年3月3日 下午2:07:11
+	 */
+	public void clearAllNotify() {
+		if (mNotificationManager == null) {
+			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);;
+		}
+		mNotificationManager.cancelAll();
 	}
 	
 	/**

@@ -8,13 +8,13 @@ import org.jxmpp.util.XmppStringUtils;
 
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
+import net.ibaixin.chat.manage.MsgManager;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.User;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.view.ProgressDialog;
-import net.ibaixin.manage.MsgManager;
-import net.ibaixin.manage.UserManager;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
@@ -115,9 +115,10 @@ public class RemarkEditActivity extends BaseActivity {
 							XMPPConnection connection = XmppConnectionManager.getInstance().getConnection();
 							if (connection != null && connection.isAuthenticated()) {
 								Roster roster = connection.getRoster();
-								String jid  =  mUser.getFullJid() ;
-								if(XmppStringUtils.isFullJID(jid))
-									jid = SystemUtil.unwrapJid2(jid);
+								String jid  =  mUser.getFullJid();
+								if(XmppStringUtils.isFullJID(jid)) {
+									jid = XmppStringUtils.parseBareJid(jid);
+								}
 								RosterEntry rosterEntry = roster.getEntry(jid);
 								try {
 									String nickname = etNickname.getText().toString();

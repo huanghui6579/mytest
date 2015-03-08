@@ -1,4 +1,4 @@
-package net.ibaixin.manage;
+package net.ibaixin.chat.manage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,6 +13,7 @@ import java.util.Set;
 
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.db.DatabaseHelper;
 import net.ibaixin.chat.model.Album;
 import net.ibaixin.chat.model.AudioItem;
 import net.ibaixin.chat.model.FileItem;
@@ -35,6 +36,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.RemoteException;
@@ -60,7 +62,11 @@ public class MsgManager {
 	
 	private UserManager userManager = UserManager.getInstance();
 	
-	private MsgManager() {}
+	private DatabaseHelper mDBHelper;
+	
+	private MsgManager() {
+		mDBHelper = new DatabaseHelper(mContext);
+	}
 	
 	public static MsgManager getInstance() {
 		if (instance == null) {
@@ -458,8 +464,28 @@ public class MsgManager {
 				list.add(msg);
 			}
 			cursor.close();
+			Collections.reverse(list);
 		}
 		return list;
+	}
+	
+	/**
+	 * 根据会话id查询该会的消息数量
+	 * @update 2015年3月6日 下午4:55:31
+	 * @param threadId 会话id
+	 * @return 会话包含的消息数量
+	 */
+	public long getMsgCountByThreadId(int threadId) {
+		SQLiteDatabase db = mDBHelper.getReadableDatabase();
+		long count = 0;
+		Cursor cursor = db.query(Provider.MsgInfoColumns.TABLE_NAME, new String[] {"count(*)"}, Provider.MsgInfoColumns.THREAD_ID + " = ?", new String[] {String.valueOf(threadId)}, null, null, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			count = cursor.getLong(0);
+		}
+		if (cursor != null) {
+			cursor.close();
+		}
+		return count;
 	}
 	
 	/**
@@ -1310,23 +1336,24 @@ public class MsgManager {
 					File sendFile = DiskCacheUtils.findInCache(fileUri, imageLoader.getDiskCache());
 					if (sendFile == null || !sendFile.exists() || sendFile.length() == 0) {	//文件不存在
 						List<Bitmap> bitmapList = MemoryCacheUtils.findCachedBitmapsForImageUri(fileUri, imageLoader.getMemoryCache());
-						if (!SystemUtil.isEmpty(bitmapList)) {	//内存缓存里没有找到
+						if (!SystemUtil.isEmpty(bitmapList)) {	//内存缓存里找到了
 							Bitmap bitmap = bitmapList.get(0);
 							if (bitmap == null) {	//重新加载图片
-								SystemUtil.loadImageThumbnails(fileUri, new SimpleImageLoadingListener() {
-									
-									@Override
-									public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-										if (loadedImage != null) {
-											if (SystemUtil.saveBitmap(imageLoader, loadedImage, photoItem)) {
-												msgList.add(setMsgInfo(mi, photoItem));
-											}
-										}
+								Bitmap loadedImage = SystemUtil.loadImageThumbnailsSync(fileUri);
+								if (loadedImage != null) {
+									if (SystemUtil.saveBitmap(imageLoader, loadedImage, photoItem)) {
+										msgList.add(setMsgInfo(mi, photoItem));
 									}
-									
-								});
+								}
 							} else {
 								if (SystemUtil.saveBitmap(imageLoader, bitmap, photoItem)) {
+									msgList.add(setMsgInfo(mi, photoItem));
+								}
+							}
+						} else {	//内存缓存里没有找到，则重新加载
+							Bitmap loadedImage = SystemUtil.loadImageThumbnailsSync(fileUri);
+							if (loadedImage != null) {
+								if (SystemUtil.saveBitmap(imageLoader, loadedImage, photoItem)) {
 									msgList.add(setMsgInfo(mi, photoItem));
 								}
 							}

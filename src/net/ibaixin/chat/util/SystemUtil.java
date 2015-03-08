@@ -371,6 +371,20 @@ public class SystemUtil {
 	}
 	
 	/**
+	 * 根据文件判断文件是否存在
+	 * @update 2015年3月3日 下午7:09:39
+	 * @param file
+	 * @return
+	 */
+	public static boolean isFileExists(File file) {
+		if (file == null) {
+			return false;
+		} else {
+			return file.exists();
+		}
+	}
+	
+	/**
 	 * 保存文件，根据用户名动态生成文件夹，该用户名为当前登录的用户名
 	 * @update 2014年10月23日 下午5:06:50
 	 * @param data
@@ -1124,20 +1138,6 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 将完整的jid托包装为账号，格式为：xxx@doamin
-	 * @update 2014年11月10日 下午8:47:14
-	 * @param jid 账号，格式为：xxx@doamin/ibaixin
-	 * @return
-	 */
-	public static String unwrapJid2(String jid) {
-		if (!TextUtils.isEmpty(jid)) {
-			return jid.substring(0, jid.indexOf("/"));
-		} else {
-			return null;
-		}
-	}
-	
-	/**
 	 * 删除文件
 	 * @update 2014年11月11日 下午7:07:25
 	 * @param filePath
@@ -1312,13 +1312,13 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 加载图片的缩略图
+	 * 异步加载图片的缩略图
 	 * @update 2014年11月17日 下午9:11:12
 	 * @param uri 包装的uri,如file:///mnt/sdcard/ddd.jpg
 	 * @param listener
 	 * @return
 	 */
-	public static void loadImageThumbnails(String uri, ImageLoadingListener listener) {
+	public static void loadImageThumbnailsAsync(String uri, ImageLoadingListener listener) {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
 			.showImageForEmptyUri(R.drawable.ic_default_icon_error)
 			.showImageOnFail(R.drawable.ic_default_icon_error)
@@ -1333,7 +1333,28 @@ public class SystemUtil {
 	}
 	
 	/**
-	 * 根据文件名获得文件的后缀，如.jpg
+	 * 同步加载图片的缩略图
+	 * @author tiger
+	 * @update 2015年3月7日 下午5:53:46
+	 * @param uri
+	 * @param listener
+	 */
+	public static Bitmap loadImageThumbnailsSync(String uri) {
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
+			.showImageForEmptyUri(R.drawable.ic_default_icon_error)
+			.showImageOnFail(R.drawable.ic_default_icon_error)
+			.cacheInMemory(true)
+			.cacheOnDisk(false)
+			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+			.bitmapConfig(Bitmap.Config.RGB_565)	//防止内存溢出
+			.resetViewBeforeLoading(true)
+			.build();
+		ImageLoader imageLoader = ImageLoader.getInstance();
+		return imageLoader.loadImageSync(uri, options);
+	}
+	
+	/**
+	 * 根据文件名获得文件的后缀，如jpg
 	 * @update 2014年11月17日 下午10:10:51
 	 * @param filename
 	 * @return
@@ -1343,7 +1364,7 @@ public class SystemUtil {
 			return null;
 		}
 		int index = url.lastIndexOf(".");
-		if (index != -1) {	//文件名包含有.
+		if (index != -1) {	//文件名不包含有.
 			return url.substring(index + 1);
 		} else {	//返回空串，直接作为文件名
 			return "";

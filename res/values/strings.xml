@@ -27,6 +27,7 @@
     <string name="loading">正在处理，请稍后&#8230;</string>
     <string name="location_prefix">[位置]</string>
     <string name="copy_text_success">内容成功复制到剪贴板！</string>
+    <string name="location_info_error">地理位置信息为空！</string>
     
     <string name="activity_lable_login">用户登录</string>
     <string name="activity_lable_regist">用户注册</string>
@@ -34,12 +35,16 @@
     <string name="activity_lable_friend_info">好友详情</string>
     <string name="activity_lable_chat">聊天</string>
     <string name="activity_lable_new_friend_info">新的朋友</string>
+    <string name="activity_lable_joke">趣味阅读</string>
     <string name="activity_lable_file_explorer">文件</string>
     <string name="activity_lable_album">图片</string>
     <string name="activity_lable_audio">音频</string>
     <string name="activity_lable_video">视频</string>
     <string name="activity_lable_location_share">位置</string>
     <string name="activity_lable_edit_remark">备注信息</string>
+    <string name="activity_lable_chat_image_preview">图片预览</string>
+    <string name="activity_lable_show_location">位置信息</string>
+    <string name="activity_lable_show_msg">消息内容</string>
     
     <string name="email">邮箱：%1$s</string>
     <string name="username">用户名：%1$s</string>
@@ -52,6 +57,7 @@
     <!-- MainActivity的主菜单 -->
     <string name="action_exit">退出</string>
     <string name="action_search">搜索</string>
+    <string name="action_new_joke">发段子</string>
     <string name="action_plus">添加</string>
     <string name="action_create_group_chat">发起群聊</string>
     <string name="action_add_friend">添加朋友</string>
@@ -147,9 +153,10 @@
     <string name="notification_batch_promtp_title">未读消息提醒</string>
     <string name="notification_batch_promtp_content">您有%1$d条未读消息,点击查看详情！</string>
     
+    <string name="show_location_error">显示地理信息失败!</string>
+    
     <string name="item_setting">设置</string>
-    <string name="item_readjokestext">笑话</string>
-    <string name="item_readjokesimg">趣图</string>
-    <string name="item_readjokeslife">感悟</string>
+    <string name="item_readjokestext">趣味阅读</string>
+    <string name="item_readjokesvideo">趣味视频</string>
     
 </resources>

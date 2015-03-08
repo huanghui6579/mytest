@@ -44,11 +44,23 @@ public class MainActivity extends BaseActivity {
 	private static final int FRAGMENT_SESSION_LIST = 0;
 	private static final int FRAGMENT_CONTACT = 1;
 	private static final int FRAGMENT_MINE = 2;
+
+	public static final String ARG_SYNC_FRIENDS = "arg_sync_friends";
+	public static final String ARG_INIT_POSITION = "arg_init_position";
 	
 	private IconTabPageIndicator mPageIndicator;
 	private ViewPager mViewPager;
 	
+	private FragmentAdapter adapter;
+	
+	/**
+	 * 是否初始化fragment标签页的索引位置
+	 */
+	private boolean initPosition = false;
+	
 	private static Map<Integer, String> tagMap = new HashMap<>();
+	
+	private CoreService coreService;
 	
 	private static String[] CONTENT = null;
     private static int[] ICONS = new int[] {
@@ -69,7 +81,7 @@ public class MainActivity extends BaseActivity {
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			// TODO Auto-generated method stub
 			MainBinder mBinder = (MainBinder) service;
-			CoreService coreService = mBinder.getService();
+			coreService = mBinder.getService();
 			coreService.initCurrentUser(initCurrentUserInfo());
 		}
 	};
@@ -88,16 +100,16 @@ public class MainActivity extends BaseActivity {
 	
 	@Override
 	public boolean onMenuOpened(int featureId, Menu menu) {
-	    if((featureId == Window.FEATURE_ACTION_BAR || featureId == Window.FEATURE_OPTIONS_PANEL) && menu != null){
-	        if(menu.getClass().getSimpleName().equals("MenuBuilder")){
+	    if((featureId == Window.FEATURE_ACTION_BAR || featureId == Window.FEATURE_OPTIONS_PANEL) && menu != null) {
+	        if(menu.getClass().getSimpleName().equals("MenuBuilder")) {
 	            try{
 	                Method m = menu.getClass().getDeclaredMethod(
 	                    "setOptionalIconsVisible", Boolean.TYPE);
 	                m.setAccessible(true);
 	                m.invoke(menu, true);
-	            } catch(NoSuchMethodException e){
+	            } catch(NoSuchMethodException e) {
 	                Log.e(TAG, "onMenuOpened", e);
-	            } catch(Exception e){
+	            } catch(Exception e) {
 	                throw new RuntimeException(e);
 	            }
 	        }
@@ -155,18 +167,42 @@ public class MainActivity extends BaseActivity {
 
 	@Override
 	protected void initData() {
+		Intent intent = getIntent();
+		int syncFlag = 0;
+		initPosition = false;
+		if (intent == null) {
+			syncFlag = CoreService.FLAG_SYNC_FRENDS;
+		} else {
+			if (intent.getBooleanExtra(ARG_SYNC_FRIENDS, true)) {
+				syncFlag = CoreService.FLAG_SYNC_FRENDS;
+			} else {
+				syncFlag = 0;
+			}
+			initPosition = intent.getBooleanExtra(MainActivity.ARG_INIT_POSITION, false);
+		}
 		CONTENT = getResources().getStringArray(R.array.main_function_lable);
-		FragmentAdapter adapter = new FragmentAdapter(getSupportFragmentManager());
-		mViewPager.setAdapter(adapter);
-		mPageIndicator.setViewPager(mViewPager);
+		if (adapter == null) {
+			adapter = new FragmentAdapter(getSupportFragmentManager());
+		}
 		
+		mViewPager.setAdapter(adapter);
+
 		Intent service = new Intent(mContext, CoreService.class);
 		bindService(service, serviceConnection, Context.BIND_AUTO_CREATE);
 		
 		//从网络上更新好友列表的数据
 //		Intent intent = new Intent(mContext, CoreService.class);
-		service.putExtra(CoreService.FLAG_SYNC, CoreService.FLAG_SYNC_FRENDS);
+		
+		service.putExtra(CoreService.FLAG_SYNC, syncFlag);
 		startService(service);
+		
+		if (initPosition) {
+			coreService.clearNotify(CoreService.NOTIFY_ID_CHAT_MSG);
+			mPageIndicator.setViewPager(mViewPager, 0);
+		} else {
+			mPageIndicator.setViewPager(mViewPager);
+		}
+		
 	}
 	
 	@Override
@@ -174,11 +210,25 @@ public class MainActivity extends BaseActivity {
 		super.onNewIntent(intent);
 		setIntent(intent);
 		
-		initWidow();
-		initView();
-		addListener();
 		initData();
 		
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		//清除聊天消息的通知栏
+		clearChatNotify();
+	}
+	
+	/**
+	 * 清除聊天消息的通知栏
+	 * @update 2015年3月3日 下午2:03:47
+	 */
+	private void clearChatNotify() {
+		if (coreService != null) {
+			coreService.clearNotify(CoreService.NOTIFY_ID_CHAT_MSG);
+		}
 	}
 	
 	@Override
@@ -193,6 +243,9 @@ public class MainActivity extends BaseActivity {
 				case FRAGMENT_CONTACT:	//好友列表
 					String tag = tagMap.get(position);
 					ContactFragment contactFragment = (ContactFragment) getSupportFragmentManager().findFragmentByTag(tag);
+					if (initPosition && contactFragment.isLoaded()) {
+						contactFragment.setLoaded(false);
+					}
 					contactFragment.onload();
 					break;
 

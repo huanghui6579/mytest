@@ -32,11 +32,12 @@
         <!-- This can of course also be a regular indeterminate ProgressBar, but then it won't be styled -->
         <net.ibaixin.chat.view.ProgressWheel
             android:id="@+id/progress"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="@dimen/progress_max_size"
+    		android:layout_height="@dimen/progress_max_size"
             android:layout_marginEnd="@dimen/alert_dialog_padding_material"
             android:layout_marginRight="@dimen/alert_dialog_padding_material"
             app:matProg_barColor="?attr/colorPrimary"
+            app:matProg_fillRadius="true"
             app:matProg_progressIndeterminate="true" />
 
         <TextView

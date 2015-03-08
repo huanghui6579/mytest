@@ -1,17 +1,12 @@
 package net.ibaixin.chat.activity;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-
-import com.afollestad.materialdialogs.MaterialDialog;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.ibaixin.chat.R;
-import net.ibaixin.chat.util.UnicodeFormatter;
-import android.graphics.Color;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 /**
  * 
@@ -20,6 +15,9 @@ import android.widget.TextView;
  * @update 2015年1月31日 上午11:50:55
  */
 public class TestActivity extends BaseActivity {
+	private ListView listView;
+	private List<String> data;
+	private ArrayAdapter<String> adapter;
 
 	@Override
 	protected int getContentView() {
@@ -28,24 +26,23 @@ public class TestActivity extends BaseActivity {
 
 	@Override
 	protected void initView() {
-		Button basicNoTitle = (Button) findViewById(R.id.basicNoTitle);
-		basicNoTitle.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				new MaterialDialog.Builder(TestActivity.this)
-                .title("提示")
-                .titleColorAttr(R.attr.colorPrimary)
-                .content("文本内容")
-                .positiveText("确定")
-                .negativeText("取消")
-                .show();
-			}
-		});
+		listView = (ListView) findViewById(R.id.lv_data);
 	}
 
 	@Override
 	protected void initData() {
+		data = new ArrayList<>();
+		for (int i = 0; i < 100; i++) {
+			data.add("test" + i);
+		}
+		adapter = new ArrayAdapter<>(mContext, android.R.layout.simple_list_item_1, android.R.id.text1, data);
+		listView.setAdapter(adapter);
+	}
+	
+	@Override
+	protected void initWidow() {
+//		requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+//		requestWindowFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
 	}
 
 	@Override

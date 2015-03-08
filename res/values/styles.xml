@@ -12,6 +12,15 @@
         <item name="colorPrimary">@color/primary_color</item>
         <item name="colorAccent">@color/primary_color</item>
         
+        <item name="windowActionModeOverlay">true</item>
+        
+        <item name="toolbarStyle">@style/MyToolBarStyle</item>
+        
+        <!-- action bar 上的颜色控制器，主要是控制文字、图标的颜色 -->
+        <!-- <item name="colorControlNormal">@android:color/white</item> -->
+        
+        <item name="actionModeStyle">@style/AppTheme.ActionMode</item>
+        
         <!-- 自定义对话框样式 -->
         <!--
 	        All dialogs will default to Theme.DARK with this set to true.
@@ -290,11 +299,20 @@
     <style name="ChatItemContentStyle">
         <item name="android:layout_width">wrap_content</item>
     	<item name="android:layout_height">wrap_content</item>
-    	<item name="android:background">@drawable/chat_msg_in_selector</item>
-    	<item name="android:paddingBottom">@dimen/chat_msg_item_content_padding_top_bottom</item>
-    	<item name="android:paddingTop">@dimen/chat_msg_item_content_padding_top_bottom</item>
+    	<!-- <item name="android:paddingBottom">@dimen/chat_msg_item_content_padding_top_bottom</item>
+    	<item name="android:paddingTop">@dimen/chat_msg_item_content_padding_top_bottom</item> -->
     	<item name="android:textColor">@android:color/black</item>
     	<item name="android:textSize">@dimen/contact_chat_msg</item>
+    </style>
+    
+    <!-- 聊天消息图片描述性文字的样式 -->
+    <style name="ChatItemContentDescStyle">
+        <item name="android:layout_width">wrap_content</item>
+    	<item name="android:layout_height">wrap_content</item>
+    	<item name="android:background">@drawable/chat_img_desc_text_bg</item>
+    	<item name="android:textColor">@android:color/white</item>
+    	<item name="android:singleLine">true</item>
+    	<item name="android:gravity">center</item>
     </style>
     
     <!-- 聊天的文字样式 -->
@@ -350,6 +368,16 @@
 	    <item name="android:maxLines">2</item>
 	    <item name="android:gravity">center_vertical</item>
 	    <item name="android:checkMark">@drawable/album_choice_selector</item>
+    </style>
+    
+    <!-- 我的位置按钮的样式 -->
+    <style name="MyLocationBtnStyle">
+        <item name="android:layout_width">wrap_content</item>
+	    <item name="android:layout_height">wrap_content</item>
+	    <item name="android:src">@drawable/main_icon_location</item>
+	    <item name="android:background">@drawable/my_location_btn_selector</item>
+	    <item name="android:padding">@dimen/location_my_btn_padding</item>
+	    <item name="android:layout_margin">@dimen/location_my_btn_margin</item>
     </style>
     
     <!-- material-dialogs样式 -->

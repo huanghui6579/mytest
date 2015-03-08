@@ -1,8 +1,6 @@
 package net.ibaixin.chat.activity;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,17 +9,16 @@ import net.ibaixin.chat.R;
 import net.ibaixin.chat.model.LocationInfo;
 import net.ibaixin.chat.model.MsgInfo;
 import net.ibaixin.chat.model.MsgPart;
+import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.ImageUtil;
 import net.ibaixin.chat.util.MimeUtils;
 import net.ibaixin.chat.util.SystemUtil;
+import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Color;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
@@ -33,7 +30,6 @@ import android.widget.AdapterView;
 import android.widget.CheckedTextView;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.baidu.location.BDLocation;
@@ -205,7 +201,7 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 			
 			@Override
 			public void onClick(View v) {
-				mProgressDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), true, true);
+				mProgressDialog = ProgressDialog.show(mContext, null, getString(R.string.loading), true);
 				mBaiduMap.snapshot(LocationShareActivity.this);
 			}
 		});
@@ -485,7 +481,7 @@ public class LocationShareActivity extends BaseActivity implements OnGetGeoCoder
 						if (success) {
 							LocationInfo locationInfo = mLocationInfos.get(mCurrentPosition);
 							mMsgInfo.setContent(locationInfo.getAddress());	//地理位置名称
-							mMsgInfo.setSubject(locationInfo.getLongitude() + ";" + locationInfo.getLatitude());	//地理位置的经纬度
+							mMsgInfo.setSubject(locationInfo.getLatitude() + Constants.SPLITE_TAG_LOCATION + locationInfo.getLongitude());	//地理位置的经纬度
 							mMsgInfo.setMsgType(MsgInfo.Type.LOCATION);
 							mMsgInfo.setCreationDate(System.currentTimeMillis());
 							//设置附件信息

@@ -34,7 +34,8 @@
 		        android:layout_marginLeft="@dimen/chat_msg_list_spacing_left_right"
 		        android:layout_marginStart="@dimen/chat_msg_list_spacing_left_right"
 		        android:layout_marginRight="@dimen/chat_msg_list_spacing_left_right"
-		        android:layout_marginEnd="@dimen/chat_msg_list_spacing_left_right"/>
+		        android:layout_marginEnd="@dimen/chat_msg_list_spacing_left_right"
+		        android:transcriptMode="normal"/>
 		    
 		    <!-- 信息编辑框 -->
 		    <RelativeLayout 

@@ -1,4 +1,4 @@
-package net.ibaixin.manage;
+package net.ibaixin.chat.manage;
 
 import java.util.ArrayList;
 import java.util.Arrays;

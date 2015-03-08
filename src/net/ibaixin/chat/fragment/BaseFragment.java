@@ -11,6 +11,7 @@ import android.support.v4.app.Fragment;
  * @update 2014年10月8日 下午7:35:15
  */
 public abstract class BaseFragment extends Fragment {
+	
 	protected Context mContext;
 	
 	public BaseFragment() {
@@ -21,8 +22,6 @@ public abstract class BaseFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		mContext = getActivity();
-		
 		super.onCreate(savedInstanceState);
-		
 	}
 }

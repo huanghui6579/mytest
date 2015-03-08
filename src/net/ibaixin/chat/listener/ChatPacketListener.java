@@ -7,6 +7,7 @@ import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.activity.UserInfoActivity;
 import net.ibaixin.chat.fragment.ContactFragment.LoadDataBroadcastReceiver;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.HeadIcon;
 import net.ibaixin.chat.model.NewFriendInfo;
 import net.ibaixin.chat.model.User;
@@ -15,7 +16,6 @@ import net.ibaixin.chat.model.NewFriendInfo.FriendStatus;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.PacketListener;

@@ -2,6 +2,7 @@ package net.ibaixin.chat.activity;
 
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.NewFriendInfo;
 import net.ibaixin.chat.model.NewFriendInfo.FriendStatus;
 import net.ibaixin.chat.model.Personal;
@@ -12,7 +13,6 @@ import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.util.XmppUtil;
 import net.ibaixin.chat.view.ProgressDialog;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;

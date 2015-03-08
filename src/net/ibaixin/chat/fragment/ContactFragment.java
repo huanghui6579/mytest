@@ -10,6 +10,7 @@ import net.ibaixin.chat.activity.MainActivity.LazyLoadCallBack;
 import net.ibaixin.chat.activity.NewFriendInfoActivity;
 import net.ibaixin.chat.activity.RemarkEditActivity;
 import net.ibaixin.chat.activity.UserInfoActivity;
+import net.ibaixin.chat.manage.UserManager;
 import net.ibaixin.chat.model.User;
 import net.ibaixin.chat.model.UserVcard;
 import net.ibaixin.chat.provider.Provider;
@@ -21,7 +22,6 @@ import net.ibaixin.chat.view.ProgressDialog;
 import net.ibaixin.chat.view.ProgressWheel;
 import net.ibaixin.chat.view.SideBar;
 import net.ibaixin.chat.view.SideBar.OnTouchingLetterChangedListener;
-import net.ibaixin.manage.UserManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 
@@ -147,6 +147,12 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 		View view = inflater.inflate(R.layout.fragment_contact, container, false);
 		
 		return view;
+	}
+	
+	@Override
+	public void onDetach() {
+		isLoaded = false;
+		super.onDetach();
 	}
 	
 	@Override
@@ -307,7 +313,9 @@ public class ContactFragment extends BaseFragment implements LazyLoadCallBack {
 				mAdapter = new ContactAdapter(mUsers, mContext);
 				lvContact.setAdapter(mAdapter);
 			}
-			
+			if (lvContact.getAdapter() == null) {
+				lvContact.setAdapter(mAdapter);
+			}
 			new LoadDataTask().execute();
 		}
 	}

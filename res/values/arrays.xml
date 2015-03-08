@@ -44,4 +44,11 @@
         <item>删除该聊天</item>
     </string-array>
     
+    <!-- 趣味阅读tab标签 -->
+    <string-array name="jokeread_function_lable">
+        <item>全部</item>
+        <item>笑话</item>
+        <item>趣图</item>
+        <item>感悟</item>
+    </string-array>
 </resources>

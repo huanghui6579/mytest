@@ -12,6 +12,7 @@ import java.util.Locale;
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.EmojiFragment2;
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.AttachItem;
 import net.ibaixin.chat.model.EmojiType;
 import net.ibaixin.chat.model.FileItem;
@@ -34,7 +35,6 @@ import net.ibaixin.chat.util.SoundMeter;
 import net.ibaixin.chat.util.SystemUtil;
 import net.ibaixin.chat.util.XmppConnectionManager;
 import net.ibaixin.chat.view.TextViewAware;
-import net.ibaixin.manage.MsgManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.Chat;

@@ -29,6 +29,8 @@ public class Constants {
 //	public static final String SERVER_NAME = "localhost-pc.com";
 	public static final String SERVER_NAME = "home-pc.com";
 	public static final int SERVER_PORT = 5222;
+	/** web登录cookie*/
+	public static String WEB_COOKIE = null;
 	/**
 	 * 用户的登录该系统的客户端类型，如Android、iphone、web等
 	 */
@@ -43,6 +45,16 @@ public class Constants {
 	public static final String NAME_SERVER_HOST = "name_server_host";
 	public static final String NAME_SERVER_PORT = "name_server_port";
 	public static final String NAME_SERVER_NAME = "name_server_name";
+	
+	/**
+	 * 地理位置的分隔符，为“;”
+	 */
+	public static final String SPLITE_TAG_LOCATION = ";";
+	
+	/**
+	 * 文件传输时，消息的类型分隔符，为“,”
+	 */
+	public static final String SPLITE_TAG_MSG_TYPE = ",";
 	
 	/**
 	 * 会话的时间格式化模板

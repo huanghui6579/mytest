@@ -5,11 +5,11 @@ import java.util.List;
 
 import net.ibaixin.chat.R;
 import net.ibaixin.chat.fragment.PhotoFragment;
+import net.ibaixin.chat.manage.MsgManager;
 import net.ibaixin.chat.model.MsgInfo;
 import net.ibaixin.chat.model.PhotoItem;
 import net.ibaixin.chat.util.Constants;
 import net.ibaixin.chat.util.SystemUtil;
-import net.ibaixin.manage.MsgManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;

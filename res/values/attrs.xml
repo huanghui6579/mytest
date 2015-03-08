@@ -113,4 +113,28 @@
     <attr name="md_btn_neutral_selector" format="reference" />
     <attr name="md_btn_negative_selector" format="reference" />
     
+    <!-- 气泡图片的样式 -->
+    <declare-styleable name="BubbleImageView">
+        
+        <!-- 箭头距离顶部的距离 -->
+        <attr name="bubble_arrowTop" format="dimension|reference" />
+        <!--  箭头的宽度 -->
+        <attr name="bubble_arrowWidth" format="dimension|reference" />
+        <!-- 气泡边上箭头的高度 -->
+        <attr name="bubble_arrowHeight" format="dimension|reference" />
+        <!-- 箭头上下的偏移量，正数 向上 ，负数 向下 -->
+        <attr name="bubble_arrowOffset" format="dimension|reference" />
+        <!-- 箭头上下的偏移是否居中,如果为true，则bubble_arrowOffset属性无效 -->
+        <attr name="bubble_arrowCenterOffset" format="boolean" />
+        <!-- 箭头是否在整个图片高度的中间 -->
+        <attr name="bubble_arrowCenter" format="boolean" />
+        <!-- 图片圆角的角度 -->
+        <attr name="bubble_angle" format="dimension|reference" />
+        <!-- 气泡边上箭头的位置，目前支持 left 和 right -->
+        <attr name="bubble_arrowLocation" format="enum">
+            <enum name="left" value="0" />
+            <enum name="right" value="1" />
+        </attr>
+    </declare-styleable>
+    
 </resources>

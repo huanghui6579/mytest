@@ -1,6 +1,8 @@
 package net.ibaixin.chat.activity;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.ibaixin.chat.ChatApplication;
 import net.ibaixin.chat.R;
@@ -17,7 +19,6 @@ import org.jivesoftware.smack.SmackException.AlreadyLoggedInException;
 import org.jivesoftware.smack.SmackException.ConnectionException;
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Presence;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -39,6 +40,7 @@ import android.widget.TextView;
  *
  */
 public class LoginActivity extends BaseActivity implements OnClickListener {
+	public static Map<String,String>  CookieContiner = new HashMap<String,String>() ;
 	private EditText etAccount;
 	private EditText etPassword;
 	private Button btnLogin;
@@ -212,6 +214,9 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 		protected Integer doInBackground(SystemConfig... params) {
 			systemConfig.setAccount(etAccount.getText().toString());
 			systemConfig.setPassword(etPassword.getText().toString());
+//			if(!loginIbaixinJoke()) {
+//				return Constants.MSG_FAILED;
+//			}
 			int result = login(params[0]);
 			if (Constants.MSG_SUCCESS == result) {
 				systemConfig.setOnline(true);
@@ -221,6 +226,7 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 			return result;
 		}
 		
+
 		@Override
 		protected void onPostExecute(Integer result) {
 			hideLoadingDialog(pDialog);
@@ -296,5 +302,4 @@ public class LoginActivity extends BaseActivity implements OnClickListener {
 	public void onBackPressed() {
 		application.exit();
 	}
-	
 }
